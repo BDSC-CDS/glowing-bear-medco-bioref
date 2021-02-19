@@ -1,0 +1,9 @@
+<!-- TODO do not display this accordion while no results is available. -->
+<p-accordionTab header="Results" id="gb-explore-statistics-results" [selected]="chartInfoReceivedAtLeastOnce">
+  <div class="small-font">
+    <div class="medco-results-chart-container">
+      <canvas #exploreStatsChartElement id="medco-explore-stats-chart">{{ chart }}</canvas>
+    </div>
+  
+  </div>
+</p-accordionTab>

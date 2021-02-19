@@ -555,3 +555,8 @@ input.input-field {
 .small-font {
   font-size: small;
 }
+
+.query-btn-dirty {
+  border: 2px solid;
+  font-weight: bolder;
+}

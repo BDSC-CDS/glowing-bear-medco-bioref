@@ -43,6 +43,8 @@ import {WorkerModule} from 'angular-web-worker/angular';
 import {DecryptionWorker} from '../decryption.worker';
 import {ToastrModule} from 'ngx-toastr';
 import {DeviceDetectorService} from 'ngx-device-detector';
+import { GbExploreStatisticsModule } from './modules/gb-explore-statistics-module/gb-explore-statistics.module';
+
 
 export function loadServices(config: AppConfig,
                              authService: AuthenticationService,
@@ -79,6 +81,7 @@ export function loadServices(config: AppConfig,
     GbMainModule,
     GbExploreModule,
     GbExploreResultsModule,
+    GbExploreStatisticsModule,
     GbAnalysisModule,
     GbResultsModule,
     GbSurvivalResultsModule,

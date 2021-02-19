@@ -7,7 +7,7 @@
       </p-accordionTab>
     </div>
 
-    <div *ngIf="navbarService.isExplore ||  navbarService.isAnalysis">
+    <div *ngIf="navbarService.isExplore ||  navbarService.isAnalysis || navbarService.isExploreStatistics">
       <p-accordionTab header="Ontology" [selected]="true">
         <gb-tree-nodes></gb-tree-nodes>
       </p-accordionTab>

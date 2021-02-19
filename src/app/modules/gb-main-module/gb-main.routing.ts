@@ -34,7 +34,11 @@ export const routes: Routes = [
         loadChildren: '../gb-survival-results-module/gb-survival-results.module#GbSurvivalResultsModule'
       }
     ]
-  }
+  },
+  {
+    path: 'explore-statistics', 
+    loadChildren: '../gb-explore-statistics-module/gb-explore-statistics.module#GbExploreStatisticsModule'
+  },
 ];
 
 export const routing: ModuleWithProviders<RouterModule> = RouterModule.forChild(routes);
