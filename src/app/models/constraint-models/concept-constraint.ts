@@ -17,6 +17,7 @@ import { NumericalOperator } from './numerical-operator';
 import { TreeNode } from '../tree-models/tree-node';
 import { TextOperator } from './text-operator';
 import { ErrorHelper } from 'src/app/utilities/error-helper';
+import { ValueType } from './value-type';
 
 export class ConceptConstraint extends Constraint {
 
@@ -47,6 +48,7 @@ export class ConceptConstraint extends Constraint {
 
   constructor(treeNode: TreeNode) {
     super();
+    this.shortTextRepresentationIsSimilar = false;
     this._treeNode = treeNode;
     this.valueConstraints = [];
     this.valDateConstraint = new TimeConstraint();
@@ -54,11 +56,13 @@ export class ConceptConstraint extends Constraint {
     this.obsDateConstraint = new TimeConstraint();
     this.obsDateConstraint.isObservationDate = true;
     this.textRepresentation = 'Concept';
+    this.shortTextRepresentation = this.textRepresentation
   }
 
   clone(): ConceptConstraint {
     let res = new ConceptConstraint(this._treeNode.clone())
     res.textRepresentation = this.textRepresentation
+    res.shortTextRepresentation = this.shortTextRepresentation
     res.parentConstraint = this.parentConstraint
     res.concept = this.concept.clone()
     res.applyNumericalOperator = this.applyNumericalOperator
@@ -108,6 +112,7 @@ export class ConceptConstraint extends Constraint {
   set concept(concept: Concept) {
     this._concept = concept;
     this.textRepresentation = concept ? `Ontology concept: ${concept.label}` : FormatHelper.nullValuePlaceholder;
+    this.shortTextRepresentation = concept ? concept.name : FormatHelper.nullValuePlaceholder;
   }
 
   get valueConstraints(): ValueConstraint[] {
@@ -222,6 +227,31 @@ export class ConceptConstraint extends Constraint {
 
   get textOperatorValue(): string {
     return this._textOperatorValue
+  }
+
+  private isAnalyte() {
+    return this.treeNode.valueType === ValueType.NUMERICAL &&
+    !this.applyNumericalOperator && !this.applyObsDateConstraint &&
+    !this.applyTextOperator && !this.applyValDateConstraint;
+  }
+
+  constraintWithoutAnalytes(): Constraint {
+    if (this.isAnalyte()) {
+      return undefined
+    }
+
+    return this
+  }
+
+  getAnalytes(): Array<TreeNode> {
+    // if the tree node is of numerical type
+    // AND there is no operator acting on the node return it
+
+    if (this.isAnalyte()) {
+      return [this.treeNode]
+    }
+
+    return []
   }
 
   inputValueValidity(): string {

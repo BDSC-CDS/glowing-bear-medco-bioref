@@ -10,6 +10,8 @@
 
 import { Constraint } from './constraint';
 import { CombinationState } from './combination-state';
+import { Concept } from './concept';
+import { TreeNode } from '../tree-models/tree-node';
 
 export class CombinationConstraint extends Constraint {
 
@@ -18,12 +20,14 @@ export class CombinationConstraint extends Constraint {
   private _isRoot: boolean;
 
 
+  public static readonly groupTextRepresentation = 'Group';
+
   constructor() {
     super();
     this._children = [];
     this.combinationState = CombinationState.And;
     this.isRoot = false;
-    this.textRepresentation = 'Group';
+    this.textRepresentation = CombinationConstraint.groupTextRepresentation;
   }
 
   get className(): string {
@@ -122,12 +126,32 @@ export class CombinationConstraint extends Constraint {
   }
 
 
+  constraintWithoutAnalytes(): Constraint {
+    const cloneObj = this.clone()
+    const children = cloneObj.children.map(c => c.constraintWithoutAnalytes())
+    const filteredChildren = children.filter(c => c !== undefined)
+    cloneObj.children = filteredChildren
+
+    return cloneObj
+  }
+
+  getAnalytes(): Array<TreeNode> {
+    if (!this.isAnd) {
+      return []
+    }
+
+    const arrays = this.children.map(c => c.getAnalytes())
+    const flattened = arrays.reduce((arr1, arr2) => arr1.concat(arr2))
+
+    return flattened
+  }
+
   private updateTextRepresentation() {
     if (this.children.length > 0) {
       this.textRepresentation = '(' + this.children.map(({ textRepresentation }) => textRepresentation)
         .join(this.combinationState === CombinationState.And ? ' and ' : ' or ') + ')'
     } else {
-      this.textRepresentation = 'Group';
+      this.textRepresentation = CombinationConstraint.groupTextRepresentation;
     }
   }
 }

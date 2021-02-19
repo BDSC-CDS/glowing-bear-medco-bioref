@@ -32,6 +32,7 @@ import { ToggleButtonModule } from 'primeng'
 import {SurvivalService} from '../../services/survival-analysis.service';
 import {SavedCohortsPatientListService} from '../../services/saved-cohorts-patient-list.service';
 import {ExploreCohortsService} from '../../services/api/medco-node/explore-cohorts.service';
+import { GbCohortDefinitionComponent } from './accordion-components/gb-cohort-definition/gb-cohort-definition.component';
 
 @NgModule({
   imports: [
@@ -55,7 +56,8 @@ import {ExploreCohortsService} from '../../services/api/medco-node/explore-cohor
     GbSidePanelComponent,
     GbTreeNodesComponent,
     GbSummaryComponent,
-    GbCohortsComponent
+    GbCohortsComponent,
+    GbCohortDefinitionComponent,
   ],
   providers: [TreeDragDropService, ConfirmationService, SurvivalService, ExploreCohortsService, SavedCohortsPatientListService],
   exports: [GbSidePanelComponent]

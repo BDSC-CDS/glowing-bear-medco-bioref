@@ -31,8 +31,13 @@ export class ConstraintMappingService {
 
     switch (constraint.className) {
       case 'NegationConstraint':
-        ((constraint as NegationConstraint).constraint as CombinationConstraint).children.forEach((childConstraint) =>
+        const castedConstraint = ((constraint as NegationConstraint).constraint as CombinationConstraint)
+        if (castedConstraint.children === undefined) {
+          return
+        }
+        castedConstraint.children.forEach((childConstraint) =>
           this.mapCombinationConstraint(panels, childConstraint as CombinationConstraint, true));
+
         break;
 
       case 'CombinationConstraint':

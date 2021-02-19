@@ -140,27 +140,41 @@ export class ConstraintService {
     }
   }
 
+  public getAnalytes(): TreeNode[]  {
+    if (!this.hasInclusionConstraint()) {
+      return []
+    }
+    return this.rootInclusionConstraint.getAnalytes()
+  }
+
   /**
    * Generate the constraint corresponding to the query.
    */
-  public generateConstraint(): Constraint {
+  public generateConstraintHelper(inclusionConstraint: Constraint, exclusionConstraint: Constraint): Constraint {
     let resultConstraint: Constraint;
     if (!this.hasInclusionConstraint() && !this.hasExclusionConstraint()) {
       throw ErrorHelper.handleNewError('Empty constraints');
 
     } else if (this.hasInclusionConstraint() && !this.hasExclusionConstraint()) {
-      resultConstraint = this.rootInclusionConstraint;
+      resultConstraint = inclusionConstraint;
 
     } else if (!this.hasInclusionConstraint() && this.hasExclusionConstraint()) {
-      resultConstraint = new NegationConstraint(this.rootExclusionConstraint);
+      resultConstraint = new NegationConstraint(exclusionConstraint);
 
     } else if (this.hasInclusionConstraint() && this.hasExclusionConstraint()) {
       resultConstraint = new CombinationConstraint();
-      (resultConstraint as CombinationConstraint).addChild(this.rootInclusionConstraint);
-      (resultConstraint as CombinationConstraint).addChild(new NegationConstraint(this.rootExclusionConstraint));
+      (resultConstraint as CombinationConstraint).addChild(inclusionConstraint);
+      (resultConstraint as CombinationConstraint).addChild(new NegationConstraint(exclusionConstraint));
     }
 
     return resultConstraint;
+  }
+
+  /**
+   * Generate the constraint corresponding to the query.
+   */
+  public generateConstraint(): Constraint {
+    return this.generateConstraintHelper(this.rootInclusionConstraint, this.rootExclusionConstraint);
   }
 
   /**

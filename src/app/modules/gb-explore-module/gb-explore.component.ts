@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { AfterViewChecked, ChangeDetectorRef, Component } from '@angular/core';
+import { AfterViewChecked, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { FormatHelper } from '../../utilities/format-helper';
 import { QueryService } from '../../services/query.service';
 import { ExploreQueryType } from '../../models/query-models/explore-query-type';
@@ -25,6 +25,10 @@ import {OperationType} from '../../models/operation-models/operation-types';
 import {ApiQueryDefinition} from '../../models/api-request-models/medco-node/api-query-definition';
 import {MedcoNetworkService} from '../../services/api/medco-network.service';
 import {ErrorHelper} from '../../utilities/error-helper';
+import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
+import { ConstraintMappingService } from 'src/app/services/constraint-mapping.service';
+import { ConstraintReverseMappingService } from 'src/app/services/constraint-reverse-mapping.service';
+import { AuthenticationService } from 'src/app/services/authentication.service';
 
 @Component({
   selector: 'gb-explore',
@@ -37,12 +41,22 @@ export class GbExploreComponent implements AfterViewChecked {
 
   OperationType = OperationType
 
-  constructor(private queryService: QueryService,
+
+  // Bucket size of each interval of the explore statistics histogram
+  @Input() bucketSize: number;
+  // Minimal observation that will be taken into account in the construction of the explore statistics histogram
+  @Input() minObservation: number;
+
+
+  constructor(
+    private authService: AuthenticationService,
+    private queryService: QueryService,
     private cohortService: CohortService,
     private medcoNetworkService: MedcoNetworkService,
     public constraintService: ConstraintService,
     private changeDetectorRef: ChangeDetectorRef,
-    private savedCohortsPatientListService: SavedCohortsPatientListService) {
+    private savedCohortsPatientListService: SavedCohortsPatientListService,
+    private exploreStatisticsService: ExploreStatisticsService) {
     this.queryService.lastSuccessfulSet.subscribe(resIDs => {
       this.lastSuccessfulSet = resIDs
     })
@@ -60,8 +74,26 @@ export class GbExploreComponent implements AfterViewChecked {
     this.changeDetectorRef.detectChanges()
   }
 
+  execExploreStatisticsQuery(event) {
+    event.stopPropagation();
+
+    this.exploreStatisticsService.executeQueryFromExplore(this.bucketSize, this.minObservation)
+  }
+
+
+  displayExploreStatsButton(): boolean {
+    return this.authService.hasExploreStatsRole()
+  }
+
   execQuery(event) {
     event.stopPropagation();
+
+    if (this.displayExploreStatsButton()) {
+      this.execExploreStatisticsQuery(event)
+      return
+    }
+
+
     this.queryService.execQuery();
   }
 

@@ -8,10 +8,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { TreeNode } from '../tree-models/tree-node';
+
 export class Constraint {
 
+  // Whether or not the shorter text represenstation of the constraint is the same as the longer text representation
+  protected shortTextRepresentationIsSimilar = true
   // The textual representation of this constraint
   protected _textRepresentation: string;
+  // The shorter textual representation of the constraint. Omitting information like the path of the constraint.
+  protected _shortTextRepresentation: string;
   // The parent constraint
   protected _parentConstraint: Constraint;
   // i2b2 timing policiy
@@ -39,6 +45,18 @@ export class Constraint {
 
   set textRepresentation(value: string) {
     this._textRepresentation = value;
+
+    if(this.shortTextRepresentationIsSimilar) {
+      this.shortTextRepresentation = value
+    }
+  }
+
+  get shortTextRepresentation(): string {
+    return this._shortTextRepresentation;
+  }
+
+  set shortTextRepresentation(value: string) {
+    this._shortTextRepresentation = value;
   }
 
   get parentConstraint(): Constraint {
@@ -66,6 +84,20 @@ export class Constraint {
 
   get panelTimingSameInstance(): boolean {
     return this._panelTimingSameInstance
+  }
+
+  /* For the needs of explore statistics requests we need to 'build' analytes (alias concepts or modifiers)
+  * from the constraints present in the inclusion criterias. The concepts or modifiers which will be used as analytes of those
+  * explore statistics requests will be the one with an 'any' value in the constraint field.
+  */
+  getAnalytes(): Array<TreeNode> {
+    return [];
+  }
+
+  // This method recursively traverse the constraints tree. The returned tree contains only constraints which are not analytes.
+  // This method can return undefined if the current constraint is an analyte.
+  constraintWithoutAnalytes(): Constraint {
+    return this
   }
 
 

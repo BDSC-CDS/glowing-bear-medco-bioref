@@ -6,6 +6,8 @@
   font-weight: bolder;
 }
 
+.gb-data-selection-accordion-header {
+}
 
 .gb-data-selection-accordion-sub-header-1 {
   font-size: large;
@@ -21,7 +23,8 @@
   padding-left: 2em;
   padding-right: 2em;
   overflow: hidden;
-  min-height: 2em;
+  height: 2em;
+  display: flex;
   align-items: center;
   justify-content: space-between;
 }
