@@ -5,9 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Component, ElementRef, EventEmitter, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { ChartInformation, ExploreStatisticsService } from 'app/services/explore-statistics.service';
+import { Component, ElementRef, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import Chart from 'chart.js';
+import { ExploreStatisticsService, ChartInformation } from '../../../../services/explore-statistics.service';
 
 @Component({
   selector: 'gb-explore-statistics-results',
@@ -40,6 +40,7 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
     'rgba(153, 102, 255, 0.5)',
     'rgba(255, 159, 64, 0.5)']
 
+    
   //the colour is chosen in BACKGROUND_COLOURS modulo the length of BACKGROUND_COLOURS
   private static getBackgroundColor(index: number): string {
     return GbExploreStatisticsResultsComponent.BACKGROUND_COLOURS[index % GbExploreStatisticsResultsComponent.BACKGROUND_COLOURS.length]

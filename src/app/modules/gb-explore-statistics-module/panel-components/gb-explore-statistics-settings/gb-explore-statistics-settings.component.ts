@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Component, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
-import { ConstraintService } from 'app/services/constraint.service';
+import { Component, ElementRef, EventEmitter, Output, ViewChild } from '@angular/core';
 import { AutoComplete } from 'primeng/autocomplete';
-import { TreeNodeService } from 'app/services/tree-node.service';
-import { GbConceptFormComponent } from 'app/modules/concept-form-component/gb-concept-form.component';
-import { ExploreStatisticsService } from 'app/services/explore-statistics.service';
-import { ErrorHelper } from 'app/utilities/error-helper';
+import { GbConceptFormComponent } from 'src/app/modules/concept-form-component/gb-concept-form.component';
+import { ConstraintService } from 'src/app/services/constraint.service';
+import { ExploreStatisticsService } from '../../../../services/explore-statistics.service';
+import { TreeNodeService } from '../../../../services/tree-node.service';
+import { ErrorHelper } from '../../../../utilities/error-helper';
 
 @Component({
   selector: 'gb-explore-statistics-settings',

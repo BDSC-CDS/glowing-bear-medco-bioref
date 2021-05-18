@@ -6,14 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Component, OnInit, Input, Output, EventEmitter, ElementRef, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
-import { Concept } from 'app/models/constraint-models/concept';
-import { ConstraintService } from 'app/services/constraint.service';
-import { UIHelper } from 'app/utilities/ui-helper';
+import { Concept } from '../../models/constraint-models/concept';
+import { ConstraintService } from '../../services/constraint.service';
+import { UIHelper } from '../../utilities/ui-helper';
 import { AutoComplete } from 'primeng/autocomplete';
-import { TreeNodeService } from 'app/services/tree-node.service';
-import { MessageHelper } from 'app/utilities/message-helper';
-import { ConceptConstraint } from 'app/models/constraint-models/concept-constraint';
-import { TreeNodeType } from 'app/models/tree-models/tree-node-type';
+import { TreeNodeService } from '../../services/tree-node.service';
+import { MessageHelper } from '../../utilities/message-helper';
+import { ConceptConstraint } from '../../models/constraint-models/concept-constraint';
+import { TreeNodeType } from '../../models/tree-models/tree-node-type';
 
 //TODO use this component using composition in survival curves.
 //for reference see how to define abstract component https://medium.com/@ozak/stop-repeating-yourself-in-angular-how-to-create-abstract-components-9726d43c99ab

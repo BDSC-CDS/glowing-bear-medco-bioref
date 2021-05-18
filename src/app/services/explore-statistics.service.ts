@@ -1,37 +1,48 @@
-import { Injectable, Output, EventEmitter } from "@angular/core";
-import { ApiExploreStatistics } from "app/models/api-request-models/survival-analyis/api-explore-statistics";
-import { ApiExploreStatisticsResponse, ApiInterval } from "app/models/api-response-models/explore-statistics/explore-statistics-response";
-import { Concept } from "app/models/constraint-models/concept";
-import { Modifier } from "app/models/constraint-models/modifier";
-import { ErrorHelper } from "app/utilities/error-helper";
-import { forkJoin, Observable } from "rxjs";
-import { timeout } from "rxjs/operators";
+import { EventEmitter, Injectable, Output } from "@angular/core";
+import { forkJoin, Observable } from 'rxjs';
+import { timeout, map } from 'rxjs/operators';
 import { ApiEndpointService } from "./api-endpoint.service";
 import { MedcoNetworkService } from "./api/medco-network.service";
 import { CohortService } from "./cohort.service";
 import { CryptoService } from "./crypto.service";
+import { ApiInterval, ApiExploreStatisticsResponse } from '../models/api-response-models/explore-statistics/explore-statistics-response';
+import { ApiExploreStatistics } from '../models/api-request-models/survival-analyis/api-explore-statistics';
+import { Concept } from '../models/constraint-models/concept';
+import { ErrorHelper } from '../utilities/error-helper';
+import { Modifier } from '../models/constraint-models/modifier';
 
 export class Interval {
     count: number
     higherBound: string
     lowerBound: string
 
-    constructor(i: ApiInterval, cryptoService: CryptoService) {
-        this.count = cryptoService.decryptIntegerWithEphemeralKey(i.encCount)
-        this.higherBound = i.higherBound
-        this.lowerBound = i.lowerBound
+    constructor(lowerBound, higherBound, decryptedCount) {
+        this.higherBound = higherBound
+        this.lowerBound = lowerBound
+        this.count = decryptedCount
         console.log("Clear count for [", this.lowerBound, ", ", this.higherBound, "] is ", this.count)
     }
 }
 
 export class ChartInformation {
-    readonly intervals: Interval[]
+    intervals: Interval[]
     readonly unit: string
+    readonly readable: Observable<any>
 
     constructor(apiResponse: ApiExploreStatisticsResponse, cryptoService: CryptoService, public readonly treeNodeName: string, public readonly cohortName: string) {
         this.unit = apiResponse.unit
-        this.intervals = apiResponse.intervals.map((i: ApiInterval) => new Interval(i, cryptoService))
-    }
+
+        const encCounts: string[] = apiResponse.intervals.map((i: ApiInterval) => i.encCount)
+        const decryptedCounts = cryptoService.decryptIntegersWithEphemeralKey(encCounts)
+        this.readable = decryptedCounts
+        decryptedCounts.subscribe(counts => {
+            this.intervals = counts.map((count, intervalIndex) => {
+                const apiInterval = apiResponse.intervals[intervalIndex]
+                return new Interval(apiInterval.lowerBound, apiInterval.higherBound, count)
+            })
+        })
+
+    }   
 
 }
 
@@ -102,11 +113,16 @@ export class ExploreStatisticsService {
                     ErrorHelper.handleNewError("Error with the server. Empty result.")
                 }
 
+
                 //Store the clear counts within the chart information class instance
                 const chartInfo = new ChartInformation(results[0], this.cryptoService, displayedName, apiRequest.cohortName)
-                this.ChartDataEmitter.emit(chartInfo)
-                onExecuted()
-            }, 
+                chartInfo.readable.subscribe(_ => {
+                    //waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
+                    this.ChartDataEmitter.emit(chartInfo)
+                    onExecuted()
+                })
+
+            },
             err => {
                 onExecuted()
             }
