@@ -4,22 +4,18 @@ Here is the fork of the front-end. The branch of interest is "bioref" https://gi
 The fork for the backend is here (the branch name is bioref) https://github.com/CHUV-DS/medco_bioref
 	
 The functionment of the new explore-statistics module
-In the front-end there are few key things to understand. I'll describe the way the logic works in the order in which it is executed.
+In the front-end there are few key things to understand. I'll describe the way the logic works in the order in which the code is executed.
 First the user communicates with an Angular component to set the parameters of the query:
+[explore-statistics settings component](https://github.com/CHUV-DS/glowing-bear-medco-bioref/blob/bioref/src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-settings/gb-explore-statistics-settings.component.ts)
+ 
 
-explore-statistics settings component:
--------------------------------------
+When the user clicks on the run button of this settings component the *explore statistics service* is called via its executeQuery function
+[explore-statistics service](https://github.com/CHUV-DS/glowing-bear-medco-bioref/blob/bioref/src/app/services/explore-statistics.service.ts).
 
- https://github.com/CHUV-DS/glowing-bear-medco-bioref/blob/bioref/src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-settings/gb-explore-statistics-settings.component.ts
 
-When the user clicks on the run button of this settings component the explore statistics service is called via its executeQuery function
-explore-statistics service: https://github.com/CHUV-DS/glowing-bear-medco-bioref/blob/bioref/src/app/services/explore-statistics.service.ts
----------------------------
 
-When the aggregated result is returned by the servers the value is read by the results component using the Emitter object from the explore statistics service. This emitter Is a sort of observable that can stream multiple values throughout time.
-Here is the result component logic:
-----------------------------------
-https://github.com/CHUV-DS/glowing-bear-medco-bioref/blob/bioref/src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component.ts
+When the aggregated result is returned by the servers the value is read by the *results component* using the *Emitter* object from the *explore statistics service*. This emitter is a sort of observable that can stream multiple values throughout time.
+[Here is the result component's logic](https://github.com/CHUV-DS/glowing-bear-medco-bioref/blob/bioref/src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component.ts).
 
 # The API: 
 After an explore-statistics request, the front-end receives information from the back-end that describes a histogram.
@@ -61,7 +57,7 @@ export class Interval {
 
 export class ChartInformation {
     intervals: Interval[]
-    readonly unit: string
+    unit: string
 }
 ```
 
@@ -88,7 +84,7 @@ In this example:
 * 42 patients have a weight between 60 and 70 kg
 * 20 patients have a weight between 70 and 80 kg
 ```javascript
-{
+
   ChartInformation: {
       unit: "kg",
 
@@ -111,13 +107,13 @@ In this example:
 
       ]
   }
-}
+
 ```
 
-Any concept's distribution can be visualized as long as the concept is of numerical type. For the moment concepts which are categorical (e.g. the gender of a person) are not supported as the concept upon which the visualisation focuses. 
+Any concept's distribution can be visualized as long as the concept is of numerical type. For the moment concepts which are categorical (e.g. the gender of a person) are not supported as the concept which observations' are counted.
 
 On the other hand cohorts (the population of focus) can be constructed upon complex constraints including categorical concepts. In the previous example, the population was composed of patients that are diagnosed with diabetes. One could, thanks to the explore functionality of MedCo, construct a population based on more than one constraint:
-It is possible to create constraints that would impose that the cohort is composed of patients that are:
+For example, it is possible to create constraints that would impose that the cohort is composed of patients that are:
 diagnosed with Diabetes AND that are males AND that are taller than 170cm.
 
-One could even use exclusion constraint. One can add any exclusion constraint to a set of inclusion constraints (e.g. patients that are not diagnosed with cancer).
+One could even use exclusion constraints. One can add any exclusion constraint to a set of inclusion constraints (e.g. patients that are not diagnosed with cancer).
