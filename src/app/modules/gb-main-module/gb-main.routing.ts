@@ -36,7 +36,7 @@ export const routes: Routes = [
     ]
   },
   {
-    path: 'explore-statistics', 
+    path: 'explore-statistics',
     loadChildren: '../gb-explore-statistics-module/gb-explore-statistics.module#GbExploreStatisticsModule'
   },
 ];

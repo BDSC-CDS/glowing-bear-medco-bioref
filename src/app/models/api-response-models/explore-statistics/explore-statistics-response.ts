@@ -6,14 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//This class describes an interval from a histogram. 
+// This class describes an interval from a histogram.
 export class ApiInterval {
   encCount: string // the encrypted count of observations that fall within this interval
   higherBound: string
   lowerBound: string
 }
 
-//describes a histogram received from the backend after an explore-statistics request
+// describes a histogram received from the backend after an explore-statistics request
 export class ApiExploreStatisticsResponse {
 
   intervals: ApiInterval[]

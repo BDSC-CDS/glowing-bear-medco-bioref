@@ -15,8 +15,9 @@ import { MessageHelper } from '../../utilities/message-helper';
 import { ConceptConstraint } from '../../models/constraint-models/concept-constraint';
 import { TreeNodeType } from '../../models/tree-models/tree-node-type';
 
-//TODO use this component using composition in survival curves.
-//for reference see how to define abstract component https://medium.com/@ozak/stop-repeating-yourself-in-angular-how-to-create-abstract-components-9726d43c99ab
+// TODO use this component using composition in survival curves.
+// for reference see how to define abstract component:
+// https://medium.com/@ozak/stop-repeating-yourself-in-angular-how-to-create-abstract-components-9726d43c99ab
 export class GbConceptFormComponent implements OnInit, OnChanges {
   private _concept: Concept
 

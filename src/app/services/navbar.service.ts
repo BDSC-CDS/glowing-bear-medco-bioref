@@ -55,7 +55,7 @@ export class NavbarService {
 
       // 1: explore statistics tab
       { label: OperationType.EXPLORE_STATISTICS, routerLink: NavbarService.EXPLORE_STATS_ROUTE },
-      
+
       // 2: survival analysis tab
       { label: OperationType.ANALYSIS, routerLink: NavbarService.ANALYSIS_ROUTE, visible: this.authService.hasAnalysisAuth },
 
@@ -71,8 +71,8 @@ export class NavbarService {
   updateNavbar(routerLink: string) {
     this.isExplore = (routerLink === NavbarService.EXPLORE_ROUTE || routerLink === '');
     this.isAnalysis = (routerLink === NavbarService.ANALYSIS_ROUTE);
-    this._isExploreStats = (routerLink == NavbarService.EXPLORE_STATS_ROUTE)
-    this.isResults = (routerLink ===NavbarService.RESULTS_ROUTE);
+    this._isExploreStats = (routerLink === NavbarService.EXPLORE_STATS_ROUTE)
+    this.isResults = (routerLink === NavbarService.RESULTS_ROUTE);
     this.isSurvivalRes = false
     for (let i = 0; i < this.resultItems.length; i++) {
       if (routerLink === this.resultItems[i].routerLink.toString()) {

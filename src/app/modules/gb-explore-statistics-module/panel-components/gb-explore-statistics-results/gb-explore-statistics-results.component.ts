@@ -17,12 +17,24 @@ import { ExploreStatisticsService, ChartInformation } from '../../../../services
 
 export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
 
-  @ViewChild('exploreStatsChartElement', { static: true }) histogramElement: ElementRef;
+  private static BACKGROUND_COLOURS: string[] = ['rgba(255, 99, 132, 0.5)',
+  'rgba(54, 162, 235, 0.5)',
+  'rgba(255, 206, 86, 0.5)',
+  'rgba(75, 192, 192, 0.5)',
+  'rgba(153, 102, 255, 0.5)',
+  'rgba(255, 159, 64, 0.5)']
 
+  @ViewChild('exploreStatsChartElement', { static: true }) histogramElement: ElementRef;
 
   chart: Chart;
 
-  chartInfoReceivedAtLeastOnce: boolean = false
+  chartInfoReceivedAtLeastOnce = false
+
+  // the colour is chosen in BACKGROUND_COLOURS modulo the length of BACKGROUND_COLOURS
+  private static getBackgroundColor(index: number): string {
+    return GbExploreStatisticsResultsComponent.BACKGROUND_COLOURS[index % GbExploreStatisticsResultsComponent.BACKGROUND_COLOURS.length]
+  }
+
 
   constructor(exploreStatisticsService: ExploreStatisticsService) {
 
@@ -33,31 +45,20 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
 
   }
 
-  private static BACKGROUND_COLOURS: string[] = ['rgba(255, 99, 132, 0.5)',
-    'rgba(54, 162, 235, 0.5)',
-    'rgba(255, 206, 86, 0.5)',
-    'rgba(75, 192, 192, 0.5)',
-    'rgba(153, 102, 255, 0.5)',
-    'rgba(255, 159, 64, 0.5)']
 
-    
-  //the colour is chosen in BACKGROUND_COLOURS modulo the length of BACKGROUND_COLOURS
-  private static getBackgroundColor(index: number): string {
-    return GbExploreStatisticsResultsComponent.BACKGROUND_COLOURS[index % GbExploreStatisticsResultsComponent.BACKGROUND_COLOURS.length]
-  }
 
   /*
   * Given a ChartInformation object this function will update the counts displayed by the histogram.
   */
   private updateChart(chartInfo: ChartInformation) {
     if (chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0) {
-      this.chart.data.labels = chartInfo.intervals.map(i => "[" + i.lowerBound + ", " + i.higherBound + "]");
+      this.chart.data.labels = chartInfo.intervals.map(i => '[' + i.lowerBound + ', ' + i.higherBound + ']');
       this.chart.data.datasets[0] = {
         data: chartInfo.intervals.map(i => i.count),
         backgroundColor: chartInfo.intervals.map((_, index) => GbExploreStatisticsResultsComponent.getBackgroundColor(index))
       }
 
-      var min, max: number
+      let min, max: number
       max = chartInfo.intervals[0].count
       min = max
 
@@ -66,14 +67,14 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
           display: false
         },
         title: {
-          text: "Histogram for the `" + chartInfo.treeNodeName + "` concept in the context of the `" + chartInfo.cohortName + "` cohort ",
+          text: 'Histogram for the `' + chartInfo.treeNodeName + '` concept in the context of the `' + chartInfo.cohortName + '` cohort ',
           display: true
         },
         scales: {
           xAxes: [{
             scaleLabel: {
               display: true,
-              labelString: "TODO x axis unit",
+              labelString: 'TODO x axis unit',
             }
           }]
         }
@@ -88,10 +89,11 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
         }
       })
 
-      const minDisplayed = min - (max - min) * .1 // the minimum value displayed by the chart is defined as the minimum data point minus 10% the range of values (max - min)
+      // the minimum value displayed by the chart is defined as the minimum data point minus 10% the range of values (max - min)
+      const minDisplayed = min - (max - min) * .1
       this.chart.options.scales.yAxes = [{
         ticks: {
-          min: minDisplayed 
+          min: minDisplayed
         }
       }]
 
@@ -105,7 +107,7 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    //initialize the chart
+    // initialize the chart
     this.chart = new Chart(this.histogramElement.nativeElement, {
       type: 'bar',
       data: {
@@ -126,7 +128,7 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
     });
   }
 
-  //TODO Check how this is used in other components.
+  // TODO Check how this is used in other components.
   ngOnChanges(changes: SimpleChanges): void {
   }
 

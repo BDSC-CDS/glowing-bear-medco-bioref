@@ -17,5 +17,5 @@ export class ApiExploreStatistics {
   cohortName: string
   concept: string
   numberOfBuckets: number
-  modifier?: ModifierApiObjet 
+  modifier?: ModifierApiObjet
 }

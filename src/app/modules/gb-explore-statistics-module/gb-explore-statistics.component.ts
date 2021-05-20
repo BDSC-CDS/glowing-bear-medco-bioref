@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component } from '@angular/core'; 
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'gb-explore-statistics',
@@ -16,6 +16,4 @@ import { Component } from '@angular/core';
   styleUrls: ['./gb-explore-statistics.component.css']
 })
 export class GbExploreStatisticsComponent {
- 
-
 }
