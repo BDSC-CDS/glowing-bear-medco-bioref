@@ -117,3 +117,28 @@ For example, it is possible to create constraints that would impose that the coh
 diagnosed with Diabetes AND that are males AND that are taller than 170cm.
 
 One could even use exclusion constraints. One can add any exclusion constraint to a set of inclusion constraints (e.g. patients that are not diagnosed with cancer).
+
+
+# Creation of a different handler on the backend side:
+
+We created a new handler [explore_statistics.go](https://github.com/CHUV-DS/medco_bioref/blob/bioref/connector/server/handlers/explore_statistics.go). This handler is reachable via the following URL at each MedCo node: /node/explore-statistics/query
+
+This service (ExploreStatisticsHandler) is responsible with answering queries whose aim is to obtain the histogram of the concept sent as parameter to the request. We defined the characteristics of this handler using swagger, and then executed swagger’s code generator in order to obtain the handler’s skeleton.The handler expects the following parameters:
+* The ID of the query which will be used to identify the query during the aggregation of thebuckets’ counts.
+* The number of buckets (or bins) of the histogram.
+* The cohort name of the predefined population of interest.
+* The  concept path if only a  concept is  given  as  parameter. If additionally a modifier is given as a parameter, the concept path will be the path of the concept to which the modifier applies.
+* The applied path and path of the modifier if some modifier is given as parameter.
+* The user public key which will be used for key switching.
+
+The response sent back to the client contains the following information (already partially listed by the API response section):
+* A list of buckets. Each list’s element describes the lower and higher bound of a bucket, as well as the encrypted count of observations that fall into that bin.
+* Timers detailing how long operations took to execute on the back-end side. 
+ 
+The handler creates a query object using the parameters given by the client. Once this is done the query is executed. This execution steps encompasses the following work (c.f. the Execute() method of the [reference_intervals.go](https://github.com/CHUV-DS/medco_bioref/blob/bioref/connector/server/reference_intervals/reference_intervals.go) file):
+* Parsing and preparing the parameters for further work
+* Retrieving observations linked to the concept and cohort.
+* Construction of the bins boundaries.
+* Classifying the observations in the appropriate buckets.
+* Aggregating the counts across the different servers.
+* Calling the key switching procedure
