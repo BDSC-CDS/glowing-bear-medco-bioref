@@ -11,6 +11,7 @@ import { Concept } from '../models/constraint-models/concept';
 import { ErrorHelper } from '../utilities/error-helper';
 import { Modifier } from '../models/constraint-models/modifier';
 
+//this class represents contains the following info: how many observations there are in a interval of a histogram for a concept
 export class Interval {
     count: number
     higherBound: string
@@ -24,6 +25,7 @@ export class Interval {
     }
 }
 
+//This class contains all information necessary to build a histogram chart with chart.js
 export class ChartInformation {
     intervals: Interval[]
     readonly unit: string
@@ -47,6 +49,11 @@ export class ChartInformation {
 
 }
 
+/*
+* ExploreStatisticsService communicates with the following two components: explore-statistics-settings, explore-statistics-results.
+* From the settings given by the explore-statistics-settings form, this class is able to execute a query which will fetch the aggregated number of observations 
+* per interval for a specific concept. It communicates that info to explore-statistics-results which will display that histogram as a chart
+*/
 @Injectable()
 export class ExploreStatisticsService {
 
@@ -72,6 +79,10 @@ export class ExploreStatisticsService {
 
 
 
+    /*
+     * Queries all nodes of the medco network in order to perform the construction of a histogram giving the observations counts for a concept or modifier.
+     * Create a ChartInformation object from that information and emit this object via the ChartDataEmitter that the explore-statistics-results component subscribes to
+     */
     executeQuery(concept: Concept, numberOfBuckets: number, onExecuted: () => any) {
         if (!this.cohortService.selectedCohort || !this.cohortService.selectedCohort.name) {
             throw ErrorHelper.handleNewError('Please select a cohort on the left located cohort selection menu.')

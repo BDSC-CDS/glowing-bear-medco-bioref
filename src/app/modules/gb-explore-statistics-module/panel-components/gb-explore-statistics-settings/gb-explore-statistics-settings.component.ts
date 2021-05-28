@@ -19,6 +19,7 @@ import { ErrorHelper } from '../../../../utilities/error-helper';
   styleUrls: ['./gb-explore-statistics-settings.component.css'],
 })
 
+//This component handles the logic behind the form used to set the parameters of the creation of histogram about the counts of observations for a numerical concept.
 export class GbExploreStatisticsSettingsComponent extends GbConceptFormComponent {
   private _isDirty: Boolean = false
   private _numberOfBuckets: number;
@@ -52,6 +53,7 @@ export class GbExploreStatisticsSettingsComponent extends GbConceptFormComponent
     this._numberOfBuckets = value;
   }
 
+  //Executed when the run query button is clicked. It launches the query via the execute query function of the service.
   execQuery(event: Event) {
 
     if (this._numberOfBuckets < 1) {
