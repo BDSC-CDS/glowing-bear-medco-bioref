@@ -32,7 +32,7 @@ export class ChartInformation {
     readonly readable: Observable<any>
 
     constructor(apiResponse: ApiExploreStatisticsResponse, cryptoService: CryptoService,
-         public readonly treeNodeName: string, public readonly cohortName: string) {
+        public readonly treeNodeName: string, public readonly cohortName: string) {
         this.unit = apiResponse.unit
 
         const encCounts: string[] = apiResponse.intervals.map((i: ApiInterval) => i.encCount)
@@ -51,7 +51,7 @@ export class ChartInformation {
 
 /*
 * ExploreStatisticsService communicates with the following two components: explore-statistics-settings, explore-statistics-results.
-* From the settings given by the explore-statistics-settings form, this class is able to execute a query which will fetch the aggregated number of observations 
+* From the settings given by the explore-statistics-settings form, this class is able to execute a query which will fetch the aggregated number of observations
 * per interval for a specific concept. It communicates that info to explore-statistics-results which will display that histogram as a chart
 */
 @Injectable()
