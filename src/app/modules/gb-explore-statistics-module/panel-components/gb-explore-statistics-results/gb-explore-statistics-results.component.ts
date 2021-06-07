@@ -78,7 +78,7 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
           xAxes: [{
             scaleLabel: {
               display: true,
-              labelString: 'TODO x axis unit',
+              labelString: chartInfo.unit + '(TODO)',
             }
           }]
         }
