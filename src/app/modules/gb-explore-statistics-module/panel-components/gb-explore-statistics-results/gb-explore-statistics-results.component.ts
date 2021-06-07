@@ -52,7 +52,11 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
   */
   private updateChart(chartInfo: ChartInformation) {
     if (chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0) {
-      this.chart.data.labels = chartInfo.intervals.map(i => '[' + i.lowerBound + ', ' + i.higherBound + ']');
+
+      //When the interval is the last one the right bound is inclusive, otherwise it is exclusive.
+      const getRightBound = (i: number) => i < (chartInfo.intervals.length - 1) ? '[' : ']'
+
+      this.chart.data.labels = chartInfo.intervals.map((int, i) => '[ ' + int.lowerBound + ', ' + int.higherBound + ' ' + getRightBound(i));
       this.chart.data.datasets[0] = {
         data: chartInfo.intervals.map(i => i.count),
         backgroundColor: chartInfo.intervals.map((_, index) => GbExploreStatisticsResultsComponent.getBackgroundColor(index))
