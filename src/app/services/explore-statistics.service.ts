@@ -10,6 +10,9 @@ import { ApiExploreStatistics } from '../models/api-request-models/survival-anal
 import { Concept } from '../models/constraint-models/concept';
 import { ErrorHelper } from '../utilities/error-helper';
 import { Modifier } from '../models/constraint-models/modifier';
+import { ConstraintService } from './constraint.service';
+import { TreeNode } from '../models/tree-models/tree-node';
+import { ApiI2b2Timing } from '../models/api-request-models/medco-node/api-i2b2-timing';
 
 //this class represents contains the following info: how many observations there are in a interval of a histogram for a concept
 export class Interval {
@@ -73,12 +76,16 @@ export class ExploreStatisticsService {
         private apiEndpointService: ApiEndpointService,
         private cryptoService: CryptoService,
         private cohortService: CohortService,
-        private medcoNetworkService: MedcoNetworkService
+        private medcoNetworkService: MedcoNetworkService,
+        private constraintService: ConstraintService
     ) { }
 
 
 
-
+    getAnalytes(): TreeNode[] {
+        return this.constraintService.getAnalytes()
+        //TODO if the returned value is empty send an error
+    }
     /*
      * Queries all nodes of the medco network in order to perform the construction of a histogram giving the observations counts for a concept or modifier.
      * Create a ChartInformation object from that information and emit this object via the ChartDataEmitter that the explore-statistics-results component subscribes to
@@ -91,19 +98,22 @@ export class ExploreStatisticsService {
         const apiRequest: ApiExploreStatistics = {
             ID: ExploreStatisticsService.getNewQueryID(),
             numberOfBuckets,
-            concept: concept.path,
-            cohortName: this.cohortService.selectedCohort.name,
-            userPublicKey: this.cryptoService.ephemeralPublicKey
+            concepts: [ concept.path ],
+            userPublicKey: this.cryptoService.ephemeralPublicKey,
+            exploreQuery: {
+                queryTiming: ApiI2b2Timing.any,
+                panels: []
+            }
         }
-
+        console.warn("TODO define explore query of explore statistics API message correctly!")
 
 
         if (concept.modifier) {
-            apiRequest.concept = concept.modifier.appliedConceptPath
-            apiRequest.modifier = {
+            apiRequest.modifiers = [{
+                ParentConceptPath: concept.modifier.appliedConceptPath,
                 ModifierKey: concept.modifier.path,
                 AppliedPath: concept.modifier.appliedPath
-            }
+            }]
         }
 
         console.log('Api request: ', apiRequest)
@@ -131,7 +141,7 @@ export class ExploreStatisticsService {
 
 
                 // Store the clear counts within the chart information class instance
-                const chartInfo = new ChartInformation(results[0], this.cryptoService, displayedName, apiRequest.cohortName)
+                const chartInfo = new ChartInformation(results[0], this.cryptoService, displayedName, "TODO Generate this from the constraints of the explore query settings menu")
                 chartInfo.readable.subscribe(_ => {
                     // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
                     this.ChartDataEmitter.emit(chartInfo)

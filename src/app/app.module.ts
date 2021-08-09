@@ -44,6 +44,7 @@ import {DecryptionWorker} from '../decryption.worker';
 import {ToastrModule} from 'ngx-toastr';
 import {DeviceDetectorService} from 'ngx-device-detector';
 import { GbExploreStatisticsModule } from './modules/gb-explore-statistics-module/gb-explore-statistics.module';
+import { ExploreStatisticsService } from './services/explore-statistics.service';
 
 
 export function loadServices(config: AppConfig,
@@ -95,6 +96,7 @@ export function loadServices(config: AppConfig,
     ApiEndpointService,
     TreeNodeService,
     MedcoNetworkService,
+    ExploreStatisticsService,
     ExploreQueryService,
     ExploreSearchService,
     GenomicAnnotationsService,

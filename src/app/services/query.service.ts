@@ -80,6 +80,11 @@ export class QueryService {
     this.query = new ExploreQuery();
   }
 
+
+  printConstraints() {
+    console.log("Constraint ", this.query.constraint)
+  }
+
   /**
    * Parse and decrypt results from MedCo nodes.
    */
@@ -178,6 +183,7 @@ export class QueryService {
     // prepare and execute query
     this.query.generateUniqueId();
     this.query.constraint = this.constraintService.generateConstraint();
+    console.log("Constraints analytes explore query:", this.query.constraint.getAnalytes())
     this.query.queryTimingSameInstanceNum = this.queryTimingSameInstance
 
     this.genomicAnnotationsService.addVariantIdsToConstraints(this.query.constraint).pipe(

@@ -6,7 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { ApiI2b2Panel } from "../medco-node/api-i2b2-panel"
+import { ApiI2b2Timing } from "../medco-node/api-i2b2-timing"
+
 export class ModifierApiObjet {
+  ParentConceptPath: string
   ModifierKey: string
   AppliedPath: string
 }
@@ -14,8 +18,16 @@ export class ModifierApiObjet {
 export class ApiExploreStatistics {
   ID: string
   userPublicKey: string
-  cohortName: string
-  concept: string
+
+  //analytes: concepts and modifiers whose distribution will be computed.
+  concepts: Array<string>
+  modifiers?: Array<ModifierApiObjet>
+
+  //Explore query parameter. The information specified by `exploreQuery` are used to fetch the patients that will define the population upon which the explore statistic is run.
+  exploreQuery: {
+    queryTiming: ApiI2b2Timing;
+    panels: ApiI2b2Panel[];
+  }
+
   numberOfBuckets: number
-  modifier?: ModifierApiObjet
 }

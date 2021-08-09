@@ -140,6 +140,14 @@ export class ConstraintService {
     }
   }
 
+  public getAnalytes(): TreeNode[]  {
+    if (!this.hasInclusionConstraint()) {
+      return []
+    }
+    console.debug("Root inclusion constraint ", this.rootInclusionConstraint)
+    return this.rootInclusionConstraint.getAnalytes()
+  }
+
   /**
    * Generate the constraint corresponding to the query.
    */

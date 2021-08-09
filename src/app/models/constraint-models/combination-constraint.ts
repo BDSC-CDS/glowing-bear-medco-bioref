@@ -10,6 +10,8 @@
 
 import { Constraint } from './constraint';
 import { CombinationState } from './combination-state';
+import { Concept } from './concept';
+import { TreeNode } from '../tree-models/tree-node';
 
 export class CombinationConstraint extends Constraint {
 
@@ -121,6 +123,16 @@ export class CombinationConstraint extends Constraint {
     this._isRoot = value;
   }
 
+  getAnalytes(): Array<TreeNode> {
+    if (!this.isAnd) {
+      return []
+    }
+
+    const arrays = this.children.map(c => c.getAnalytes())
+    const flattened = arrays.reduce((arr1, arr2) => arr1.concat(arr2))
+
+    return flattened
+  }
 
   private updateTextRepresentation() {
     if (this.children.length > 0) {

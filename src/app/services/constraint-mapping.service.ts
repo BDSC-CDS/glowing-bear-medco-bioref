@@ -24,6 +24,8 @@ export class ConstraintMappingService {
   public mapConstraint(constraint: Constraint): ApiI2b2Panel[] {
     let panels = [];
     this.mapCombinationConstraint(panels, constraint as CombinationConstraint, false);
+    console.log("map constraint : " , constraint, " transformed panels", panels)
+
     return panels;
   }
 

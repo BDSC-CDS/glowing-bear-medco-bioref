@@ -25,6 +25,7 @@ import {OperationType} from '../../models/operation-models/operation-types';
 import {ApiQueryDefinition} from '../../models/api-request-models/medco-node/api-query-definition';
 import {MedcoNetworkService} from '../../services/api/medco-network.service';
 import {ErrorHelper} from '../../utilities/error-helper';
+import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 
 @Component({
   selector: 'gb-explore',
@@ -42,7 +43,8 @@ export class GbExploreComponent implements AfterViewChecked {
     private medcoNetworkService: MedcoNetworkService,
     public constraintService: ConstraintService,
     private changeDetectorRef: ChangeDetectorRef,
-    private savedCohortsPatientListService: SavedCohortsPatientListService) {
+    private savedCohortsPatientListService: SavedCohortsPatientListService,
+    private exploreStatisticsService: ExploreStatisticsService) {
     this.queryService.lastSuccessfulSet.subscribe(resIDs => {
       this.lastSuccessfulSet = resIDs
     })
@@ -59,6 +61,18 @@ export class GbExploreComponent implements AfterViewChecked {
   ngAfterViewChecked() {
     this.changeDetectorRef.detectChanges()
   }
+
+  execExploreStatisticsQuery(event) {
+    event.stopPropagation();
+    const constraint = this.constraintService.generateConstraint()
+    this.queryService.printConstraints()
+    console.log("constraints this.constraintService.getAnalytes(): ", this.constraintService.getAnalytes())
+    console.log("constraints this.constraintService.generateConstraint().getAnalytes() ", constraint.getAnalytes())
+    //TODO parse analytes from the inclusion constraints of the first level
+
+    //TODO execute the explore statistics query.
+  }
+
 
   execQuery(event) {
     event.stopPropagation();

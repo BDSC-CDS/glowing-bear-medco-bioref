@@ -17,6 +17,7 @@ import { NumericalOperator } from './numerical-operator';
 import { TreeNode } from '../tree-models/tree-node';
 import { TextOperator } from './text-operator';
 import { ErrorHelper } from 'src/app/utilities/error-helper';
+import { ValueType } from './value-type';
 
 export class ConceptConstraint extends Constraint {
 
@@ -222,6 +223,21 @@ export class ConceptConstraint extends Constraint {
 
   get textOperatorValue(): string {
     return this._textOperatorValue
+  }
+
+  getAnalytes(): Array<TreeNode> {
+    //if the tree node is of numerical type
+    // AND there is no operator acting on the node return it
+    const eligible =
+      this.treeNode.valueType == ValueType.NUMERICAL &&
+      !this.applyNumericalOperator && !this.applyObsDateConstraint &&
+      !this.applyTextOperator && !this.applyValDateConstraint;
+
+    if (eligible) {
+      return [this.treeNode]
+    } else {
+      return []
+    }
   }
 
   inputValueValidity(): string {
