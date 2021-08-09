@@ -68,7 +68,7 @@ export class GbExploreComponent implements AfterViewChecked {
 
   execExploreStatisticsQuery(event) {
     event.stopPropagation();
-    const constraint = this.constraintService.generateConstraint()
+    const constraint = this.constraintService.rootInclusionConstraint
     const reversedConstraint = this.reverseConstraintMappingService.mapPanels(this.constraintMappingService.mapConstraint(constraint))
     console.log("Reversed constraints ", reversedConstraint)
     reversedConstraint.subscribe(upToDateConstraint => {
