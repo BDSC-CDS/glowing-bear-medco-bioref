@@ -26,6 +26,8 @@ import {ApiQueryDefinition} from '../../models/api-request-models/medco-node/api
 import {MedcoNetworkService} from '../../services/api/medco-network.service';
 import {ErrorHelper} from '../../utilities/error-helper';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
+import { ConstraintMappingService } from 'src/app/services/constraint-mapping.service';
+import { ConstraintReverseMappingService } from 'src/app/services/constraint-reverse-mapping.service';
 
 @Component({
   selector: 'gb-explore',
@@ -44,6 +46,8 @@ export class GbExploreComponent implements AfterViewChecked {
     public constraintService: ConstraintService,
     private changeDetectorRef: ChangeDetectorRef,
     private savedCohortsPatientListService: SavedCohortsPatientListService,
+    private constraintMappingService: ConstraintMappingService,
+    private reverseConstraintMappingService: ConstraintReverseMappingService,
     private exploreStatisticsService: ExploreStatisticsService) {
     this.queryService.lastSuccessfulSet.subscribe(resIDs => {
       this.lastSuccessfulSet = resIDs
@@ -65,6 +69,12 @@ export class GbExploreComponent implements AfterViewChecked {
   execExploreStatisticsQuery(event) {
     event.stopPropagation();
     const constraint = this.constraintService.generateConstraint()
+    const reversedConstraint = this.reverseConstraintMappingService.mapPanels(this.constraintMappingService.mapConstraint(constraint))
+    console.log("Reversed constraints ", reversedConstraint)
+    reversedConstraint.subscribe(upToDateConstraint => {
+      console.log("reversed constraints analytes ", upToDateConstraint.getAnalytes())
+    })
+    console.log("Analytes from reversed constraints ", )
     this.queryService.printConstraints()
     console.log("constraints this.constraintService.getAnalytes(): ", this.constraintService.getAnalytes())
     console.log("constraints this.constraintService.generateConstraint().getAnalytes() ", constraint.getAnalytes())
