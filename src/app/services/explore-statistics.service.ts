@@ -1,8 +1,9 @@
 import { EventEmitter, Injectable, Output } from '@angular/core';
 import { forkJoin, Observable } from 'rxjs';
 import { timeout } from 'rxjs/operators';
+import { ApiI2B2Modifier } from '../models/api-request-models/medco-node/api-i2b2-modifier';
 import { ApiI2b2Timing } from '../models/api-request-models/medco-node/api-i2b2-timing';
-import { ApiExploreStatistics } from '../models/api-request-models/survival-analyis/api-explore-statistics';
+import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
 import { ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
 import { CombinationConstraint } from '../models/constraint-models/combination-constraint';
 import { Concept } from '../models/constraint-models/concept';
@@ -16,6 +17,7 @@ import { ConstraintMappingService } from './constraint-mapping.service';
 import { ConstraintReverseMappingService } from './constraint-reverse-mapping.service';
 import { ConstraintService } from './constraint.service';
 import { CryptoService } from './crypto.service';
+import { QueryService } from './query.service';
 
 //this class represents contains the following info: how many observations there are in a interval of a histogram for a concept
 export class Interval {
@@ -82,6 +84,7 @@ export class ExploreStatisticsService {
         private medcoNetworkService: MedcoNetworkService,
         private constraintService: ConstraintService,
 
+        private queryService: QueryService,
         private constraintMappingService: ConstraintMappingService,
         private reverseConstraintMappingService: ConstraintReverseMappingService,
     ) { }
@@ -102,11 +105,46 @@ export class ExploreStatisticsService {
             const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, this.constraintService.rootExclusionConstraint)
             console.log("Analytes ", uniqueAnalytes)
             console.log("Cohort constraint ", cohortConstraint)
-            //TODO verify that the content of the filtered panel is the right one.
+
+
+            if (cohortConstraint === undefined) {
+                throw ErrorHelper.handleNewError("Undefined population. Please select criterias which are not analytes")
+            }
+
+            const errorMsg = cohortConstraint.inputValueValidity()
+            if (errorMsg !== '') {
+                throw ErrorHelper.handleNewError(errorMsg)
+            }
+
+            const analytes =  Array.from(uniqueAnalytes)
+
+            const conceptsPaths = analytes
+                .filter(node => !node.isModifier)
+                .map(node => node.path)
+
+            const modifiers: Array<ModifierApiObjet> = analytes.filter(node => node.isModifier).map(node => {
+                return {
+                    ParentConceptPath: node.appliedPath,
+                    ModifierKey: node.path,
+                    AppliedPath: node.appliedConcept.path
+                }
+            })
+
+            const apiRequest: ApiExploreStatistics = {
+                ID: ExploreStatisticsService.getNewQueryID(),
+                concepts: conceptsPaths,
+                modifiers: modifiers,
+                userPublicKey: this.cryptoService.ephemeralPublicKey,
+                cohortDefinition: {
+                    queryTiming: this.queryService.lastTiming,
+                    panels: this.constraintMappingService.mapConstraint(cohortConstraint)
+                }
+            }
+
+            console.log("Api request ", apiRequest)
         })
 
         //TODO
-        // Prepare the request object with the exclusion AND filter inclusion constraints
         // Send the object to all nodes
         // Switch to the explore statistics tab when the request has been sent
         // When the answer is received display it in the widgets.
