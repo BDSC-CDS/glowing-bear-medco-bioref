@@ -114,6 +114,10 @@ export class NavbarService {
     }
   }
 
+  navigateToExploreTab() {
+    this.router.navigateByUrl(NavbarService.EXPLORE_STATS_ROUTE)
+  }
+
   navigateToNewResults() {
     this.router.navigateByUrl(`/results/survival/${this._lastSuccessfulSurvival}`)
   }

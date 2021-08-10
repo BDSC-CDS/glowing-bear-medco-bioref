@@ -9,6 +9,7 @@ import { CombinationConstraint } from '../models/constraint-models/combination-c
 import { Concept } from '../models/constraint-models/concept';
 import { Constraint } from '../models/constraint-models/constraint';
 import { Modifier } from '../models/constraint-models/modifier';
+import { TreeNode } from '../models/tree-models/tree-node';
 import { ErrorHelper } from '../utilities/error-helper';
 import { ApiEndpointService } from './api-endpoint.service';
 import { MedcoNetworkService } from './api/medco-network.service';
@@ -17,6 +18,7 @@ import { ConstraintMappingService } from './constraint-mapping.service';
 import { ConstraintReverseMappingService } from './constraint-reverse-mapping.service';
 import { ConstraintService } from './constraint.service';
 import { CryptoService } from './crypto.service';
+import { NavbarService } from './navbar.service';
 import { QueryService } from './query.service';
 
 //this class represents contains the following info: how many observations there are in a interval of a histogram for a concept
@@ -87,6 +89,7 @@ export class ExploreStatisticsService {
         private queryService: QueryService,
         private constraintMappingService: ConstraintMappingService,
         private reverseConstraintMappingService: ConstraintReverseMappingService,
+        private navbarService: NavbarService
     ) { }
 
 
@@ -124,6 +127,7 @@ export class ExploreStatisticsService {
 
             const obs = this.sendRequest(apiRequest)
 
+            this.navbarService.navigateToExploreTab()
             console.log("Api request ", apiRequest)
         })
 
@@ -131,7 +135,6 @@ export class ExploreStatisticsService {
         // Send the object to all nodes. i.e. subscribe to the back-end's answer
         // Switch to the explore statistics tab when the request has been sent
         // When the answer is received display it in the widgets.
-        //
     }
 
     private sendRequest(apiRequest: ApiExploreStatistics) {
@@ -146,7 +149,7 @@ export class ExploreStatisticsService {
             .pipe(timeout(ExploreStatisticsService.TIMEOUT_MS));
     }
 
-    private extractConceptsAndModifiers(analytes: import("/home/localadmin/hackerspace/glowing-bear-medco/src/app/models/tree-models/tree-node").TreeNode[]) {
+    private extractConceptsAndModifiers(analytes: TreeNode[]) {
         const conceptsPaths = analytes
             .filter(node => !node.isModifier)
             .map(node => node.path);
