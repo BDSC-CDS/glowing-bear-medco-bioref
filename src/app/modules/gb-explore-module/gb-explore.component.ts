@@ -70,14 +70,10 @@ export class GbExploreComponent implements AfterViewChecked {
     event.stopPropagation();
     const constraint = this.constraintService.rootInclusionConstraint
     const reversedConstraint = this.reverseConstraintMappingService.mapPanels(this.constraintMappingService.mapConstraint(constraint))
-    console.log("Reversed constraints ", reversedConstraint)
     reversedConstraint.subscribe(upToDateConstraint => {
-      console.log("reversed constraints analytes ", upToDateConstraint.getAnalytes())
+      console.log("reversed constraints analytes ", new Set(upToDateConstraint.getAnalytes()))
     })
-    console.log("Analytes from reversed constraints ", )
     this.queryService.printConstraints()
-    console.log("constraints this.constraintService.getAnalytes(): ", this.constraintService.getAnalytes())
-    console.log("constraints this.constraintService.generateConstraint().getAnalytes() ", constraint.getAnalytes())
     //TODO parse analytes from the inclusion constraints of the first level
 
     //TODO execute the explore statistics query.
