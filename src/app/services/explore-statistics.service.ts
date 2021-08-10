@@ -101,34 +101,15 @@ export class ExploreStatisticsService {
 
         upToDateConstraint.subscribe(upToDateConstraint => {
             const uniqueAnalytes = new Set(upToDateConstraint.getAnalytes())
-            const filteredInclusionConstraint = upToDateConstraint.constraintWithoutAnalytes()
-            const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, this.constraintService.rootExclusionConstraint)
             console.log("Analytes ", uniqueAnalytes)
-            console.log("Cohort constraint ", cohortConstraint)
 
 
-            if (cohortConstraint === undefined) {
-                throw ErrorHelper.handleNewError("Undefined population. Please select criterias which are not analytes")
-            }
+            const cohortConstraint = this.prepareCohort(upToDateConstraint);
 
-            const errorMsg = cohortConstraint.inputValueValidity()
-            if (errorMsg !== '') {
-                throw ErrorHelper.handleNewError(errorMsg)
-            }
+            const analytes = Array.from(uniqueAnalytes)
 
-            const analytes =  Array.from(uniqueAnalytes)
-
-            const conceptsPaths = analytes
-                .filter(node => !node.isModifier)
-                .map(node => node.path)
-
-            const modifiers: Array<ModifierApiObjet> = analytes.filter(node => node.isModifier).map(node => {
-                return {
-                    ParentConceptPath: node.appliedPath,
-                    ModifierKey: node.path,
-                    AppliedPath: node.appliedConcept.path
-                }
-            })
+            //the analytes split into two groups: modifiers and concepts
+            const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } = this.extractConceptsAndModifiers(analytes);
 
             const apiRequest: ApiExploreStatistics = {
                 ID: ExploreStatisticsService.getNewQueryID(),
@@ -149,6 +130,38 @@ export class ExploreStatisticsService {
         // Switch to the explore statistics tab when the request has been sent
         // When the answer is received display it in the widgets.
         //
+    }
+
+    private extractConceptsAndModifiers(analytes: import("/home/localadmin/hackerspace/glowing-bear-medco/src/app/models/tree-models/tree-node").TreeNode[]) {
+        const conceptsPaths = analytes
+            .filter(node => !node.isModifier)
+            .map(node => node.path);
+
+        const modifiers: Array<ModifierApiObjet> = analytes.filter(node => node.isModifier).map(node => {
+            return {
+                ParentConceptPath: node.appliedPath,
+                ModifierKey: node.path,
+                AppliedPath: node.appliedConcept.path
+            };
+        });
+        return { conceptsPaths, modifiers };
+    }
+
+    private prepareCohort(upToDateConstraint: Constraint) {
+        const filteredInclusionConstraint = upToDateConstraint.constraintWithoutAnalytes();
+        const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, this.constraintService.rootExclusionConstraint);
+
+        console.log("Cohort constraint ", cohortConstraint);
+
+        if (cohortConstraint === undefined) {
+            throw ErrorHelper.handleNewError("Undefined population. Please select criterias which are not analytes");
+        }
+
+        const errorMsg = cohortConstraint.inputValueValidity();
+        if (errorMsg !== '') {
+            throw ErrorHelper.handleNewError(errorMsg);
+        }
+        return cohortConstraint;
     }
 
     /*
