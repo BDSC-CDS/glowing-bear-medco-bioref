@@ -72,7 +72,7 @@ export class GbExploreStatisticsSettingsComponent extends GbConceptFormComponent
 
     const onDone = () => { this.isDirty = false; }
     try {
-      this.exploreStatisticsService.executeQuery(this.concept, this._numberOfBuckets, onDone)
+      this.exploreStatisticsService.executeQuery(this.concept, onDone)
     } catch (e) {
       onDone()
       throw e

@@ -23,11 +23,11 @@ export class ApiExploreStatistics {
   concepts: Array<string>
   modifiers?: Array<ModifierApiObjet>
 
-  //Explore query parameter. The information specified by `exploreQuery` are used to fetch the patients that will define the population upon which the explore statistic is run.
-  exploreQuery: {
+  // Similar as the parameter passed to an explore query.
+  // The information specified by `cohortDefinition` defines
+  // the population upon which the explore statistic is run.
+  cohortDefinition: {
     queryTiming: ApiI2b2Timing;
     panels: ApiI2b2Panel[];
   }
-
-  numberOfBuckets: number
 }

@@ -61,7 +61,6 @@ export class QueryService {
 
 
   constructor(private appConfig: AppConfig,
-    private treeNodeService: TreeNodeService,
     private constraintService: ConstraintService,
     private exploreQueryService: ExploreQueryService,
     private authService: AuthenticationService,
@@ -81,9 +80,6 @@ export class QueryService {
   }
 
 
-  printConstraints() {
-    console.log("Constraint ", this.query.constraint)
-  }
 
   /**
    * Parse and decrypt results from MedCo nodes.

@@ -9,7 +9,6 @@
  */
 
 import { TreeNode } from "../tree-models/tree-node";
-import { Concept } from "./concept";
 
 export class Constraint {
 
@@ -77,6 +76,12 @@ export class Constraint {
   */
   getAnalytes(): Array<TreeNode> {
     return [];
+  }
+
+  // This method recursively traverse the constraints tree. The returned tree contains only constraints which are not analytes.
+  // This method can return undefined if the current constraint is an analyte.
+  constraintWithoutAnalytes(): Constraint {
+    return this
   }
 
 

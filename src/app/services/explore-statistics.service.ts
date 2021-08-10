@@ -1,18 +1,21 @@
 import { EventEmitter, Injectable, Output } from '@angular/core';
 import { forkJoin, Observable } from 'rxjs';
-import { timeout, map } from 'rxjs/operators';
+import { timeout } from 'rxjs/operators';
+import { ApiI2b2Timing } from '../models/api-request-models/medco-node/api-i2b2-timing';
+import { ApiExploreStatistics } from '../models/api-request-models/survival-analyis/api-explore-statistics';
+import { ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
+import { CombinationConstraint } from '../models/constraint-models/combination-constraint';
+import { Concept } from '../models/constraint-models/concept';
+import { Constraint } from '../models/constraint-models/constraint';
+import { Modifier } from '../models/constraint-models/modifier';
+import { ErrorHelper } from '../utilities/error-helper';
 import { ApiEndpointService } from './api-endpoint.service';
 import { MedcoNetworkService } from './api/medco-network.service';
 import { CohortService } from './cohort.service';
-import { CryptoService } from './crypto.service';
-import { ApiInterval, ApiExploreStatisticsResponse } from '../models/api-response-models/explore-statistics/explore-statistics-response';
-import { ApiExploreStatistics } from '../models/api-request-models/survival-analyis/api-explore-statistics';
-import { Concept } from '../models/constraint-models/concept';
-import { ErrorHelper } from '../utilities/error-helper';
-import { Modifier } from '../models/constraint-models/modifier';
+import { ConstraintMappingService } from './constraint-mapping.service';
+import { ConstraintReverseMappingService } from './constraint-reverse-mapping.service';
 import { ConstraintService } from './constraint.service';
-import { TreeNode } from '../models/tree-models/tree-node';
-import { ApiI2b2Timing } from '../models/api-request-models/medco-node/api-i2b2-timing';
+import { CryptoService } from './crypto.service';
 
 //this class represents contains the following info: how many observations there are in a interval of a histogram for a concept
 export class Interval {
@@ -77,30 +80,53 @@ export class ExploreStatisticsService {
         private cryptoService: CryptoService,
         private cohortService: CohortService,
         private medcoNetworkService: MedcoNetworkService,
-        private constraintService: ConstraintService
+        private constraintService: ConstraintService,
+
+        private constraintMappingService: ConstraintMappingService,
+        private reverseConstraintMappingService: ConstraintReverseMappingService,
     ) { }
 
 
-
-    getAnalytes(): TreeNode[] {
-        return this.constraintService.getAnalytes()
-        //TODO if the returned value is empty send an error
+    private refreshConstraint(constraint: Constraint): Observable<Constraint> {
+        return this.reverseConstraintMappingService.mapPanels(this.constraintMappingService.mapConstraint(constraint))
     }
+
+    //TODO renameThisMethod
+    executeQueryFromExplore() {
+        const constraint = this.constraintService.rootInclusionConstraint
+        const upToDateConstraint = this.refreshConstraint(constraint)
+
+        upToDateConstraint.subscribe(upToDateConstraint => {
+            const uniqueAnalytes = new Set(upToDateConstraint.getAnalytes())
+            const filteredInclusionConstraint = upToDateConstraint.constraintWithoutAnalytes()
+            const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, this.constraintService.rootExclusionConstraint)
+            console.log("Analytes ", uniqueAnalytes)
+            console.log("Cohort constraint ", cohortConstraint)
+            //TODO verify that the content of the filtered panel is the right one.
+        })
+
+        //TODO
+        // Prepare the request object with the exclusion AND filter inclusion constraints
+        // Send the object to all nodes
+        // Switch to the explore statistics tab when the request has been sent
+        // When the answer is received display it in the widgets.
+        //
+    }
+
     /*
      * Queries all nodes of the medco network in order to perform the construction of a histogram giving the observations counts for a concept or modifier.
      * Create a ChartInformation object from that information and emit this object via the ChartDataEmitter that the explore-statistics-results component subscribes to
      */
-    executeQuery(concept: Concept, numberOfBuckets: number, onExecuted: () => any) {
+    executeQuery(concept: Concept, onExecuted: () => any) {
         if (!this.cohortService.selectedCohort || !this.cohortService.selectedCohort.name) {
             throw ErrorHelper.handleNewError('Please select a cohort on the left located cohort selection menu.')
         }
 
         const apiRequest: ApiExploreStatistics = {
             ID: ExploreStatisticsService.getNewQueryID(),
-            numberOfBuckets,
-            concepts: [ concept.path ],
+            concepts: [concept.path],
             userPublicKey: this.cryptoService.ephemeralPublicKey,
-            exploreQuery: {
+            cohortDefinition: {
                 queryTiming: ApiI2b2Timing.any,
                 panels: []
             }

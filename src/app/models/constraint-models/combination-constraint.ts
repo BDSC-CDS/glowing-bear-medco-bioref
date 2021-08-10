@@ -123,6 +123,16 @@ export class CombinationConstraint extends Constraint {
     this._isRoot = value;
   }
 
+
+  constraintWithoutAnalytes(): Constraint {
+    const cloneObj = this.clone()
+    const children = cloneObj.children.map(c => c.constraintWithoutAnalytes())
+    const filteredChildren = children.filter(c => c !== undefined)
+    cloneObj.children = filteredChildren
+
+    return cloneObj
+  }
+
   getAnalytes(): Array<TreeNode> {
     if (!this.isAnd) {
       return []

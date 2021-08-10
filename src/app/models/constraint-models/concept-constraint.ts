@@ -225,19 +225,29 @@ export class ConceptConstraint extends Constraint {
     return this._textOperatorValue
   }
 
+  private isAnalyte() {
+    return this.treeNode.valueType == ValueType.NUMERICAL &&
+    !this.applyNumericalOperator && !this.applyObsDateConstraint &&
+    !this.applyTextOperator && !this.applyValDateConstraint;
+  }
+
+  constraintWithoutAnalytes(): Constraint {
+    if (this.isAnalyte()) {
+      return undefined
+    }
+
+    return this
+  }
+
   getAnalytes(): Array<TreeNode> {
     //if the tree node is of numerical type
     // AND there is no operator acting on the node return it
-    const eligible =
-      this.treeNode.valueType == ValueType.NUMERICAL &&
-      !this.applyNumericalOperator && !this.applyObsDateConstraint &&
-      !this.applyTextOperator && !this.applyValDateConstraint;
 
-    if (eligible) {
+    if (this.isAnalyte()) {
       return [this.treeNode]
-    } else {
-      return []
     }
+
+    return []
   }
 
   inputValueValidity(): string {

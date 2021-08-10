@@ -46,8 +46,6 @@ export class GbExploreComponent implements AfterViewChecked {
     public constraintService: ConstraintService,
     private changeDetectorRef: ChangeDetectorRef,
     private savedCohortsPatientListService: SavedCohortsPatientListService,
-    private constraintMappingService: ConstraintMappingService,
-    private reverseConstraintMappingService: ConstraintReverseMappingService,
     private exploreStatisticsService: ExploreStatisticsService) {
     this.queryService.lastSuccessfulSet.subscribe(resIDs => {
       this.lastSuccessfulSet = resIDs
@@ -68,15 +66,7 @@ export class GbExploreComponent implements AfterViewChecked {
 
   execExploreStatisticsQuery(event) {
     event.stopPropagation();
-    const constraint = this.constraintService.rootInclusionConstraint
-    const reversedConstraint = this.reverseConstraintMappingService.mapPanels(this.constraintMappingService.mapConstraint(constraint))
-    reversedConstraint.subscribe(upToDateConstraint => {
-      console.log("reversed constraints analytes ", new Set(upToDateConstraint.getAnalytes()))
-    })
-    this.queryService.printConstraints()
-    //TODO parse analytes from the inclusion constraints of the first level
-
-    //TODO execute the explore statistics query.
+    this.exploreStatisticsService.executeQueryFromExplore()
   }
 
 
