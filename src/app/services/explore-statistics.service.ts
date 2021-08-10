@@ -122,14 +122,28 @@ export class ExploreStatisticsService {
                 }
             }
 
+            const obs = this.sendRequest(apiRequest)
+
             console.log("Api request ", apiRequest)
         })
 
         //TODO
-        // Send the object to all nodes
+        // Send the object to all nodes. i.e. subscribe to the back-end's answer
         // Switch to the explore statistics tab when the request has been sent
         // When the answer is received display it in the widgets.
         //
+    }
+
+    private sendRequest(apiRequest: ApiExploreStatistics) {
+        return forkJoin(this.medcoNetworkService.nodes
+            .map(
+                node => this.apiEndpointService.postCall(
+                    'node/explore-statistics/query',
+                    apiRequest,
+                    node.url
+                )
+            ))
+            .pipe(timeout(ExploreStatisticsService.TIMEOUT_MS));
     }
 
     private extractConceptsAndModifiers(analytes: import("/home/localadmin/hackerspace/glowing-bear-medco/src/app/models/tree-models/tree-node").TreeNode[]) {
