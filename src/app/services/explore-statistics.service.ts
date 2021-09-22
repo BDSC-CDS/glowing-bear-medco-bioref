@@ -1,11 +1,9 @@
 import { EventEmitter, Injectable, Output } from '@angular/core';
 import { forkJoin, Observable } from 'rxjs';
 import { timeout } from 'rxjs/operators';
-import { ApiI2B2Modifier } from '../models/api-request-models/medco-node/api-i2b2-modifier';
 import { ApiI2b2Timing } from '../models/api-request-models/medco-node/api-i2b2-timing';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
-import { ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
-import { CombinationConstraint } from '../models/constraint-models/combination-constraint';
+import { ApiExploreStatisticResult, ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
 import { Concept } from '../models/constraint-models/concept';
 import { Constraint } from '../models/constraint-models/constraint';
 import { Modifier } from '../models/constraint-models/modifier';
@@ -41,7 +39,7 @@ export class ChartInformation {
     readonly unit: string
     readonly readable: Observable<any>
 
-    constructor(apiResponse: ApiExploreStatisticsResponse, cryptoService: CryptoService,
+    constructor(apiResponse: ApiExploreStatisticResult, cryptoService: CryptoService,
         public readonly treeNodeName: string, public readonly cohortName: string) {
         this.unit = apiResponse.unit
 
@@ -97,7 +95,12 @@ export class ExploreStatisticsService {
         return this.reverseConstraintMappingService.mapPanels(this.constraintMappingService.mapConstraint(constraint))
     }
 
-    //TODO renameThisMethod
+
+    /*
+     * This function is called when the user wants to execute an explore statistics from the explore tab.
+     * This function sends an explore statistics query to all running back-end nodes. When the answer is received it is processed and transformed
+     * into a list of chart informations. Each chart information is used to build a new chart in the front end.
+     */
     executeQueryFromExplore() {
         const constraint = this.constraintService.rootInclusionConstraint
         const upToDateConstraint = this.refreshConstraint(constraint)
@@ -119,24 +122,42 @@ export class ExploreStatisticsService {
                 concepts: conceptsPaths,
                 modifiers: modifiers,
                 userPublicKey: this.cryptoService.ephemeralPublicKey,
+                numberOfBuckets: 6, //TODO define this in another way
                 cohortDefinition: {
                     queryTiming: this.queryService.lastTiming,
                     panels: this.constraintMappingService.mapConstraint(cohortConstraint)
                 }
             }
 
-            const obs = this.sendRequest(apiRequest)
+            const observableRequest = this.sendRequest(apiRequest)
 
             this.navbarService.navigateToExploreTab()
             console.log("Api request ", apiRequest)
+
+            observableRequest.subscribe((answers: ApiExploreStatisticsResponse[]) => {
+                //TODO if answers is empty send an error
+                if (answers == undefined || answers.length == 0) {
+                    ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.')
+                }
+                // All servers are supposed to send the same information so we pick the element with index zero
+                const serverResponse: ApiExploreStatisticsResponse = answers[0]
+
+                console.debug("Explore stats response ", serverResponse)
+                const chartsInformations = serverResponse.results.map ((result: ApiExploreStatisticResult) => {
+                    return new ChartInformation(result, this.cryptoService, result.analyteName, "TODO Generate this from the constraints of the explore query settings menu")
+                })
+
+                console.debug("Information constructed for the charts ", chartsInformations)
+            })
         })
 
         //TODO
         // Send the object to all nodes. i.e. subscribe to the back-end's answer
-        // Switch to the explore statistics tab when the request has been sent
         // When the answer is received display it in the widgets.
     }
 
+
+    //TODO define the return type of this method
     private sendRequest(apiRequest: ApiExploreStatistics) {
         return forkJoin(this.medcoNetworkService.nodes
             .map(
@@ -194,6 +215,7 @@ export class ExploreStatisticsService {
             ID: ExploreStatisticsService.getNewQueryID(),
             concepts: [concept.path],
             userPublicKey: this.cryptoService.ephemeralPublicKey,
+            numberOfBuckets: 6, //TODO remove this
             cohortDefinition: {
                 queryTiming: ApiI2b2Timing.any,
                 panels: []
@@ -235,7 +257,7 @@ export class ExploreStatisticsService {
 
 
                 // Store the clear counts within the chart information class instance
-                const chartInfo = new ChartInformation(results[0], this.cryptoService, displayedName, "TODO Generate this from the constraints of the explore query settings menu")
+                const chartInfo = new ChartInformation(results[0].results[0], this.cryptoService, displayedName, "TODO Generate this from the constraints of the explore query settings menu")
                 chartInfo.readable.subscribe(_ => {
                     // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
                     this.ChartDataEmitter.emit(chartInfo)

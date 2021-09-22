@@ -23,6 +23,8 @@ export class ApiExploreStatistics {
   concepts: Array<string>
   modifiers?: Array<ModifierApiObjet>
 
+  numberOfBuckets: number
+
   // Similar as the parameter passed to an explore query.
   // The information specified by `cohortDefinition` defines
   // the population upon which the explore statistic is run.

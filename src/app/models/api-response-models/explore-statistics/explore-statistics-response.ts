@@ -15,6 +15,16 @@ export class ApiInterval {
 
 // describes a histogram received from the backend after an explore-statistics request
 export class ApiExploreStatisticsResponse {
+  globalTimers: {
+    name: string
+    milliseconds: number
+  }[]
+
+  results: ApiExploreStatisticResult[]
+}
+
+export class ApiExploreStatisticResult {
+  analyteName: string
 
   intervals: ApiInterval[]
 
