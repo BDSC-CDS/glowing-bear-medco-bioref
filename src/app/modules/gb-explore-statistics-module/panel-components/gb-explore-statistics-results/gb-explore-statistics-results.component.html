@@ -1,8 +1,7 @@
 <p-accordionTab header="Results" id="gb-explore-statistics-results" [selected]="chartInfoReceivedAtLeastOnce">
   <div class="small-font">
-    <div class="medco-results-chart-container">
-      <canvas #exploreStatsChartElement id="medco-explore-stats-chart">{{ chart }}</canvas>
+    <div class="medco-results-chart-container" #exploreStatsCanvasContainer>
     </div>
-  
+
   </div>
 </p-accordionTab>

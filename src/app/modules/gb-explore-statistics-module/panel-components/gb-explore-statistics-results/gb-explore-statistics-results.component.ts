@@ -5,9 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 import { Component, ElementRef, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import Chart from 'chart.js';
-import { ExploreStatisticsService, ChartInformation } from '../../../../services/explore-statistics.service';
+import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 
 @Component({
   selector: 'gb-explore-statistics-results',
@@ -24,9 +25,8 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
   'rgba(153, 102, 255, 0.5)',
   'rgba(255, 159, 64, 0.5)']
 
-  @ViewChild('exploreStatsChartElement', { static: true }) histogramElement: ElementRef;
+  @ViewChild('exploreStatsCanvasContainer') canvasContainer: ElementRef;
 
-  chart: Chart;
 
   chartInfoReceivedAtLeastOnce = false
 
@@ -36,83 +36,126 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
   }
 
 
-  constructor(exploreStatisticsService: ExploreStatisticsService) {
+  constructor(private exploreStatisticsService: ExploreStatisticsService) {
 
-    exploreStatisticsService.ChartDataEmitter.subscribe((chartInfo: ChartInformation) => {
-      console.log(chartInfo.intervals)
-      this.updateChart(chartInfo)
+    console.debug("Subscribing to charts data emitter")
+
+    this.exploreStatisticsService.ChatsDataSubject.subscribe((chartsInfo: ChartInformation[]) => {
+      this.displayCharts(chartsInfo);
     })
 
   }
 
-
-
-  /*
-  * Given a ChartInformation object this function will update the counts displayed by the histogram.
-  */
-  private updateChart(chartInfo: ChartInformation) {
-    if (chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0) {
-
-      //When the interval is the last one the right bound is inclusive, otherwise it is exclusive.
-      const getRightBound = (i: number) => i < (chartInfo.intervals.length - 1) ? '[' : ']'
-
-      this.chart.data.labels = chartInfo.intervals.map((int, i) => '[ ' + int.lowerBound + ', ' + int.higherBound + ' ' + getRightBound(i));
-      this.chart.data.datasets[0] = {
-        data: chartInfo.intervals.map(i => i.count),
-        backgroundColor: chartInfo.intervals.map((_, index) => GbExploreStatisticsResultsComponent.getBackgroundColor(index))
-      }
-
-      let min, max: number
-      max = chartInfo.intervals[0].count
-      min = max
-
-      this.chart.options = {
-        legend: {
-          display: false
-        },
-        title: {
-          text: 'Histogram for the `' + chartInfo.treeNodeName + '` concept in the context of the `' + chartInfo.cohortName + '` cohort ',
-          display: true
-        },
-        scales: {
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: chartInfo.unit + '(TODO)',
-            }
-          }]
-        }
-      }
-
-      chartInfo.intervals.forEach(v => {
-        if (max < v.count) {
-          max = v.count
-        }
-        if (min > v.count) {
-          min = v.count
-        }
-      })
-
-      // the minimum value displayed by the chart is defined as the minimum data point minus 10% the range of values (max - min)
-      const minDisplayed = min - (max - min) * .1
-      this.chart.options.scales.yAxes = [{
-        ticks: {
-          min: minDisplayed
-        }
-      }]
-
-    } else {
-      this.chart.data.labels = [];
-      this.chart.data.datasets[0].data = [];
-    }
-
-    this.chartInfoReceivedAtLeastOnce = true
-    this.chart.update();
+  ngOnChanges(changes: SimpleChanges): void {
   }
 
+
   ngOnInit(): void {
-    // initialize the chart
-    this.chart = new Chart(this.histogramElement.nativeElement, {
+  }
+
+
+
+
+  private displayCharts(chartsInfo: ChartInformation[]) {
+    console.debug("callback from subscription to data emitter", chartsInfo);
+
+    const canvasContainerElement = this.canvasContainer.nativeElement
+    canvasContainerElement.childNodes.forEach(child => {
+      canvasContainerElement.removeChild(child)
+    });
+
+    chartsInfo.forEach(chartInfo => {
+
+      console.debug(chartInfo.intervals);
+
+      // create the canvas on which the chart will be drawn.
+      const canvas = document.createElement('canvas');
+
+      // append the canvas to the div within the result accordion.
+      canvasContainerElement.appendChild(canvas)
+
+      const newChart = this.newChart(canvas);
+      this.appendChart(chartInfo, newChart);
+
+
+      return canvas;
+    });
+
+
+
+    this.chartInfoReceivedAtLeastOnce = true;
+  }
+
+  /*
+  * Given ChartInformation object this function will append the chart to the list containing all charts
+  */
+  private appendChart(chartInfo: ChartInformation, chart: Chart) {
+    if (!(chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0)) {
+      chart.data.labels = [];
+      chart.data.datasets[0].data = [];
+
+      chart.update()
+
+      return
+
+    }
+
+    //When the interval is the last one the right bound is inclusive, otherwise it is exclusive.
+    const getRightBound = (i: number) => i < (chartInfo.intervals.length - 1) ? '[' : ']'
+
+    chart.data.labels = chartInfo.intervals.map((int, i) => '[ ' + int.lowerBound + ', ' + int.higherBound + ' ' + getRightBound(i));
+    chart.data.datasets[0] = {
+      data: chartInfo.intervals.map(i => i.count),
+      backgroundColor: chartInfo.intervals.map((_, index) => GbExploreStatisticsResultsComponent.getBackgroundColor(index))
+    }
+
+    let min, max: number
+    max = chartInfo.intervals[0].count
+    min = max
+
+    chart.options = {
+      legend: {
+        display: false
+      },
+      title: {
+        text: 'Histogram for the `' + chartInfo.treeNodeName + '` concept in the context of the `' + chartInfo.cohortName + '` cohort ',
+        display: true
+      },
+      scales: {
+        xAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: chartInfo.unit,
+          }
+        }]
+      }
+    }
+
+    chartInfo.intervals.forEach(v => {
+      if (max < v.count) {
+        max = v.count
+      }
+      if (min > v.count) {
+        min = v.count
+      }
+    })
+
+    // the minimum value displayed by the chart is defined as the minimum data point minus 10% the range of values (max - min)
+    const minDisplayed = min - (max - min) * .1
+    chart.options.scales.yAxes = [{
+      ticks: {
+        min: minDisplayed
+      }
+    }]
+
+    chart.update();
+  }
+
+
+  private newChart(canvas: HTMLCanvasElement) {
+
+
+    const chart = new Chart(canvas, {
       type: 'bar',
       data: {
         labels: [],
@@ -129,11 +172,10 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
           }]
         }
       }
-    });
-  }
+    })
 
-  // TODO Check how this is used in other components.
-  ngOnChanges(changes: SimpleChanges): void {
+
+    return chart
   }
 
 

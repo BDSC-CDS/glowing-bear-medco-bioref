@@ -52,8 +52,7 @@ import { ExploreStatisticsService } from '../../services/explore-statistics.serv
   entryComponents: [
     GbConstraintComponent,
     GbCombinationConstraintComponent
-  ],
-  providers: [ExploreStatisticsService],
+  ]
 })
 
 export class GbExploreStatisticsModule {

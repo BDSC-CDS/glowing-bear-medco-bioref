@@ -27,24 +27,8 @@
       </div>
     </div>
 
-    <div class="input-label-wrapper">
-      <div>
-        <label>Number of buckets:</label>
-      </div>
-      <input type="number" min="1" step="1" [(ngModel)]="numberOfBuckets" class="input-field input-field-margin" />
-    </div> 
 
-    <div class="input-label-wrapper">
 
-      <button type="button" (click)="execQuery($event)" [disabled]="isDirty"
-        class="btn btn-outline-primary btn-sm {{isDirty? 'query-btn-dirty' : ''}}">
-        Run query
-      </button>
-    </div>
-
-    <div style="margin: auto;" class="{{ !isDirty ? 'non-visible' : '' }} fade-in-fade-out ">
-      <p class="loading-blink"><span>•</span><span>•</span><span>•</span></p>
-    </div>
 
   </div>
 </p-accordionTab>

@@ -1,17 +1,13 @@
 import { EventEmitter, Injectable, Output } from '@angular/core';
-import { forkJoin, Observable } from 'rxjs';
+import { BehaviorSubject, forkJoin, Observable, ReplaySubject, Subject } from 'rxjs';
 import { timeout } from 'rxjs/operators';
-import { ApiI2b2Timing } from '../models/api-request-models/medco-node/api-i2b2-timing';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
 import { ApiExploreStatisticResult, ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
-import { Concept } from '../models/constraint-models/concept';
 import { Constraint } from '../models/constraint-models/constraint';
-import { Modifier } from '../models/constraint-models/modifier';
 import { TreeNode } from '../models/tree-models/tree-node';
 import { ErrorHelper } from '../utilities/error-helper';
 import { ApiEndpointService } from './api-endpoint.service';
 import { MedcoNetworkService } from './api/medco-network.service';
-import { CohortService } from './cohort.service';
 import { ConstraintMappingService } from './constraint-mapping.service';
 import { ConstraintReverseMappingService } from './constraint-reverse-mapping.service';
 import { ConstraintService } from './constraint.service';
@@ -58,18 +54,20 @@ export class ChartInformation {
 }
 
 /*
-* ExploreStatisticsService communicates with the following two components: explore-statistics-settings, explore-statistics-results.
+* ExploreStatisticsService that communicates with the following two components: explore-statistics-settings, explore-statistics-results.
 * From the settings given by the explore-statistics-settings form, this class is able to execute a query which will fetch the aggregated number of observations
 * per interval for a specific concept. It communicates that info to explore-statistics-results which will display that histogram as a chart
 */
-@Injectable()
+@Injectable({
+    providedIn: "root" //singleton service
+})
 export class ExploreStatisticsService {
 
     // 1 minute timeout
     private static TIMEOUT_MS = 1000 * 60 * 1;
 
     // Sends the result of the latest query when is is available
-    @Output() ChartDataEmitter: EventEmitter<ChartInformation> = new EventEmitter()
+    @Output() ChatsDataSubject: Subject<ChartInformation[]> = new ReplaySubject(1)
 
     private static getNewQueryID(): string {
         let d = new Date()
@@ -80,7 +78,6 @@ export class ExploreStatisticsService {
     constructor(
         private apiEndpointService: ApiEndpointService,
         private cryptoService: CryptoService,
-        private cohortService: CohortService,
         private medcoNetworkService: MedcoNetworkService,
         private constraintService: ConstraintService,
 
@@ -88,7 +85,10 @@ export class ExploreStatisticsService {
         private constraintMappingService: ConstraintMappingService,
         private reverseConstraintMappingService: ConstraintReverseMappingService,
         private navbarService: NavbarService
-    ) { }
+    ) {
+        console.debug("constructing the explore statistics service TODO remove me")
+
+    }
 
 
     private refreshConstraint(constraint: Constraint): Observable<Constraint> {
@@ -110,7 +110,7 @@ export class ExploreStatisticsService {
             console.log("Analytes ", uniqueAnalytes)
 
 
-            const cohortConstraint = this.prepareCohort(upToDateConstraint);
+            const cohortConstraint: Constraint = this.prepareCohort(upToDateConstraint);
 
             const analytes = Array.from(uniqueAnalytes)
 
@@ -143,22 +143,26 @@ export class ExploreStatisticsService {
                 const serverResponse: ApiExploreStatisticsResponse = answers[0]
 
                 console.debug("Explore stats response ", serverResponse)
-                const chartsInformations = serverResponse.results.map ((result: ApiExploreStatisticResult) => {
-                    return new ChartInformation(result, this.cryptoService, result.analyteName, "TODO Generate this from the constraints of the explore query settings menu")
+                const chartsInformations = serverResponse.results.map((result: ApiExploreStatisticResult) =>
+                    new ChartInformation(result, this.cryptoService, result.analyteName, cohortConstraint.textRepresentation)
+                )
+
+
+
+                forkJoin(chartsInformations.map(ci => ci.readable)).subscribe(_ => {
+                    console.debug("All charts are readable")
+                    // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
+                    this.ChatsDataSubject.next(chartsInformations)
                 })
 
                 console.debug("Information constructed for the charts ", chartsInformations)
             })
         })
 
-        //TODO
-        // Send the object to all nodes. i.e. subscribe to the back-end's answer
-        // When the answer is received display it in the widgets.
     }
 
 
-    //TODO define the return type of this method
-    private sendRequest(apiRequest: ApiExploreStatistics) {
+    private sendRequest(apiRequest: ApiExploreStatistics): Observable<ApiExploreStatisticsResponse[]> {
         return forkJoin(this.medcoNetworkService.nodes
             .map(
                 node => this.apiEndpointService.postCall(
@@ -202,79 +206,5 @@ export class ExploreStatisticsService {
         return cohortConstraint;
     }
 
-    /*
-     * Queries all nodes of the medco network in order to perform the construction of a histogram giving the observations counts for a concept or modifier.
-     * Create a ChartInformation object from that information and emit this object via the ChartDataEmitter that the explore-statistics-results component subscribes to
-     */
-    executeQuery(concept: Concept, onExecuted: () => any) {
-        if (!this.cohortService.selectedCohort || !this.cohortService.selectedCohort.name) {
-            throw ErrorHelper.handleNewError('Please select a cohort on the left located cohort selection menu.')
-        }
-
-        const apiRequest: ApiExploreStatistics = {
-            ID: ExploreStatisticsService.getNewQueryID(),
-            concepts: [concept.path],
-            userPublicKey: this.cryptoService.ephemeralPublicKey,
-            numberOfBuckets: 6, //TODO remove this
-            cohortDefinition: {
-                queryTiming: ApiI2b2Timing.any,
-                panels: []
-            }
-        }
-        console.warn("TODO define explore query of explore statistics API message correctly!")
-
-
-        if (concept.modifier) {
-            apiRequest.modifiers = [{
-                ParentConceptPath: concept.modifier.appliedConceptPath,
-                ModifierKey: concept.modifier.path,
-                AppliedPath: concept.modifier.appliedPath
-            }]
-        }
-
-        console.log('Api request: ', apiRequest)
-
-        const obs = forkJoin(this.medcoNetworkService.nodes
-            .map(
-                node =>
-                    this.apiEndpointService.postCall(
-                        'node/explore-statistics/query',
-                        apiRequest,
-                        node.url
-                    )
-            ))
-            .pipe(timeout(ExploreStatisticsService.TIMEOUT_MS))
-
-
-        const displayedName = concept.modifier ? this.getModifierDisplayName(concept.modifier) : concept.name
-
-        obs.subscribe(
-            (results: Array<ApiExploreStatisticsResponse>) => {
-                console.log('Explore statistics request results ', results)
-                if (results === undefined || results.length <= 0) {
-                    ErrorHelper.handleNewError('Error with the server. Empty result.')
-                }
-
-
-                // Store the clear counts within the chart information class instance
-                const chartInfo = new ChartInformation(results[0].results[0], this.cryptoService, displayedName, "TODO Generate this from the constraints of the explore query settings menu")
-                chartInfo.readable.subscribe(_ => {
-                    // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
-                    this.ChartDataEmitter.emit(chartInfo)
-                    onExecuted()
-                })
-
-            },
-            err => {
-                onExecuted()
-            }
-
-        )
-
-    }
-
-    private getModifierDisplayName(m: Modifier): string {
-        return m.path.split('/').filter(s => s).pop()
-    }
 
 }
