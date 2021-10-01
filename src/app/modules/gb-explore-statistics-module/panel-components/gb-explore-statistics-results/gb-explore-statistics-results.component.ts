@@ -46,7 +46,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
 
     // Clean the content of the canvas container: remove the previous charts from the canvas container
-    //TODO remove the comment directive from the next line
     this.canvasContainer.clear()
 
     chartsInfo.forEach(chartInfo => {
@@ -73,12 +72,9 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
 
 
-// TODO est-ce que ça render mal parceque j'ai oublié de spécifier l'existence de ce composant dans app.module.ts
-// https://learntutorials.net/fr/angular2/topic/831/ajout-dynamique-de-composants-a-l-aide-de-viewcontainerref-createcomponent
-
 // See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
 @Component({
-  selector: 'explore-stats-canvas', //TODO maybe we should not use selector option since we might have multiple chart component on our hands. And hence multiple component would have the same name
+  selector: 'explore-stats-canvas',
   template: `<div [hidden]="!chart"><canvas #canvasElement>{{chart}}</canvas></div>`
 })
 export class ChartComponent implements AfterViewInit {
