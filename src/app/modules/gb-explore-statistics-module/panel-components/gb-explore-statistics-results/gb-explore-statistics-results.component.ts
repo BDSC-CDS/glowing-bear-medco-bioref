@@ -24,7 +24,8 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
 
   constructor(private exploreStatisticsService: ExploreStatisticsService,
-    private componentFactoryResolver: ComponentFactoryResolver) {
+    private componentFactoryResolver: ComponentFactoryResolver,
+    private cdref: ChangeDetectorRef) {
 
     console.debug("Subscribing to charts data emitter")
 
@@ -36,6 +37,12 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
       this.displayCharts(chartsInfo);
     })
   }
+
+
+  ngAfterContentChecked() {
+    this.cdref.detectChanges();
+  }
+
 
 
 

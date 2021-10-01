@@ -6,25 +6,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {GbExploreStatisticsComponent} from './gb-explore-statistics.component';
-import {routing} from './gb-explore-statistics.routing';
-import {RouterModule} from '@angular/router';
-import {GbCombinationConstraintComponent} from '../gb-explore-module/constraint-components/gb-combination-constraint/gb-combination-constraint.component';
-import {GbConstraintComponent} from '../gb-explore-module/constraint-components/gb-constraint/gb-constraint.component';
-
-import {FormsModule} from '@angular/forms';
-import {AutoCompleteModule} from 'primeng/autocomplete';
-import {CheckboxModule} from 'primeng/checkbox';
-import {CalendarModule} from 'primeng/calendar';
-import {PanelModule} from 'primeng/panel';
-import {MultiSelectModule} from 'primeng/multiselect';
-import {GbSelectionModule} from '../gb-explore-module/gb-selection-component/gb-selection.module';
-import { GbExploreStatisticsSettingsComponent } from './panel-components/gb-explore-statistics-settings/gb-explore-statistics-settings.component';
-import { ChartComponent, GbExploreStatisticsResultsComponent } from './panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { AccordionModule, OverlayPanelModule } from 'primeng';
-import { ExploreStatisticsService } from '../../services/explore-statistics.service';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { CalendarModule } from 'primeng/calendar';
+import { CheckboxModule } from 'primeng/checkbox';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { PanelModule } from 'primeng/panel';
+import { GbCombinationConstraintComponent } from '../gb-explore-module/constraint-components/gb-combination-constraint/gb-combination-constraint.component';
+import { GbConstraintComponent } from '../gb-explore-module/constraint-components/gb-constraint/gb-constraint.component';
+import { GbSelectionModule } from '../gb-explore-module/gb-selection-component/gb-selection.module';
+import { GbExploreStatisticsComponent } from './gb-explore-statistics.component';
+import { routing } from './gb-explore-statistics.routing';
+import { ChartComponent, GbExploreStatisticsResultsComponent } from './panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
+import { GbExploreStatisticsSettingsComponent } from './panel-components/gb-explore-statistics-settings/gb-explore-statistics-settings.component';
+
 
 @NgModule({
   imports: [

@@ -28,6 +28,7 @@ import {ErrorHelper} from '../../utilities/error-helper';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { ConstraintMappingService } from 'src/app/services/constraint-mapping.service';
 import { ConstraintReverseMappingService } from 'src/app/services/constraint-reverse-mapping.service';
+import { AuthenticationService } from 'src/app/services/authentication.service';
 
 @Component({
   selector: 'gb-explore',
@@ -40,7 +41,9 @@ export class GbExploreComponent implements AfterViewChecked {
 
   OperationType = OperationType
 
-  constructor(private queryService: QueryService,
+  constructor(
+    private authService: AuthenticationService,
+    private queryService: QueryService,
     private cohortService: CohortService,
     private medcoNetworkService: MedcoNetworkService,
     public constraintService: ConstraintService,
@@ -69,6 +72,10 @@ export class GbExploreComponent implements AfterViewChecked {
     this.exploreStatisticsService.executeQueryFromExplore()
   }
 
+
+  displayExploreStatsButton(): boolean {
+    return this.authService.hasExploreStatsRole()
+  }
 
   execQuery(event) {
     event.stopPropagation();

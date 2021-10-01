@@ -2,7 +2,7 @@
 
 
 
-  <div class="gb-data-selection-accordion-header">
+  <div class="gb-data-selection-accordion-header" *ngIf="!displayExploreStatsButton()">
     <div class="gb-data-selection-accordion-sub-header-1">
       Define your MedCo Explore query
     </div>
@@ -55,7 +55,7 @@
     </div>
   </div>
 
-  <div class="gb-data-selection-accordion-header" style="margin-top: 1em;">
+  <div class="gb-data-selection-accordion-header" style="margin-top: 1em;" *ngIf="displayExploreStatsButton()">
     <div class="gb-data-selection-accordion-sub-header-1">
       Explore statistics
     </div>
