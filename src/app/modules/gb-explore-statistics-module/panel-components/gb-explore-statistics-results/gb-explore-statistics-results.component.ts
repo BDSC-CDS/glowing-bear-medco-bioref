@@ -5,9 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
-import { Component, ElementRef, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, OnChanges, OnInit, SimpleChanges, ViewChild, ViewContainerRef } from '@angular/core';
 import Chart from 'chart.js';
+import { Subject } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 
 @Component({
@@ -15,43 +15,28 @@ import { ChartInformation, ExploreStatisticsService } from '../../../../services
   templateUrl: './gb-explore-statistics-results.component.html',
   styleUrls: ['./gb-explore-statistics-results.component.css'],
 })
+export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
-export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
-
-  private static BACKGROUND_COLOURS: string[] = ['rgba(255, 99, 132, 0.5)',
-  'rgba(54, 162, 235, 0.5)',
-  'rgba(255, 206, 86, 0.5)',
-  'rgba(75, 192, 192, 0.5)',
-  'rgba(153, 102, 255, 0.5)',
-  'rgba(255, 159, 64, 0.5)']
-
-  @ViewChild('exploreStatsCanvasContainer') canvasContainer: ElementRef;
+  @ViewChild('exploreStatsCanvasContainer', { read: ViewContainerRef }) canvasContainer: ViewContainerRef;
 
 
-  chartInfoReceivedAtLeastOnce = false
-
-  // the colour is chosen in BACKGROUND_COLOURS modulo the length of BACKGROUND_COLOURS
-  private static getBackgroundColor(index: number): string {
-    return GbExploreStatisticsResultsComponent.BACKGROUND_COLOURS[index % GbExploreStatisticsResultsComponent.BACKGROUND_COLOURS.length]
-  }
+  openStatsResultsAccordion = false
 
 
-  constructor(private exploreStatisticsService: ExploreStatisticsService) {
+  constructor(private exploreStatisticsService: ExploreStatisticsService,
+    private componentFactoryResolver: ComponentFactoryResolver) {
 
     console.debug("Subscribing to charts data emitter")
 
+  }
+
+
+  ngAfterViewInit() {
     this.exploreStatisticsService.ChatsDataSubject.subscribe((chartsInfo: ChartInformation[]) => {
       this.displayCharts(chartsInfo);
     })
-
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-  }
-
-
-  ngOnInit(): void {
-  }
 
 
 
@@ -59,37 +44,111 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
   private displayCharts(chartsInfo: ChartInformation[]) {
     console.debug("callback from subscription to data emitter", chartsInfo);
 
-    const canvasContainerElement = this.canvasContainer.nativeElement
-    canvasContainerElement.childNodes.forEach(child => {
-      canvasContainerElement.removeChild(child)
-    });
+
+    // Clean the content of the canvas container: remove the previous charts from the canvas container
+    //TODO remove the comment directive from the next line
+    this.canvasContainer.clear()
 
     chartsInfo.forEach(chartInfo => {
 
-      console.debug(chartInfo.intervals);
-
       // create the canvas on which the chart will be drawn.
-      const canvas = document.createElement('canvas');
-
-      // append the canvas to the div within the result accordion.
-      canvasContainerElement.appendChild(canvas)
-
-      const newChart = this.newChart(canvas);
-      this.appendChart(chartInfo, newChart);
+      const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(ChartComponent);
+      const childComponentRef = this.canvasContainer.createComponent(childComponentFactory);
 
 
-      return canvas;
+      const chart = childComponentRef.instance
+
+      chart.componentInitialized.subscribe(_ => {
+        chart.drawChart(chartInfo)
+      })
+
+      return childComponentRef
     });
 
 
 
-    this.chartInfoReceivedAtLeastOnce = true;
+    this.openStatsResultsAccordion = true;
+  }
+}
+
+
+
+// TODO est-ce que ça render mal parceque j'ai oublié de spécifier l'existence de ce composant dans app.module.ts
+// https://learntutorials.net/fr/angular2/topic/831/ajout-dynamique-de-composants-a-l-aide-de-viewcontainerref-createcomponent
+
+// See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
+@Component({
+  selector: 'explore-stats-canvas', //TODO maybe we should not use selector option since we might have multiple chart component on our hands. And hence multiple component would have the same name
+  template: `<div [hidden]="!chart"><canvas #canvasElement>{{chart}}</canvas></div>`
+})
+export class ChartComponent implements AfterViewInit {
+  private static BACKGROUND_COLOURS: string[] = ['rgba(255, 99, 132, 0.5)',
+    'rgba(54, 162, 235, 0.5)',
+    'rgba(255, 206, 86, 0.5)',
+    'rgba(75, 192, 192, 0.5)',
+    'rgba(153, 102, 255, 0.5)',
+    'rgba(255, 159, 64, 0.5)']
+
+
+
+  chart: Chart
+
+  context: CanvasRenderingContext2D; // not sure it is necessary to put this as an attribute of the class
+
+
+  @ViewChild('canvasElement', { static: false })
+  canvasRef: ElementRef<HTMLCanvasElement>;//HTMLCanvasElement
+
+  componentInitialized: Subject<boolean> = new Subject()
+
+  constructor(public element: ElementRef, private cdref: ChangeDetectorRef) {
+    this.element.nativeElement
   }
 
+  // the colour is chosen in BACKGROUND_COLOURS modulo the length of BACKGROUND_COLOURS
+  private static getBackgroundColor(index: number): string {
+    return ChartComponent.BACKGROUND_COLOURS[index % ChartComponent.BACKGROUND_COLOURS.length]
+  }
+
+  ngAfterContentChecked() {
+    this.cdref.detectChanges();
+  }
+
+  ngAfterViewInit(): void {
+    // the reference to the `canvas` on which the chart will be drawn. See the @Component to see the canvas.
+    this.context = this.canvasRef.nativeElement.getContext('2d');
+    console.debug("Ng on init of ChartComponent : canvasRef", this.context)
+
+    this.chart = new Chart(this.context, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [{
+          data: []
+        }]
+      },
+      options: {
+        scales: {
+          yAxes: [{
+            ticks: {
+              min: 0
+            }
+          }]
+        }
+      }
+    })
+
+    this.componentInitialized.next(true)
+  }
+
+
+
   /*
-  * Given ChartInformation object this function will append the chart to the list containing all charts
+  * Given ChartInformation object this function will draw the chart on the canvas
   */
-  private appendChart(chartInfo: ChartInformation, chart: Chart) {
+  drawChart(chartInfo: ChartInformation) {
+    const chart = this.chart
+
     if (!(chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0)) {
       chart.data.labels = [];
       chart.data.datasets[0].data = [];
@@ -106,7 +165,7 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
     chart.data.labels = chartInfo.intervals.map((int, i) => '[ ' + int.lowerBound + ', ' + int.higherBound + ' ' + getRightBound(i));
     chart.data.datasets[0] = {
       data: chartInfo.intervals.map(i => i.count),
-      backgroundColor: chartInfo.intervals.map((_, index) => GbExploreStatisticsResultsComponent.getBackgroundColor(index))
+      backgroundColor: chartInfo.intervals.map((_, index) => ChartComponent.getBackgroundColor(index))
     }
 
     let min, max: number
@@ -150,33 +209,5 @@ export class GbExploreStatisticsResultsComponent implements OnInit, OnChanges {
 
     chart.update();
   }
-
-
-  private newChart(canvas: HTMLCanvasElement) {
-
-
-    const chart = new Chart(canvas, {
-      type: 'bar',
-      data: {
-        labels: [],
-        datasets: [{
-          data: []
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            ticks: {
-              min: 0
-            }
-          }]
-        }
-      }
-    })
-
-
-    return chart
-  }
-
 
 }

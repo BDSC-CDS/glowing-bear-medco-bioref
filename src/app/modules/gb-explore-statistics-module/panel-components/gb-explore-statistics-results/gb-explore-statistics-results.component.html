@@ -1,6 +1,7 @@
-<p-accordionTab header="Results" id="gb-explore-statistics-results" [selected]="chartInfoReceivedAtLeastOnce">
+<p-accordionTab header="Results" id="gb-explore-statistics-results" [selected]="openStatsResultsAccordion">
   <div class="small-font">
     <div class="medco-results-chart-container" #exploreStatsCanvasContainer>
+      <ng-content></ng-content>
     </div>
 
   </div>

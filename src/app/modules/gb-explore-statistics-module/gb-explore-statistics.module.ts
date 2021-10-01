@@ -22,7 +22,7 @@ import {PanelModule} from 'primeng/panel';
 import {MultiSelectModule} from 'primeng/multiselect';
 import {GbSelectionModule} from '../gb-explore-module/gb-selection-component/gb-selection.module';
 import { GbExploreStatisticsSettingsComponent } from './panel-components/gb-explore-statistics-settings/gb-explore-statistics-settings.component';
-import { GbExploreStatisticsResultsComponent } from './panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
+import { ChartComponent, GbExploreStatisticsResultsComponent } from './panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
 import { AccordionModule, OverlayPanelModule } from 'primeng';
 import { ExploreStatisticsService } from '../../services/explore-statistics.service';
 
@@ -51,7 +51,8 @@ import { ExploreStatisticsService } from '../../services/explore-statistics.serv
   ],
   entryComponents: [
     GbConstraintComponent,
-    GbCombinationConstraintComponent
+    GbCombinationConstraintComponent,
+    ChartComponent
   ]
 })
 
