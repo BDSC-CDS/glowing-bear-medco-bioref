@@ -8,7 +8,7 @@
 /*
   custom variables
 */
-:root {
+/* :root {
   --gb-loading-bg-color: #28AA9D;
   --gb-navbar-bg-color: #fdfdfd;
   --gb-orange-light: #ffa27f;
@@ -17,6 +17,19 @@
   --gb-clinical-green-light: #84c3bc;
   --gb-clinical-green-light-light: #c8eae6;
   --gb-clinical-green-dark: #2d8c81;
+  --gb-top-panel-height: 26px;
+} */
+
+:root {
+  /*for bioref*/
+  --gb-loading-bg-color: #295388;
+  --gb-navbar-bg-color: #fdfdfd;
+  --gb-orange-light: #ffa27f;
+  --gb-orange-light-light: #ffd9cb;
+  --gb-clinical-green: #295388;
+  --gb-clinical-green-light: #8488c3;
+  --gb-clinical-green-light-light: #c8d8ea;
+  --gb-clinical-green-dark: #2d528c;
   --gb-top-panel-height: 26px;
 }
 
@@ -252,7 +265,7 @@ gb-nav-bar .ui-tabmenu-nav {
 }
 
 gb-nav-bar .ui-menuitem-text {
-  color: hsl(0, 0%, 30%);
+  /* color: hsl(0, 0%, 30%); commented for bioref */
 }
 
 /*
