@@ -22,6 +22,8 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
   openStatsResultsAccordion = false
 
+  displayLoadingIcon = false
+
 
   constructor(private exploreStatisticsService: ExploreStatisticsService,
     private componentFactoryResolver: ComponentFactoryResolver,
@@ -33,8 +35,12 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
 
   ngAfterViewInit() {
-    this.exploreStatisticsService.ChatsDataSubject.subscribe((chartsInfo: ChartInformation[]) => {
+    this.exploreStatisticsService.chartsDataSubject.subscribe((chartsInfo: ChartInformation[]) => {
       this.displayCharts(chartsInfo);
+    })
+
+    this.exploreStatisticsService.displayLoadingIcon.subscribe((display: boolean) => {
+      this.displayLoadingIcon = display
     })
   }
 
@@ -42,10 +48,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
   ngAfterContentChecked() {
     this.cdref.detectChanges();
   }
-
-
-
-
 
 
   private displayCharts(chartsInfo: ChartInformation[]) {

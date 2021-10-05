@@ -67,7 +67,10 @@ export class ExploreStatisticsService {
     private static TIMEOUT_MS = 1000 * 60 * 1;
 
     // Sends the result of the latest query when is is available
-    @Output() ChatsDataSubject: Subject<ChartInformation[]> = new ReplaySubject(1)
+    @Output() chartsDataSubject: Subject<ChartInformation[]> = new ReplaySubject(1)
+
+    // Emits whenever the explore statitistics query has been launched.
+    @Output() displayLoadingIcon: Subject<boolean> = new ReplaySubject(1)
 
     private static getNewQueryID(): string {
         let d = new Date()
@@ -129,18 +132,27 @@ export class ExploreStatisticsService {
                 }
             }
 
+            this.displayLoadingIcon.next(true)
+
             const observableRequest = this.sendRequest(apiRequest)
 
             this.navbarService.navigateToExploreTab()
             console.log("Api request ", apiRequest)
 
             observableRequest.subscribe((answers: ApiExploreStatisticsResponse[]) => {
-                //TODO if answers is empty send an error
                 if (answers == undefined || answers.length == 0) {
                     ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.')
+                    return
                 }
                 // All servers are supposed to send the same information so we pick the element with index zero
                 const serverResponse: ApiExploreStatisticsResponse = answers[0]
+
+
+                if (serverResponse.results == undefined) {
+                    this.displayLoadingIcon.next(false)
+                    ErrorHelper.handleNewError('Please verify you selected an analyte.')
+                    return
+                }
 
                 console.debug("Explore stats response ", serverResponse)
                 const chartsInformations = serverResponse.results.map((result: ApiExploreStatisticResult) =>
@@ -152,10 +164,13 @@ export class ExploreStatisticsService {
                 forkJoin(chartsInformations.map(ci => ci.readable)).subscribe(_ => {
                     console.debug("All charts are readable")
                     // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
-                    this.ChatsDataSubject.next(chartsInformations)
+                    this.chartsDataSubject.next(chartsInformations)
+                    this.displayLoadingIcon.next(false)
                 })
 
                 console.debug("Information constructed for the charts ", chartsInformations)
+            }, err => {
+                this.displayLoadingIcon.next(false)
             })
         })
 

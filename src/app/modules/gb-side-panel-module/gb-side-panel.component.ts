@@ -7,6 +7,7 @@
  */
 
 import {Component} from '@angular/core';
+import { AuthenticationService } from 'src/app/services/authentication.service';
 import {NavbarService} from '../../services/navbar.service';
 import {SavedCohortsPatientListService} from '../../services/saved-cohorts-patient-list.service';
 
@@ -18,6 +19,10 @@ import {SavedCohortsPatientListService} from '../../services/saved-cohorts-patie
 export class GbSidePanelComponent {
 
   constructor(public navbarService: NavbarService,
-              public savedCohortsPatientListService: SavedCohortsPatientListService) { }
+              public savedCohortsPatientListService: SavedCohortsPatientListService,
+              private authService: AuthenticationService) { }
 
+  userHasExploreStatsRole(): boolean {
+    return this.authService.hasExploreStatsRole()
+  }
 }
