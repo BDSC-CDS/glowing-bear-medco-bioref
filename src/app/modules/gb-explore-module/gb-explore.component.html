@@ -56,23 +56,21 @@
   </div>
 
   <div class="gb-data-selection-accordion-header" style="margin-top: 1em;" *ngIf="displayExploreStatsButton()">
-    <div class="gb-data-selection-accordion-sub-header-1">
+    <div class="gb-data-selection-accordion-sub-header-1" style="display: inline-block;">
       Explore statistics
     </div>
-    <div class="gb-data-selection-accordion-sub-header-2">
-      <button
-      type="button" *ngIf="!isUpdating && hasConstraint; else disabledButton"
-      (click)="execExploreStatisticsQuery($event)"
-      class="btn btn-outline-primary btn-sm gb-data-selection-update-btn
-                {{isDirty? 'gb-explore-query-btn-dirty' : ''}}" >
+    <button
+    type="button" *ngIf="!isUpdating && hasConstraint; else disabledButton"
+    (click)="execExploreStatisticsQuery($event)"
+    class="btn btn-outline-primary btn-sm gb-data-selection-update-btn
+              {{isDirty? 'gb-explore-query-btn-dirty' : ''}}" >
+      Run
+    </button>
+    <ng-template #disabledButton>
+      <button type="button" disabled class="btn btn-outline-primary btn-sm gb-data-selection-update-btn">
         Run
       </button>
-      <ng-template #disabledButton>
-        <button type="button" disabled class="btn btn-outline-primary btn-sm gb-data-selection-update-btn">
-          Run
-        </button>
-      </ng-template>
-    </div>
+    </ng-template>
   </div>
 
   <div style="margin-top: 1em;">
