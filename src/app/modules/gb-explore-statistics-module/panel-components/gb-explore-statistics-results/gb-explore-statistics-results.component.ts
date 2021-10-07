@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, OnChanges, OnInit, SimpleChanges, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ElementRef, ViewChild, ViewContainerRef } from '@angular/core';
 import Chart from 'chart.js';
 import { Subject } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
@@ -29,7 +29,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     private componentFactoryResolver: ComponentFactoryResolver,
     private cdref: ChangeDetectorRef) {
 
-    console.debug("Subscribing to charts data emitter")
 
   }
 
@@ -51,7 +50,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
 
   private displayCharts(chartsInfo: ChartInformation[]) {
-    console.debug("callback from subscription to data emitter", chartsInfo);
 
 
     // Clean the content of the canvas container: remove the previous charts from the canvas container
@@ -83,7 +81,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
 // See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
 @Component({
-  selector: 'explore-stats-canvas',
+  selector: 'gb-explore-stats-canvas',
   template: `<div [hidden]="!chart"><canvas #canvasElement>{{chart}}</canvas></div>`
 })
 export class ChartComponent implements AfterViewInit {
@@ -102,18 +100,18 @@ export class ChartComponent implements AfterViewInit {
 
 
   @ViewChild('canvasElement', { static: false })
-  canvasRef: ElementRef<HTMLCanvasElement>;//HTMLCanvasElement
+  canvasRef: ElementRef<HTMLCanvasElement>;
 
   componentInitialized: Subject<boolean> = new Subject()
-
-  constructor(public element: ElementRef, private cdref: ChangeDetectorRef) {
-    this.element.nativeElement
-  }
 
   // the colour is chosen in BACKGROUND_COLOURS modulo the length of BACKGROUND_COLOURS
   private static getBackgroundColor(index: number): string {
     return ChartComponent.BACKGROUND_COLOURS[index % ChartComponent.BACKGROUND_COLOURS.length]
   }
+
+  constructor(public element: ElementRef, private cdref: ChangeDetectorRef) {
+  }
+
 
   ngAfterContentChecked() {
     this.cdref.detectChanges();
@@ -122,7 +120,6 @@ export class ChartComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     // the reference to the `canvas` on which the chart will be drawn. See the @Component to see the canvas.
     this.context = this.canvasRef.nativeElement.getContext('2d');
-    console.debug("Ng on init of ChartComponent : canvasRef", this.context)
 
     this.chart = new Chart(this.context, {
       type: 'bar',
@@ -164,7 +161,7 @@ export class ChartComponent implements AfterViewInit {
 
     }
 
-    //When the interval is the last one the right bound is inclusive, otherwise it is exclusive.
+    // When the interval is the last one the right bound is inclusive, otherwise it is exclusive.
     const getRightBound = (i: number) => i < (chartInfo.intervals.length - 1) ? '[' : ']'
 
     chart.data.labels = chartInfo.intervals.map((int, i) => '[ ' + int.lowerBound + ', ' + int.higherBound + ' ' + getRightBound(i));

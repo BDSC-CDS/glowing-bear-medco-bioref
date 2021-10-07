@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ApiI2b2Panel } from "../medco-node/api-i2b2-panel"
-import { ApiI2b2Timing } from "../medco-node/api-i2b2-timing"
+import { ApiI2b2Panel } from '../medco-node/api-i2b2-panel'
+import { ApiI2b2Timing } from '../medco-node/api-i2b2-timing'
 
 export class ModifierApiObjet {
   ParentConceptPath: string
@@ -19,7 +19,7 @@ export class ApiExploreStatistics {
   ID: string
   userPublicKey: string
 
-  //analytes: concepts and modifiers whose distribution will be computed.
+  // analytes: concepts and modifiers whose distribution will be computed.
   concepts: Array<string>
   modifiers?: Array<ModifierApiObjet>
 

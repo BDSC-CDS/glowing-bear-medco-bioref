@@ -17,7 +17,10 @@ import { TreeNodeService } from '../../../../services/tree-node.service';
   styleUrls: ['./gb-explore-statistics-settings.component.css'],
 })
 
-//This component handles the logic behind the form used to set the parameters of the creation of histogram about the counts of observations for a numerical concept.
+/*
+* This component handles the logic behind the form used to set the parameters
+* of the creation of histogram about the counts of observations for a numerical concept.
+*/
 export class GbExploreStatisticsSettingsComponent extends GbConceptFormComponent {
   private _isDirty: Boolean = false
 

@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { TreeNode } from "../tree-models/tree-node";
+import { TreeNode } from '../tree-models/tree-node';
 
 export class Constraint {
 
@@ -70,9 +70,9 @@ export class Constraint {
     return this._panelTimingSameInstance
   }
 
-  /* For the needs of explore statistics requests we need to "build" analytes (alias concepts or modifiers)
+  /* For the needs of explore statistics requests we need to 'build' analytes (alias concepts or modifiers)
   * from the constraints present in the inclusion criterias. The concepts or modifiers which will be used as analytes of those
-  * explore statistics requests will be the one with an "any" value in the constraint field.
+  * explore statistics requests will be the one with an 'any' value in the constraint field.
   */
   getAnalytes(): Array<TreeNode> {
     return [];

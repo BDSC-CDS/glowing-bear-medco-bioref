@@ -1,5 +1,5 @@
-import { EventEmitter, Injectable, Output } from '@angular/core';
-import { BehaviorSubject, forkJoin, Observable, ReplaySubject, Subject } from 'rxjs';
+import { Injectable, Output } from '@angular/core';
+import { forkJoin, Observable, ReplaySubject, Subject } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
 import { ApiExploreStatisticResult, ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
@@ -15,7 +15,7 @@ import { CryptoService } from './crypto.service';
 import { NavbarService } from './navbar.service';
 import { QueryService } from './query.service';
 
-//this class represents contains the following info: how many observations there are in a interval of a histogram for a concept
+// this class represents contains the following info: how many observations there are in a interval of a histogram for a concept
 export class Interval {
     count: number
     higherBound: string
@@ -29,7 +29,7 @@ export class Interval {
     }
 }
 
-//This class contains all information necessary to build a histogram chart with chart.js
+// This class contains all information necessary to build a histogram chart with chart.js
 export class ChartInformation {
     intervals: Interval[]
     readonly unit: string
@@ -55,11 +55,12 @@ export class ChartInformation {
 
 /*
 * ExploreStatisticsService that communicates with the following two components: explore-statistics-settings, explore-statistics-results.
-* From the settings given by the explore-statistics-settings form, this class is able to execute a query which will fetch the aggregated number of observations
+* From the settings given by the explore-statistics-settings form, this class is able to execute a
+* query which will fetch the aggregated number of observations
 * per interval for a specific concept. It communicates that info to explore-statistics-results which will display that histogram as a chart
 */
 @Injectable({
-    providedIn: "root" //singleton service
+    providedIn: 'root' // singleton service
 })
 export class ExploreStatisticsService {
 
@@ -89,7 +90,6 @@ export class ExploreStatisticsService {
         private reverseConstraintMappingService: ConstraintReverseMappingService,
         private navbarService: NavbarService
     ) {
-        console.debug("constructing the explore statistics service TODO remove me")
 
     }
 
@@ -101,31 +101,33 @@ export class ExploreStatisticsService {
 
     /*
      * This function is called when the user wants to execute an explore statistics from the explore tab.
-     * This function sends an explore statistics query to all running back-end nodes. When the answer is received it is processed and transformed
+     * This function sends an explore statistics query to all running back-end nodes.
+     *  When the answer is received it is processed and transformed
      * into a list of chart informations. Each chart information is used to build a new chart in the front end.
      */
     executeQueryFromExplore() {
         const constraint = this.constraintService.rootInclusionConstraint
-        const upToDateConstraint = this.refreshConstraint(constraint)
+        const upToDateConstraintObs = this.refreshConstraint(constraint)
 
-        upToDateConstraint.subscribe(upToDateConstraint => {
+        upToDateConstraintObs.subscribe(upToDateConstraint => {
             const uniqueAnalytes = new Set(upToDateConstraint.getAnalytes())
-            console.log("Analytes ", uniqueAnalytes)
+            console.log('Analytes ', uniqueAnalytes)
 
 
             const cohortConstraint: Constraint = this.prepareCohort(upToDateConstraint);
 
             const analytes = Array.from(uniqueAnalytes)
 
-            //the analytes split into two groups: modifiers and concepts
-            const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } = this.extractConceptsAndModifiers(analytes);
+            // the analytes split into two groups: modifiers and concepts
+            const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } =
+                this.extractConceptsAndModifiers(analytes);
 
             const apiRequest: ApiExploreStatistics = {
                 ID: ExploreStatisticsService.getNewQueryID(),
                 concepts: conceptsPaths,
                 modifiers: modifiers,
                 userPublicKey: this.cryptoService.ephemeralPublicKey,
-                numberOfBuckets: 6, //TODO define this in another way
+                numberOfBuckets: 6, // TODO define this in another way
                 cohortDefinition: {
                     queryTiming: this.queryService.lastTiming,
                     panels: this.constraintMappingService.mapConstraint(cohortConstraint)
@@ -137,10 +139,10 @@ export class ExploreStatisticsService {
             const observableRequest = this.sendRequest(apiRequest)
 
             this.navbarService.navigateToExploreTab()
-            console.log("Api request ", apiRequest)
+            console.log('Api request ', apiRequest)
 
             observableRequest.subscribe((answers: ApiExploreStatisticsResponse[]) => {
-                if (answers == undefined || answers.length == 0) {
+                if (answers === undefined || answers.length === 0) {
                     ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.')
                     return
                 }
@@ -148,13 +150,12 @@ export class ExploreStatisticsService {
                 const serverResponse: ApiExploreStatisticsResponse = answers[0]
 
 
-                if (serverResponse.results == undefined) {
+                if (serverResponse.results === undefined) {
                     this.displayLoadingIcon.next(false)
                     ErrorHelper.handleNewError('Please verify you selected an analyte.')
                     return
                 }
 
-                console.debug("Explore stats response ", serverResponse)
                 const chartsInformations = serverResponse.results.map((result: ApiExploreStatisticResult) =>
                     new ChartInformation(result, this.cryptoService, result.analyteName, cohortConstraint.textRepresentation)
                 )
@@ -162,13 +163,11 @@ export class ExploreStatisticsService {
 
 
                 forkJoin(chartsInformations.map(ci => ci.readable)).subscribe(_ => {
-                    console.debug("All charts are readable")
                     // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
                     this.chartsDataSubject.next(chartsInformations)
                     this.displayLoadingIcon.next(false)
                 })
 
-                console.debug("Information constructed for the charts ", chartsInformations)
             }, err => {
                 this.displayLoadingIcon.next(false)
             })
@@ -206,12 +205,13 @@ export class ExploreStatisticsService {
 
     private prepareCohort(upToDateConstraint: Constraint) {
         const filteredInclusionConstraint = upToDateConstraint.constraintWithoutAnalytes();
-        const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, this.constraintService.rootExclusionConstraint);
+        const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint,
+            this.constraintService.rootExclusionConstraint);
 
-        console.log("Cohort constraint ", cohortConstraint);
+        console.log('Cohort constraint ', cohortConstraint);
 
         if (cohortConstraint === undefined) {
-            throw ErrorHelper.handleNewError("Undefined population. Please select criterias which are not analytes");
+            throw ErrorHelper.handleNewError('Undefined population. Please select criterias which are not analytes');
         }
 
         const errorMsg = cohortConstraint.inputValueValidity();

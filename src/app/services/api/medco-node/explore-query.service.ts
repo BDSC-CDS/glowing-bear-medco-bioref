@@ -102,9 +102,9 @@ export class ExploreQueryService {
     let currentTiming = query.queryTimingSameInstanceNum ? ApiI2b2Timing.sameInstanceNum : ApiI2b2Timing.any;
 
 
-    console.log("Passed constraint ", query.constraint)
-    console.log("Current definition of contraints ", currentDefinition)
-    console.log("Current timing ", currentTiming)
+    console.log('Passed constraint ', query.constraint)
+    console.log('Current definition of contraints ', currentDefinition)
+    console.log('Current timing ', currentTiming)
     return this.exploreQueryAllNodes(
       query.uniqueId,
       this.cryptoService.ephemeralPublicKey,

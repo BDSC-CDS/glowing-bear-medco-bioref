@@ -144,7 +144,6 @@ export class ConstraintService {
     if (!this.hasInclusionConstraint()) {
       return []
     }
-    console.debug("Root inclusion constraint ", this.rootInclusionConstraint)
     return this.rootInclusionConstraint.getAnalytes()
   }
 

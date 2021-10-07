@@ -226,7 +226,7 @@ export class ConceptConstraint extends Constraint {
   }
 
   private isAnalyte() {
-    return this.treeNode.valueType == ValueType.NUMERICAL &&
+    return this.treeNode.valueType === ValueType.NUMERICAL &&
     !this.applyNumericalOperator && !this.applyObsDateConstraint &&
     !this.applyTextOperator && !this.applyValDateConstraint;
   }
@@ -240,7 +240,7 @@ export class ConceptConstraint extends Constraint {
   }
 
   getAnalytes(): Array<TreeNode> {
-    //if the tree node is of numerical type
+    // if the tree node is of numerical type
     // AND there is no operator acting on the node return it
 
     if (this.isAnalyte()) {
