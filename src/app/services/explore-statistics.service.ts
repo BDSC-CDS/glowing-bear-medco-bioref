@@ -105,7 +105,16 @@ export class ExploreStatisticsService {
      *  When the answer is received it is processed and transformed
      * into a list of chart informations. Each chart information is used to build a new chart in the front end.
      */
-    executeQueryFromExplore() {
+    executeQueryFromExplore(bucketSize: number, minObservation: number) {
+        if (bucketSize === undefined || bucketSize <= 0) {
+            ErrorHelper.handleError('Please specify a bucket size that will define the histograms\' intervals', Error('Bucket size not specified'))
+            return
+        }
+
+        if (minObservation === undefined) {
+            ErrorHelper.handleError('Please specify the minimal observation that exists', Error('minimal observation input undefined'))
+        }
+
         const constraint = this.constraintService.rootInclusionConstraint
         const upToDateConstraintObs = this.refreshConstraint(constraint)
 
@@ -127,7 +136,8 @@ export class ExploreStatisticsService {
                 concepts: conceptsPaths,
                 modifiers: modifiers,
                 userPublicKey: this.cryptoService.ephemeralPublicKey,
-                numberOfBuckets: 6, // TODO define this in another way
+                bucketSize,
+                minObservation,
                 cohortDefinition: {
                     queryTiming: this.queryService.lastTiming,
                     panels: this.constraintMappingService.mapConstraint(cohortConstraint)

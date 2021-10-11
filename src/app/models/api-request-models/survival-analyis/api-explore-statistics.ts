@@ -23,7 +23,10 @@ export class ApiExploreStatistics {
   concepts: Array<string>
   modifiers?: Array<ModifierApiObjet>
 
-  numberOfBuckets: number
+  bucketSize: number // size of a bucket in the histogram that will be returned to the user.
+  minObservation: number // This limit defines the threshold above which observations for analytes must be. Observations smaller than this threshold will be removed.
+  // in the future minObservation will be defined for each analyte. Its value will be set by a phase of exchange of information which will
+  // will compute necessary information to define the bucket width used in the construction of the aggregated histogram. We could base ourselves upon interquartile ranges etc...
 
   // Similar as the parameter passed to an explore query.
   // The information specified by `cohortDefinition` defines

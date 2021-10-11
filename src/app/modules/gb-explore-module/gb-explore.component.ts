@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { AfterViewChecked, ChangeDetectorRef, Component } from '@angular/core';
+import { AfterViewChecked, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { FormatHelper } from '../../utilities/format-helper';
 import { QueryService } from '../../services/query.service';
 import { ExploreQueryType } from '../../models/query-models/explore-query-type';
@@ -41,6 +41,13 @@ export class GbExploreComponent implements AfterViewChecked {
 
   OperationType = OperationType
 
+
+  // Bucket size of each interval of the explore statistics histogram
+  @Input() bucketSize: number;
+  // Minimal observation that will be taken into account in the construction of the explore statistics histogram
+  @Input() minObservation: number;
+
+
   constructor(
     private authService: AuthenticationService,
     private queryService: QueryService,
@@ -69,7 +76,9 @@ export class GbExploreComponent implements AfterViewChecked {
 
   execExploreStatisticsQuery(event) {
     event.stopPropagation();
-    this.exploreStatisticsService.executeQueryFromExplore()
+
+
+    this.exploreStatisticsService.executeQueryFromExplore(this.bucketSize, this.minObservation)
   }
 
 
