@@ -2,7 +2,13 @@
   <p-accordion [multiple]="true">
 
     <div>
-      <p-accordionTab header="Latest explore query" [selected]="true" *ngIf="!userHasExploreStatsRole()">
+      <p-accordionTab header="Cohort definition" [selected]="true" *ngIf="inExploreTab()">
+        <gb-cohort-definition></gb-cohort-definition>
+      </p-accordionTab>
+    </div>
+
+    <div>
+      <p-accordionTab header="Latest explore query" [selected]="true" *ngIf="!inExploreTab()">
         <gb-summary></gb-summary>
       </p-accordionTab>
     </div>
@@ -14,7 +20,7 @@
     </div>
 
     <div>
-      <p-accordionTab header="Saved Cohorts" *ngIf="savedCohortsPatientListService.authorizedForPatientList" [selected]="true">
+      <p-accordionTab header="Saved Cohorts" *ngIf="savedCohortsPatientListService.authorizedForPatientList && !inExploreTab()" [selected]="true">
         <gb-cohorts></gb-cohorts>
       </p-accordionTab>
     </div>

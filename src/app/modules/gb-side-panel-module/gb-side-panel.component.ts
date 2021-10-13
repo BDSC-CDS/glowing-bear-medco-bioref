@@ -25,4 +25,10 @@ export class GbSidePanelComponent {
   userHasExploreStatsRole(): boolean {
     return this.authService.hasExploreStatsRole()
   }
+
+  inExploreTab(): boolean {
+    return this.navbarService.isExploreStatistics
+  }
+
+
 }

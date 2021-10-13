@@ -38,6 +38,7 @@ export class GbMainComponent implements OnInit {
     private config: AppConfig) {
   }
 
+
   ngOnInit() {
     const parentContainerElm = this.parentContainer.nativeElement;
     this.isGutterDragged = false;

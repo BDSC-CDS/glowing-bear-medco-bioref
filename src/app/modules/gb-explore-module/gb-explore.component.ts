@@ -77,7 +77,6 @@ export class GbExploreComponent implements AfterViewChecked {
   execExploreStatisticsQuery(event) {
     event.stopPropagation();
 
-
     this.exploreStatisticsService.executeQueryFromExplore(this.bucketSize, this.minObservation)
   }
 
@@ -88,6 +87,13 @@ export class GbExploreComponent implements AfterViewChecked {
 
   execQuery(event) {
     event.stopPropagation();
+
+    if (this.displayExploreStatsButton()) {
+      this.execExploreStatisticsQuery(event)
+      return
+    }
+
+
     this.queryService.execQuery();
   }
 

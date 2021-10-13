@@ -1,8 +1,10 @@
 import { Injectable, Output } from '@angular/core';
 import { forkJoin, Observable, ReplaySubject, Subject } from 'rxjs';
 import { timeout } from 'rxjs/operators';
+import { ApiI2b2Panel } from '../models/api-request-models/medco-node/api-i2b2-panel';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
 import { ApiExploreStatisticResult, ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
+import { CombinationConstraint } from '../models/constraint-models/combination-constraint';
 import { Constraint } from '../models/constraint-models/constraint';
 import { TreeNode } from '../models/tree-models/tree-node';
 import { ErrorHelper } from '../utilities/error-helper';
@@ -73,6 +75,11 @@ export class ExploreStatisticsService {
     // Emits whenever the explore statitistics query has been launched.
     @Output() displayLoadingIcon: Subject<boolean> = new ReplaySubject(1)
 
+    // This observable emits the latest query's cohort inclusion criteria
+    inclusionConstraint: Subject<Constraint> = new ReplaySubject(1)
+    // This observable emits the latest query's cohort exclusion criteria
+    exclusionConstraint: Subject<Constraint> = new ReplaySubject(1)
+
     private static getNewQueryID(): string {
         let d = new Date()
         return (`Explore_Statistics${d.getUTCFullYear()}${d.getUTCMonth()}${d.getUTCDate()}${d.getUTCHours()}` +
@@ -94,8 +101,17 @@ export class ExploreStatisticsService {
     }
 
 
+    // The panels returned by the constraint service have a tendency to be out of date. Use this method to refresh them.
     private refreshConstraint(constraint: Constraint): Observable<Constraint> {
-        return this.reverseConstraintMappingService.mapPanels(this.constraintMappingService.mapConstraint(constraint))
+        const i2b2Panels: ApiI2b2Panel[] = this.constraintMappingService.mapConstraint(constraint)
+
+        if (i2b2Panels.length == 0) {
+            return new Observable(subscribe => {
+                subscribe.next(new CombinationConstraint()) // return empty constraint
+            })
+        }
+
+        return this.reverseConstraintMappingService.mapPanels(i2b2Panels)
     }
 
 
@@ -115,76 +131,84 @@ export class ExploreStatisticsService {
             ErrorHelper.handleError('Please specify the minimal observation that exists', Error('minimal observation input undefined'))
         }
 
-        const constraint = this.constraintService.rootInclusionConstraint
-        const upToDateConstraintObs = this.refreshConstraint(constraint)
-
-        upToDateConstraintObs.subscribe(upToDateConstraint => {
-            const uniqueAnalytes = new Set(upToDateConstraint.getAnalytes())
-            console.log('Analytes ', uniqueAnalytes)
+        const updatedInclusionObs = this.refreshConstraint(this.constraintService.rootInclusionConstraint)
+        const updatedExclusionObs = this.refreshConstraint(this.constraintService.rootExclusionConstraint)
 
 
-            const cohortConstraint: Constraint = this.prepareCohort(upToDateConstraint);
-
-            const analytes = Array.from(uniqueAnalytes)
-
-            // the analytes split into two groups: modifiers and concepts
-            const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } =
-                this.extractConceptsAndModifiers(analytes);
-
-            const apiRequest: ApiExploreStatistics = {
-                ID: ExploreStatisticsService.getNewQueryID(),
-                concepts: conceptsPaths,
-                modifiers: modifiers,
-                userPublicKey: this.cryptoService.ephemeralPublicKey,
-                bucketSize,
-                minObservation,
-                cohortDefinition: {
-                    queryTiming: this.queryService.lastTiming,
-                    panels: this.constraintMappingService.mapConstraint(cohortConstraint)
-                }
-            }
-
-            this.displayLoadingIcon.next(true)
-
-            const observableRequest = this.sendRequest(apiRequest)
-
-            this.navbarService.navigateToExploreTab()
-            console.log('Api request ', apiRequest)
-
-            observableRequest.subscribe((answers: ApiExploreStatisticsResponse[]) => {
-                if (answers === undefined || answers.length === 0) {
-                    ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.')
-                    return
-                }
-                // All servers are supposed to send the same information so we pick the element with index zero
-                const serverResponse: ApiExploreStatisticsResponse = answers[0]
-
-
-                if (serverResponse.results === undefined) {
-                    this.displayLoadingIcon.next(false)
-                    ErrorHelper.handleNewError('Please verify you selected an analyte.')
-                    return
-                }
-
-                const chartsInformations = serverResponse.results.map((result: ApiExploreStatisticResult) =>
-                    new ChartInformation(result, this.cryptoService, result.analyteName, cohortConstraint.textRepresentation)
-                )
-
-
-
-                forkJoin(chartsInformations.map(ci => ci.readable)).subscribe(_ => {
-                    // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
-                    this.chartsDataSubject.next(chartsInformations)
-                    this.displayLoadingIcon.next(false)
-                })
-
-            }, err => {
-                this.displayLoadingIcon.next(false)
-            })
+        forkJoin([updatedInclusionObs, updatedExclusionObs]).subscribe(updatedConstraints => {
+             this.processQuery(updatedConstraints, bucketSize, minObservation);
         })
+
 
     }
 
+
+    private processQuery(updatedConstraints: [Constraint, Constraint], bucketSize: number, minObservation: number) {
+        const [upToDateInclusionConstraint, upToDateExclusionConstraint] = updatedConstraints
+
+        console.log("Updated inclusion and exclusion constraints", upToDateInclusionConstraint, upToDateExclusionConstraint);
+
+        const uniqueAnalytes = new Set(upToDateInclusionConstraint.getAnalytes());
+        console.log('Analytes ', uniqueAnalytes);
+
+
+        const cohortConstraint: Constraint = this.prepareCohort(upToDateInclusionConstraint, upToDateExclusionConstraint);
+
+        const analytes = Array.from(uniqueAnalytes);
+
+        // the analytes split into two groups: modifiers and concepts
+        const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } = this.extractConceptsAndModifiers(analytes);
+
+        const apiRequest: ApiExploreStatistics = {
+            ID: ExploreStatisticsService.getNewQueryID(),
+            concepts: conceptsPaths,
+            modifiers: modifiers,
+            userPublicKey: this.cryptoService.ephemeralPublicKey,
+            bucketSize,
+            minObservation,
+            cohortDefinition: {
+                queryTiming: this.queryService.lastTiming,
+                panels: this.constraintMappingService.mapConstraint(cohortConstraint)
+            }
+        };
+
+        this.displayLoadingIcon.next(true);
+
+        const observableRequest = this.sendRequest(apiRequest);
+
+        this.navbarService.navigateToExploreTab();
+        console.log('Api request ', apiRequest);
+
+        observableRequest.subscribe((answers: ApiExploreStatisticsResponse[]) => {
+            if (answers === undefined || answers.length === 0) {
+                ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.');
+                return;
+            }
+            // All servers are supposed to send the same information so we pick the element with index zero
+            const serverResponse: ApiExploreStatisticsResponse = answers[0];
+
+
+            if (serverResponse.results === undefined) {
+                this.displayLoadingIcon.next(false);
+                ErrorHelper.handleNewError('Please verify you selected an analyte.');
+                return;
+            }
+
+            const chartsInformations = serverResponse.results.map((result: ApiExploreStatisticResult) => new ChartInformation(result, this.cryptoService, result.analyteName, cohortConstraint.textRepresentation)
+            );
+
+
+
+            forkJoin(chartsInformations.map(ci => ci.readable)).subscribe(_ => {
+                // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
+                this.chartsDataSubject.next(chartsInformations);
+                this.displayLoadingIcon.next(false);
+            });
+
+        }, err => {
+            this.displayLoadingIcon.next(false);
+        });
+    }
 
     private sendRequest(apiRequest: ApiExploreStatistics): Observable<ApiExploreStatisticsResponse[]> {
         return forkJoin(this.medcoNetworkService.nodes
@@ -213,10 +237,13 @@ export class ExploreStatisticsService {
         return { conceptsPaths, modifiers };
     }
 
-    private prepareCohort(upToDateConstraint: Constraint) {
-        const filteredInclusionConstraint = upToDateConstraint.constraintWithoutAnalytes();
-        const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint,
-            this.constraintService.rootExclusionConstraint);
+    private prepareCohort(upToDateInclusionConstraint: Constraint, upToDateExclusionConstraint: Constraint): Constraint {
+        const filteredInclusionConstraint = upToDateInclusionConstraint.constraintWithoutAnalytes();
+        const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, upToDateExclusionConstraint);
+
+
+        this.inclusionConstraint.next(filteredInclusionConstraint)
+        this.exclusionConstraint.next(upToDateExclusionConstraint)
 
         console.log('Cohort constraint ', cohortConstraint);
 

@@ -46,12 +46,16 @@ export class NavbarService {
   private static get RESULTS_ROUTE() { return '/results'; }
 
   constructor(private authService: AuthenticationService, private router: Router) {
+
     this._selectedSurvivalId = new Subject<number>()
     this._selectedSurvivalIDtoDelete = new Subject<number>()
+
+    const exploreTabLabel = this.authService.hasExploreStatsRole ? 'Cohort Building' : OperationType.EXPLORE
+
     this.items = [
 
       // 0: explore tab, default page
-      { label: OperationType.EXPLORE, routerLink: NavbarService.EXPLORE_ROUTE },
+      { label: exploreTabLabel, routerLink: NavbarService.EXPLORE_ROUTE },
 
       // 1: explore statistics tab
       { label: OperationType.EXPLORE_STATISTICS, routerLink: NavbarService.EXPLORE_STATS_ROUTE },
@@ -65,10 +69,12 @@ export class NavbarService {
 
     this.resultItems = []
     this._lastSuccessfulSurvival = 0
+
+    this.updateState(router.url)
   }
 
 
-  updateNavbar(routerLink: string) {
+  updateState(routerLink: string) {
     this.isExplore = (routerLink === NavbarService.EXPLORE_ROUTE || routerLink === '');
     this.isAnalysis = (routerLink === NavbarService.ANALYSIS_ROUTE);
     this._isExploreStats = (routerLink === NavbarService.EXPLORE_STATS_ROUTE)
@@ -80,6 +86,11 @@ export class NavbarService {
         break
       }
     }
+  }
+
+  updateNavbar(routerLink: string) {
+    this.updateState(routerLink)
+
     console.log('Updated router link: ', routerLink)
 
     if (this.isExplore) {

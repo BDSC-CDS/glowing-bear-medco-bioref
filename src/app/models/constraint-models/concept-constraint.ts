@@ -48,6 +48,7 @@ export class ConceptConstraint extends Constraint {
 
   constructor(treeNode: TreeNode) {
     super();
+    this.shortTextRepresentationIsSimilar = false;
     this._treeNode = treeNode;
     this.valueConstraints = [];
     this.valDateConstraint = new TimeConstraint();
@@ -55,11 +56,13 @@ export class ConceptConstraint extends Constraint {
     this.obsDateConstraint = new TimeConstraint();
     this.obsDateConstraint.isObservationDate = true;
     this.textRepresentation = 'Concept';
+    this.shortTextRepresentation = this.textRepresentation
   }
 
   clone(): ConceptConstraint {
     let res = new ConceptConstraint(this._treeNode.clone())
     res.textRepresentation = this.textRepresentation
+    res.shortTextRepresentation = this.shortTextRepresentation
     res.parentConstraint = this.parentConstraint
     res.concept = this.concept.clone()
     res.applyNumericalOperator = this.applyNumericalOperator
@@ -109,6 +112,7 @@ export class ConceptConstraint extends Constraint {
   set concept(concept: Concept) {
     this._concept = concept;
     this.textRepresentation = concept ? `Ontology concept: ${concept.label}` : FormatHelper.nullValuePlaceholder;
+    this.shortTextRepresentation = concept ? concept.name : FormatHelper.nullValuePlaceholder;
   }
 
   get valueConstraints(): ValueConstraint[] {

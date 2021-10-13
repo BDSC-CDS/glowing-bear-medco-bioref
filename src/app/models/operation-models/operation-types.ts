@@ -10,7 +10,7 @@ export class OperationType {
 
   static readonly EXPLORE: string = 'Explore'
   static readonly ANALYSIS: string = 'Analysis'
-  static readonly EXPLORE_STATISTICS: string = 'Explore Statistics'
+  static readonly EXPLORE_STATISTICS: string = 'Statistics Results'
 
   static readonly ALL_TYPES = [
     OperationType.EXPLORE,
