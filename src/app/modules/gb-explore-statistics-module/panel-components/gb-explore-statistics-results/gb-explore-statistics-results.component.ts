@@ -58,10 +58,10 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     chartsInfo.forEach(chartInfo => {
 
       // Create a histogram based on the chart info
-      this.buildChart(chartInfo, (chartComponent: ChartComponent) => chartComponent.drawHistogram(chartInfo));
+      this.buildChart((chartComponent: ChartComponent) => chartComponent.drawHistogram(chartInfo));
 
       // Create a plot with interpolated lines
-      this.buildChart(chartInfo, (chartComponent: ChartComponent) => chartComponent.drawInterpolatedLine(chartInfo))
+      this.buildChart((chartComponent: ChartComponent) => chartComponent.drawInterpolatedLine(chartInfo))
 
     });
 
@@ -73,10 +73,9 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
   /*
   * This method acts as a factory to build the graph (histogram, line plot, ...).
-  * It takes as parameters the method from the ChartComponent which will be used to draw the graph
-  * and the chartInformation containing the information necessary to draw the graph.
+  * It takes as parameters the method from the ChartComponent which will be used to draw the graph.
   * */
-  private buildChart(chartInfo: ChartInformation, drawMethod: (ChartComponent) => void): void {
+  private buildChart(drawMethod: (ChartComponent) => void): void {
     const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(ChartComponent);
     const childComponentRef = this.canvasContainer.createComponent(childComponentFactory);
 
@@ -97,11 +96,11 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 })
 export class ChartComponent implements AfterViewInit {
   private static BACKGROUND_COLOURS: string[] = [
-    'rgba(255, 99, 132, 0.5)',
+    'rgba(153, 102, 255, 0.5)',
     'rgba(54, 162, 235, 0.5)',
+    'rgba(255, 99, 132, 0.5)',
     'rgba(255, 206, 86, 0.5)',
     'rgba(75, 192, 192, 0.5)',
-    'rgba(153, 102, 255, 0.5)',
     'rgba(255, 159, 64, 0.5)']
 
 
@@ -279,7 +278,7 @@ export class ChartComponent implements AfterViewInit {
     chart.data.labels = chartInfo.intervals.map((int, i) => '[ ' + int.lowerBound + ', ' + int.higherBound + ' ' + getRightBound(i));
     chart.data.datasets[0] = {
       data: chartInfo.intervals.map(i => i.count),
-      backgroundColor: chartInfo.intervals.map((_, index) => ChartComponent.getBackgroundColor(index))
+      backgroundColor: ChartComponent.getBackgroundColor(0) //chartInfo.intervals.map(_ => ChartComponent.getBackgroundColor(0))
     }
 
     let min, max: number
