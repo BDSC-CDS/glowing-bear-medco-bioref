@@ -58,10 +58,10 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     chartsInfo.forEach(chartInfo => {
 
       // Create a histogram based on the chart info
-      this.buildChart((chartComponent: ChartComponent) => chartComponent.drawHistogram(chartInfo));
+      this.buildChart('bar', (chartComponent: ChartComponent) => chartComponent.drawHistogram(chartInfo));
 
       // Create a plot with interpolated lines
-      this.buildChart((chartComponent: ChartComponent) => chartComponent.drawInterpolatedLine(chartInfo))
+      this.buildChart('line', (chartComponent: ChartComponent) => chartComponent.drawInterpolatedLine(chartInfo))
 
     });
 
@@ -72,15 +72,16 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
 
   /*
-  * This method acts as a factory to build the graph (histogram, line plot, ...).
+  * This method acts as a factory to dynamically build the graph (histogram, line plot, ...).
   * It takes as parameters the method from the ChartComponent which will be used to draw the graph.
   * */
-  private buildChart(drawMethod: (ChartComponent) => void): void {
+  private buildChart(chartType: string, drawMethod: (ChartComponent) => void): void {
     const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(ChartComponent);
     const childComponentRef = this.canvasContainer.createComponent(childComponentFactory);
 
 
     const chart = childComponentRef.instance;
+    chart.chartType = chartType
 
     chart.componentInitialized.subscribe(_ => drawMethod(chart));
   }
@@ -107,6 +108,8 @@ export class ChartComponent implements AfterViewInit {
 
   chart: Chart
 
+  chartType: string
+
   context: CanvasRenderingContext2D; // not sure it is necessary to put this as an attribute of the class
 
 
@@ -121,6 +124,7 @@ export class ChartComponent implements AfterViewInit {
   }
 
   constructor(public element: ElementRef, private cdref: ChangeDetectorRef) {
+
   }
 
 
@@ -133,7 +137,7 @@ export class ChartComponent implements AfterViewInit {
     this.context = this.canvasRef.nativeElement.getContext('2d');
 
     this.chart = new Chart(this.context, {
-      type: 'bar',
+      type: this.chartType,
       data: {
         labels: [],
         datasets: [{
