@@ -179,7 +179,7 @@ export class ChartComponent implements AfterViewInit {
         display: false
       },
       title: {
-        text: 'Histogram for the `' + chartInfo.treeNodeName + '` concept in the context of the `' + chartInfo.cohortName + '` cohort ',
+        text: 'Histogram for the `' + chartInfo.treeNodeName + '` concept',
         display: true
       },
       scales: {
