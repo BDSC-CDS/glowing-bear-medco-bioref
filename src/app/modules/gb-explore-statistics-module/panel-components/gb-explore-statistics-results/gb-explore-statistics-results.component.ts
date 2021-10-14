@@ -96,7 +96,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 })
 export class ChartComponent implements AfterViewInit {
   private static BACKGROUND_COLOURS: string[] = [
-    'rgba(153, 102, 255, 0.5)',
+    'rgba(68, 0, 203, 0.5)',
     'rgba(54, 162, 235, 0.5)',
     'rgba(255, 99, 132, 0.5)',
     'rgba(255, 206, 86, 0.5)',
@@ -169,24 +169,26 @@ export class ChartComponent implements AfterViewInit {
       labels: xPoints,
       datasets: [
         {
-          label: 'Cubic interpolation (monotone)',
+          label: 'Interpolated line plot for the `' + chartInfo.treeNodeName + '` analyte', //'Cubic interpolation (monotone)',
           data: dataPoints,
           borderColor: ChartComponent.BACKGROUND_COLOURS[0],
           fill: false,
           cubicInterpolationMode: 'monotone',
           tension: 0.4
-        }, {
-          label: 'Cubic interpolation',
-          data: dataPoints,
-          borderColor: ChartComponent.BACKGROUND_COLOURS[1],
-          fill: false,
-          tension: 0.4
-        }, {
-          label: 'Linear interpolation (default)',
-          data: dataPoints,
-          borderColor: ChartComponent.BACKGROUND_COLOURS[2],
-          fill: false
-        }
+        },
+        // {
+        //   label: 'Cubic interpolation',
+        //   data: dataPoints,
+        //   borderColor: ChartComponent.BACKGROUND_COLOURS[1],
+        //   fill: false,
+        //   tension: 0.4
+        // },
+        // {
+        //   label: 'Linear interpolation (default)',
+        //   data: dataPoints,
+        //   borderColor: ChartComponent.BACKGROUND_COLOURS[2],
+        //   fill: false
+        // }
       ]
     };
   }
@@ -199,29 +201,42 @@ export class ChartComponent implements AfterViewInit {
       options: {
         responsive: true,
         plugins: {
+          legend: {
+            position: 'top',
+          },
           title: {
             display: true,
-            text: 'Chart.js Line Chart - Cubic interpolation mode'
+            text: 'Interpolated line plot for the `' + chartInfo.treeNodeName + '` analyte',
           },
         },
         interaction: {
           intersect: false,
         },
         scales: {
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Value [' + chartInfo.unit + ']',
+            }
+          }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Frequency',
+            }
+          }],
           x: {
             display: true,
             title: {
-              display: true
+              display: true,
             }
           },
           y: {
             display: true,
             title: {
               display: true,
-              text: 'Value'
             },
             suggestedMin: -10,
-            suggestedMax: 200
           }
         }
       },
@@ -275,45 +290,18 @@ export class ChartComponent implements AfterViewInit {
     // When the interval is the last one the right bound is inclusive, otherwise it is exclusive.
     const getRightBound = (i: number) => i < (chartInfo.intervals.length - 1) ? '[' : ']'
 
-    chart.data.labels = chartInfo.intervals.map((int, i) => '[ ' + int.lowerBound + ', ' + int.higherBound + ' ' + getRightBound(i));
+    chart.data.labels = chartInfo.intervals.map((int, i) => {
+      return '[ ' + parseFloat(int.lowerBound) + ', ' + parseFloat(int.higherBound) + ' ' + getRightBound(i)
+    });
     chart.data.datasets[0] = {
       data: chartInfo.intervals.map(i => i.count),
       backgroundColor: ChartComponent.getBackgroundColor(0) //chartInfo.intervals.map(_ => ChartComponent.getBackgroundColor(0))
     }
 
-    let min, max: number
-    max = chartInfo.intervals[0].count
-    min = max
 
-    chart.options = {
-      legend: {
-        display: false
-      },
-      title: {
-        text: 'Histogram for the `' + chartInfo.treeNodeName + '` concept',
-        display: true
-      },
-      scales: {
-        xAxes: [{
-          scaleLabel: {
-            display: true,
-            labelString: chartInfo.unit,
-          }
-        }]
-      }
-    }
+    chart.options = this.buildHistogramOptions(chartInfo)
 
-    chartInfo.intervals.forEach(v => {
-      if (max < v.count) {
-        max = v.count
-      }
-      if (min > v.count) {
-        min = v.count
-      }
-    })
-
-    // the minimum value displayed by the chart is defined as the minimum data point minus 10% the range of values (max - min)
-    const minDisplayed = min - (max - min) * .1
+    const minDisplayed = this.findMinDisplayed(chartInfo);
     chart.options.scales.yAxes = [{
       ticks: {
         min: minDisplayed
@@ -323,4 +311,49 @@ export class ChartComponent implements AfterViewInit {
     chart.update();
   }
 
+
+  private findMinDisplayed(chartInfo: ChartInformation) {
+    let min, max: number;
+    max = chartInfo.intervals[0].count;
+    min = max;
+
+    chartInfo.intervals.forEach(v => {
+      if (max < v.count) {
+        max = v.count;
+      }
+      if (min > v.count) {
+        min = v.count;
+      }
+    });
+
+    // the minimum value displayed by the chart is defined as the minimum data point minus 10% the range of values (max - min)
+    const minDisplayed = min === 0 ? 0 : Math.floor(min - (max - min) * .1);
+    return minDisplayed;
+  }
+
+  private buildHistogramOptions(chartInfo: ChartInformation): Chart.ChartOptions {
+    return {
+      legend: {
+        display: false
+      },
+      title: {
+        text: 'Histogram for the `' + chartInfo.treeNodeName + '` analyte',
+        display: true
+      },
+      scales: {
+        xAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Value [' + chartInfo.unit + ']',
+          }
+        }],
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Frequency',
+          }
+        }]
+      }
+    };
+  }
 }
