@@ -57,24 +57,35 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
     chartsInfo.forEach(chartInfo => {
 
-      // create the canvas on which the chart will be drawn.
-      const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(ChartComponent);
-      const childComponentRef = this.canvasContainer.createComponent(childComponentFactory);
+      // Create a histogram based on the chart info
+      this.buildChart(chartInfo, (chartComponent: ChartComponent) => chartComponent.drawHistogram(chartInfo));
 
+      // Create a plot with interpolated lines
+      this.buildChart(chartInfo, (chartComponent: ChartComponent) => chartComponent.drawInterpolatedLine(chartInfo))
 
-      const chart = childComponentRef.instance
-
-      chart.componentInitialized.subscribe(_ => {
-        chart.drawChart(chartInfo)
-      })
-
-      return childComponentRef
     });
 
 
 
     this.openStatsResultsAccordion = true;
   }
+
+
+  /*
+  * This method acts as a factory to build the graph (histogram, line plot, ...).
+  * It takes as parameters the method from the ChartComponent which will be used to draw the graph
+  * and the chartInformation containing the information necessary to draw the graph.
+  * */
+  private buildChart(chartInfo: ChartInformation, drawMethod: (ChartComponent) => void): void {
+    const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(ChartComponent);
+    const childComponentRef = this.canvasContainer.createComponent(childComponentFactory);
+
+
+    const chart = childComponentRef.instance;
+
+    chart.componentInitialized.subscribe(_ => drawMethod(chart));
+  }
+
 }
 
 
@@ -85,7 +96,8 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
   template: `<div [hidden]="!chart"><canvas #canvasElement>{{chart}}</canvas></div>`
 })
 export class ChartComponent implements AfterViewInit {
-  private static BACKGROUND_COLOURS: string[] = ['rgba(255, 99, 132, 0.5)',
+  private static BACKGROUND_COLOURS: string[] = [
+    'rgba(255, 99, 132, 0.5)',
     'rgba(54, 162, 235, 0.5)',
     'rgba(255, 206, 86, 0.5)',
     'rgba(75, 192, 192, 0.5)',
@@ -144,11 +156,111 @@ export class ChartComponent implements AfterViewInit {
   }
 
 
+  //this method process the dataset necessary for drawing the interpolated line graph
+  private buildPoints(chartInfo: ChartInformation): Object {
+    // the x axis point associated to an interval count will be the the middle between the higher and lower bound of an interval
+    const xPoints: Array<number> = chartInfo.intervals.map(interval => {
+      return (parseFloat(interval.higherBound) + parseFloat(interval.lowerBound)) / 2
+    })
+
+    const dataPoints: Array<number> = chartInfo.intervals.map(interval => interval.count)
+
+
+    return {
+      labels: xPoints,
+      datasets: [
+        {
+          label: 'Cubic interpolation (monotone)',
+          data: dataPoints,
+          borderColor: ChartComponent.BACKGROUND_COLOURS[0],
+          fill: false,
+          cubicInterpolationMode: 'monotone',
+          tension: 0.4
+        }, {
+          label: 'Cubic interpolation',
+          data: dataPoints,
+          borderColor: ChartComponent.BACKGROUND_COLOURS[1],
+          fill: false,
+          tension: 0.4
+        }, {
+          label: 'Linear interpolation (default)',
+          data: dataPoints,
+          borderColor: ChartComponent.BACKGROUND_COLOURS[2],
+          fill: false
+        }
+      ]
+    };
+  }
+
+  // this method builds the config necessary for drawing the interpolated line graph
+  private buildConfig(chartInfo: ChartInformation, data: Object): Object {
+    return {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Chart.js Line Chart - Cubic interpolation mode'
+          },
+        },
+        interaction: {
+          intersect: false,
+        },
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true
+            }
+          },
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Value'
+            },
+            suggestedMin: -10,
+            suggestedMax: 200
+          }
+        }
+      },
+    };
+  }
 
   /*
-  * Given ChartInformation object this function will draw the chart on the canvas
+  * Given ChartInformation object this function will a line graph on the canvas. The points of the curves are interconnected using interpolation methods
+  * see for reference https://github.com/chartjs/Chart.js/blob/master/docs/samples/line/interpolation.md
   */
-  drawChart(chartInfo: ChartInformation) {
+  drawInterpolatedLine(chartInfo: ChartInformation) {
+    const chart = this.chart
+
+    if (!(chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0)) {
+      chart.data.labels = [];
+      chart.data.datasets[0].data = [];
+
+      chart.update()
+
+      return
+
+    }
+
+
+    const data = this.buildPoints(chartInfo)
+
+    const config = this.buildConfig(chartInfo, data)
+
+    chart.config = config
+    chart.data = data
+
+    chart.update()
+  }
+
+  /*
+  * Given ChartInformation object this function will draw the histogram on the canvas
+  */
+  drawHistogram(chartInfo: ChartInformation) {
     const chart = this.chart
 
     if (!(chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0)) {
