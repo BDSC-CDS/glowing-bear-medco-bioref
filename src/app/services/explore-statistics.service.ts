@@ -1,5 +1,5 @@
 import { Injectable, Output } from '@angular/core';
-import { forkJoin, Observable, ReplaySubject, Subject } from 'rxjs';
+import { forkJoin, Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ApiI2b2Panel } from '../models/api-request-models/medco-node/api-i2b2-panel';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
@@ -106,9 +106,9 @@ export class ExploreStatisticsService {
         const i2b2Panels: ApiI2b2Panel[] = this.constraintMappingService.mapConstraint(constraint)
 
         if (i2b2Panels.length == 0) {
-            return new Observable(subscribe => {
-                subscribe.next(new CombinationConstraint()) // return empty constraint
-            })
+            /* Return an empty constraint if the passed parameter is empty.
+            * This can happen if the exclusion criteria is empty for example.  */
+            return of(new CombinationConstraint())
         }
 
         return this.reverseConstraintMappingService.mapPanels(i2b2Panels)

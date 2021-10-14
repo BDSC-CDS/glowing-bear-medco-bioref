@@ -7,7 +7,7 @@
  */
 import {Injectable} from '@angular/core';
 import {AppConfig} from '../../../config/app.config';
-import {Observable, forkJoin} from 'rxjs';
+import {Observable, forkJoin, of} from 'rxjs';
 import {timeout, map, tap} from 'rxjs/operators';
 import {ApiI2b2Panel} from '../../../models/api-request-models/medco-node/api-i2b2-panel';
 import {ConstraintMappingService} from '../../constraint-mapping.service';
