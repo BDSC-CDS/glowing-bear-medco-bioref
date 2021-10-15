@@ -9,6 +9,7 @@ import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, 
 import Chart from 'chart.js';
 import { Subject } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
+import * as ChartAnnotation from 'chartjs-plugin-annotation';
 
 @Component({
   selector: 'gb-explore-statistics-results',
@@ -32,6 +33,13 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
   }
 
+
+  ngOnInit() {
+
+    const namedChartAnnotation = ChartAnnotation;
+    namedChartAnnotation["id"] = "annotation";
+    Chart.pluginService.register(namedChartAnnotation);
+  }
 
   ngAfterViewInit() {
     this.exploreStatisticsService.chartsDataSubject.subscribe((chartsInfo: ChartInformation[]) => {
@@ -198,13 +206,49 @@ export class ChartComponent implements AfterViewInit {
   }
 
   // this method builds the config necessary for drawing the interpolated line graph
-  private buildConfig(chartInfo: ChartInformation, data: Object): Object {
+  private buildConfig(chartInfo: ChartInformation, data): Object {
+
+
+
+    const refIntervalX1 = data.labels[1]
+
     return {
       type: 'line',
       data: data,
       options: {
+        annotation: {
+          annotations: [{
+            drawTime: 'afterDraw', // overrides annotation.drawTime if set
+            id: 'a-line-1', // optional
+            type: 'line',
+            mode: 'horizontal',
+            scaleID: 'y-axis-0',
+            value: '25',
+            borderColor: 'red',
+            borderWidth: 2,
+
+
+            // type: 'line',
+            // mode: 'vertical',
+            // scaleID: 'x-axis-0',
+            // value: 3,
+            // xMin: 3,
+            // borderColor: 'red',
+            // borderWidth: 2,
+          }],
+        },
         responsive: true,
         plugins: {
+          // autocolors: false,
+          // annotations: {
+          //   line1: { // the dashed line highlighting the first reference interval
+          //     type: 'line',
+          //     xMin: refIntervalX1,
+          //     xMax: refIntervalX1,
+          //     borderColor: 'rgb(255, 99, 132)',
+          //     borderWidth: 2,
+          //   }
+          // },
           legend: {
             position: 'top',
           },
