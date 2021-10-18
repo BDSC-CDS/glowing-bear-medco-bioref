@@ -27,7 +27,6 @@ export class Interval {
         this.higherBound = higherBound
         this.lowerBound = lowerBound
         this.count = decryptedCount
-        console.log('Clear count for [', this.lowerBound, ', ', this.higherBound, '] is ', this.count)
     }
 }
 

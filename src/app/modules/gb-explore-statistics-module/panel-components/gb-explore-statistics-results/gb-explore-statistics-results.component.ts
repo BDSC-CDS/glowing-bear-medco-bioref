@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ElementRef, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ElementRef, Injector, ReflectiveInjector, ViewChild, ViewContainerRef } from '@angular/core';
 import Chart from 'chart.js';
 import { Subject } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
@@ -23,38 +23,37 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
   openStatsResultsAccordion = false
 
-  displayLoadingIcon = false
+  private _displayLoadingIcon: boolean = false
 
 
   constructor(private exploreStatisticsService: ExploreStatisticsService,
     private componentFactoryResolver: ComponentFactoryResolver,
-    private cdref: ChangeDetectorRef) {
+    private cdref: ChangeDetectorRef) { }
 
 
+  get displayLoadingIcon() {
+    return this._displayLoadingIcon
   }
-
 
   ngOnInit() {
 
     const namedChartAnnotation = ChartAnnotation;
     namedChartAnnotation["id"] = "annotation";
     Chart.pluginService.register(namedChartAnnotation);
+
+    this.exploreStatisticsService.displayLoadingIcon.subscribe((display: boolean) => {
+      this._displayLoadingIcon = display
+      this.cdref.detectChanges();
+    })
   }
 
   ngAfterViewInit() {
+    //TODO debug: Il faudrait qu'on build les chart dans le after view init des composants enfants
     this.exploreStatisticsService.chartsDataSubject.subscribe((chartsInfo: ChartInformation[]) => {
       this.displayCharts(chartsInfo);
     })
-
-    this.exploreStatisticsService.displayLoadingIcon.subscribe((display: boolean) => {
-      this.displayLoadingIcon = display
-    })
   }
 
-
-  ngAfterContentChecked() {
-    this.cdref.detectChanges();
-  }
 
 
   private displayCharts(chartsInfo: ChartInformation[]) {
@@ -66,10 +65,10 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     chartsInfo.forEach(chartInfo => {
 
       // Create a histogram based on the chart info
-      this.buildChart('bar', (chartComponent: ChartComponent) => chartComponent.drawHistogram(chartInfo));
+      this.buildChart('bar', chartInfo, (chartComponent: ChartComponent) => chartComponent.drawHistogram());
 
       // Create a plot with interpolated lines
-      this.buildChart('line', (chartComponent: ChartComponent) => chartComponent.drawInterpolatedLine(chartInfo))
+      this.buildChart('line', chartInfo, (chartComponent: ChartComponent) => chartComponent.drawInterpolatedLine())
 
     });
 
@@ -83,14 +82,19 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
   * This method acts as a factory to dynamically build the graph (histogram, line plot, ...).
   * It takes as parameters the method from the ChartComponent which will be used to draw the graph.
   * */
-  private buildChart(chartType: string, drawMethod: (ChartComponent) => void): void {
+  private buildChart(chartType: string, chartInfo: ChartInformation, drawMethod: (ChartComponent) => void): void {
     const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(ChartComponent);
     const childComponentRef = this.canvasContainer.createComponent(childComponentFactory);
 
-
     const chart = childComponentRef.instance;
     chart.chartType = chartType
+    chart.chartInfo = chartInfo
 
+    // TODO pour éviter d'avoir l'erreur :
+    // ExpressionChangedAfterItHasBeenCheckedError: Previous value: 'undefined'. Current value: '[object Object]'.
+    // Il faudrait passer la draw method au constructeur de chart component pour qu'il l'invoque dans onInit
+    // au lieu de passer une fonction tu pourrais créer deux classes une pour chaque type de graphe. Chaque classe aurait sa draw method et au final
+    // tout ce que tu passerais au factory ce serait le chart info.
     chart.componentInitialized.subscribe(_ => drawMethod(chart));
   }
 
@@ -101,7 +105,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 // See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
 @Component({
   selector: 'gb-explore-stats-canvas',
-  template: `<div [hidden]="!chart"><canvas #canvasElement>{{chart}}</canvas></div>`
+  template: `<div><canvas #canvasElement>{{chart}}</canvas></div>`
 })
 export class ChartComponent implements AfterViewInit {
   private static BACKGROUND_COLOURS: string[] = [
@@ -113,6 +117,7 @@ export class ChartComponent implements AfterViewInit {
     'rgba(255, 159, 64, 0.5)']
 
 
+  chartInfo: ChartInformation
 
   chart: Chart
 
@@ -131,14 +136,8 @@ export class ChartComponent implements AfterViewInit {
     return ChartComponent.BACKGROUND_COLOURS[index % ChartComponent.BACKGROUND_COLOURS.length]
   }
 
-  constructor(public element: ElementRef, private cdref: ChangeDetectorRef) {
+  constructor(public element: ElementRef) { }
 
-  }
-
-
-  ngAfterContentChecked() {
-    this.cdref.detectChanges();
-  }
 
   ngAfterViewInit(): void {
     // the reference to the `canvas` on which the chart will be drawn. See the @Component to see the canvas.
@@ -168,7 +167,7 @@ export class ChartComponent implements AfterViewInit {
 
 
   //this method process the dataset necessary for drawing the interpolated line graph
-  private buildPoints(chartInfo: ChartInformation): Object {
+  private buildPoints(chartInfo: ChartInformation): Chart.ChartData {
     // the x axis point associated to an interval count will be the the middle between the higher and lower bound of an interval
     const xPoints: Array<number> = chartInfo.intervals.map(interval => {
       return (parseFloat(interval.higherBound) + parseFloat(interval.lowerBound)) / 2
@@ -186,7 +185,6 @@ export class ChartComponent implements AfterViewInit {
           borderColor: ChartComponent.BACKGROUND_COLOURS[0],
           fill: false,
           cubicInterpolationMode: 'monotone',
-          tension: 0.4
         },
         // {
         //   label: 'Cubic interpolation',
@@ -206,7 +204,7 @@ export class ChartComponent implements AfterViewInit {
   }
 
   // this method builds the config necessary for drawing the interpolated line graph
-  private buildConfig(chartInfo: ChartInformation, data): Object {
+  private buildConfig(data: Chart.ChartData): Object /*Chart.ChartConfiguration*/ {
 
 
 
@@ -218,43 +216,27 @@ export class ChartComponent implements AfterViewInit {
       options: {
         annotation: {
           annotations: [{
-            drawTime: 'afterDraw', // overrides annotation.drawTime if set
-            id: 'a-line-1', // optional
             type: 'line',
-            mode: 'horizontal',
-            scaleID: 'y-axis-0',
-            value: '25',
+            mode: 'vertical',
+            scaleID: 'x-axis-0',
+            value: refIntervalX1,
             borderColor: 'red',
-            borderWidth: 2,
+            label: {
+              content: "Test",
+              enabled: true,
+              position: "top"
+            }
 
-
-            // type: 'line',
-            // mode: 'vertical',
-            // scaleID: 'x-axis-0',
-            // value: 3,
-            // xMin: 3,
-            // borderColor: 'red',
-            // borderWidth: 2,
           }],
         },
         responsive: true,
         plugins: {
-          // autocolors: false,
-          // annotations: {
-          //   line1: { // the dashed line highlighting the first reference interval
-          //     type: 'line',
-          //     xMin: refIntervalX1,
-          //     xMax: refIntervalX1,
-          //     borderColor: 'rgb(255, 99, 132)',
-          //     borderWidth: 2,
-          //   }
-          // },
           legend: {
             position: 'top',
           },
           title: {
             display: true,
-            text: 'Interpolated line plot for the `' + chartInfo.treeNodeName + '` analyte',
+            text: 'Interpolated line plot for the `' + this.chartInfo.treeNodeName + '` analyte',
           },
         },
         interaction: {
@@ -264,7 +246,7 @@ export class ChartComponent implements AfterViewInit {
           xAxes: [{
             scaleLabel: {
               display: true,
-              labelString: 'Value [' + chartInfo.unit + ']',
+              labelString: 'Value [' + this.chartInfo.unit + ']',
             }
           }],
           yAxes: [{
@@ -273,19 +255,6 @@ export class ChartComponent implements AfterViewInit {
               labelString: 'Frequency',
             }
           }],
-          x: {
-            display: true,
-            title: {
-              display: true,
-            }
-          },
-          y: {
-            display: true,
-            title: {
-              display: true,
-            },
-            suggestedMin: -10,
-          }
         }
       },
     };
@@ -295,10 +264,10 @@ export class ChartComponent implements AfterViewInit {
   * Given ChartInformation object this function will a line graph on the canvas. The points of the curves are interconnected using interpolation methods
   * see for reference https://github.com/chartjs/Chart.js/blob/master/docs/samples/line/interpolation.md
   */
-  drawInterpolatedLine(chartInfo: ChartInformation) {
+  drawInterpolatedLine() {
     const chart = this.chart
 
-    if (!(chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0)) {
+    if (!(this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0)) {
       chart.data.labels = [];
       chart.data.datasets[0].data = [];
 
@@ -309,9 +278,9 @@ export class ChartComponent implements AfterViewInit {
     }
 
 
-    const data = this.buildPoints(chartInfo)
+    const data = this.buildPoints(this.chartInfo)
 
-    const config = this.buildConfig(chartInfo, data)
+    const config = this.buildConfig(data)
 
     chart.config = config
     chart.data = data
@@ -322,10 +291,10 @@ export class ChartComponent implements AfterViewInit {
   /*
   * Given ChartInformation object this function will draw the histogram on the canvas
   */
-  drawHistogram(chartInfo: ChartInformation) {
+  drawHistogram() {
     const chart = this.chart
 
-    if (!(chartInfo && chartInfo.intervals && chartInfo.intervals.length > 0)) {
+    if (!(this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0)) {
       chart.data.labels = [];
       chart.data.datasets[0].data = [];
 
@@ -336,20 +305,20 @@ export class ChartComponent implements AfterViewInit {
     }
 
     // When the interval is the last one the right bound is inclusive, otherwise it is exclusive.
-    const getRightBound = (i: number) => i < (chartInfo.intervals.length - 1) ? '[' : ']'
+    const getRightBound = (i: number) => i < (this.chartInfo.intervals.length - 1) ? '[' : ']'
 
-    chart.data.labels = chartInfo.intervals.map((int, i) => {
+    chart.data.labels = this.chartInfo.intervals.map((int, i) => {
       return '[ ' + parseFloat(int.lowerBound) + ', ' + parseFloat(int.higherBound) + ' ' + getRightBound(i)
     });
     chart.data.datasets[0] = {
-      data: chartInfo.intervals.map(i => i.count),
-      backgroundColor: ChartComponent.getBackgroundColor(0) //chartInfo.intervals.map(_ => ChartComponent.getBackgroundColor(0))
+      data: this.chartInfo.intervals.map(i => i.count),
+      backgroundColor: ChartComponent.getBackgroundColor(0) //this.chartInfo.intervals.map(_ => ChartComponent.getBackgroundColor(0))
     }
 
 
-    chart.options = this.buildHistogramOptions(chartInfo)
+    chart.options = this.buildHistogramOptions()
 
-    const minDisplayed = this.findMinDisplayed(chartInfo);
+    const minDisplayed = this.findMinDisplayed();
     chart.options.scales.yAxes = [{
       ticks: {
         min: minDisplayed
@@ -360,12 +329,12 @@ export class ChartComponent implements AfterViewInit {
   }
 
 
-  private findMinDisplayed(chartInfo: ChartInformation) {
+  private findMinDisplayed() {
     let min, max: number;
-    max = chartInfo.intervals[0].count;
+    max = this.chartInfo.intervals[0].count;
     min = max;
 
-    chartInfo.intervals.forEach(v => {
+    this.chartInfo.intervals.forEach(v => {
       if (max < v.count) {
         max = v.count;
       }
@@ -379,20 +348,20 @@ export class ChartComponent implements AfterViewInit {
     return minDisplayed;
   }
 
-  private buildHistogramOptions(chartInfo: ChartInformation): Chart.ChartOptions {
+  private buildHistogramOptions(): Chart.ChartOptions {
     return {
       legend: {
         display: false
       },
       title: {
-        text: 'Histogram for the `' + chartInfo.treeNodeName + '` analyte',
+        text: 'Histogram for the `' + this.chartInfo.treeNodeName + '` analyte',
         display: true
       },
       scales: {
         xAxes: [{
           scaleLabel: {
             display: true,
-            labelString: 'Value [' + chartInfo.unit + ']',
+            labelString: 'Value [' + this.chartInfo.unit + ']',
           }
         }],
         yAxes: [{

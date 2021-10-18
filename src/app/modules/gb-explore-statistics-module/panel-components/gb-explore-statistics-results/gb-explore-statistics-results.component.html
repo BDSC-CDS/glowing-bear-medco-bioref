@@ -1,6 +1,6 @@
 <div class="small-font">
 
-  <span class="loading-blink" style="display: table; margin: 0 auto;" *ngIf="displayLoadingIcon">
+  <span class="loading-blink" style="display: table; margin: 0 auto;" [hidden]="!displayLoadingIcon">
     <span>•</span><span>•</span><span>•</span>
   </span>
 
