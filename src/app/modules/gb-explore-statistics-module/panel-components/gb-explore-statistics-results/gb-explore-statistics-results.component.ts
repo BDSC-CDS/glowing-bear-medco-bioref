@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ElementRef, Injector, ReflectiveInjector, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ElementRef, Injector, ReflectiveInjector, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import Chart from 'chart.js';
 import { Subject } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
@@ -65,10 +65,10 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     chartsInfo.forEach(chartInfo => {
 
       // Create a histogram based on the chart info
-      this.buildChart('bar', chartInfo, (chartComponent: ChartComponent) => chartComponent.drawHistogram());
+      this.buildChart('bar', chartInfo, HistogramChartComponent);
 
       // Create a plot with interpolated lines
-      this.buildChart('line', chartInfo, (chartComponent: ChartComponent) => chartComponent.drawInterpolatedLine())
+      this.buildChart('line', chartInfo, LineChartComponent)
 
     });
 
@@ -82,12 +82,11 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
   * This method acts as a factory to dynamically build the graph (histogram, line plot, ...).
   * It takes as parameters the method from the ChartComponent which will be used to draw the graph.
   * */
-  private buildChart(chartType: string, chartInfo: ChartInformation, drawMethod: (ChartComponent) => void): void {
-    const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(ChartComponent);
+  private buildChart<C extends ChartComponent>(chartType: string, chartInfo: ChartInformation, chartClass: Type<C>): void {
+    const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(chartClass);
     const childComponentRef = this.canvasContainer.createComponent(childComponentFactory);
 
     const chart = childComponentRef.instance;
-    chart.chartType = chartType
     chart.chartInfo = chartInfo
 
     // TODO pour éviter d'avoir l'erreur :
@@ -95,10 +94,12 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     // Il faudrait passer la draw method au constructeur de chart component pour qu'il l'invoque dans onInit
     // au lieu de passer une fonction tu pourrais créer deux classes une pour chaque type de graphe. Chaque classe aurait sa draw method et au final
     // tout ce que tu passerais au factory ce serait le chart info.
-    chart.componentInitialized.subscribe(_ => drawMethod(chart));
+    chart.componentInitialized.subscribe(_ => chart.draw());
   }
 
 }
+
+
 
 
 
@@ -107,7 +108,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
   selector: 'gb-explore-stats-canvas',
   template: `<div><canvas #canvasElement>{{chart}}</canvas></div>`
 })
-export class ChartComponent implements AfterViewInit {
+export abstract class ChartComponent implements AfterViewInit {
   private static BACKGROUND_COLOURS: string[] = [
     'rgba(68, 0, 203, 0.5)',
     'rgba(54, 162, 235, 0.5)',
@@ -117,13 +118,15 @@ export class ChartComponent implements AfterViewInit {
     'rgba(255, 159, 64, 0.5)']
 
 
+  private context: CanvasRenderingContext2D; // not sure it is necessary to put this as an attribute of the class
+  private chartType: string
+
+  protected chart: Chart
+
   chartInfo: ChartInformation
 
-  chart: Chart
 
-  chartType: string
 
-  context: CanvasRenderingContext2D; // not sure it is necessary to put this as an attribute of the class
 
 
   @ViewChild('canvasElement', { static: false })
@@ -132,17 +135,21 @@ export class ChartComponent implements AfterViewInit {
   componentInitialized: Subject<boolean> = new Subject()
 
   // the colour is chosen in BACKGROUND_COLOURS modulo the length of BACKGROUND_COLOURS
-  private static getBackgroundColor(index: number): string {
+  static getBackgroundColor(index: number): string {
     return ChartComponent.BACKGROUND_COLOURS[index % ChartComponent.BACKGROUND_COLOURS.length]
   }
 
-  constructor(public element: ElementRef) { }
+  constructor(public element: ElementRef, chartType: string) {
+    this.chartType = chartType
+  }
 
 
   ngAfterViewInit(): void {
     // the reference to the `canvas` on which the chart will be drawn. See the @Component to see the canvas.
     this.context = this.canvasRef.nativeElement.getContext('2d');
 
+
+    //TODO prochaine etape appeler la methode draw directement (et aussi update)
     this.chart = new Chart(this.context, {
       type: this.chartType,
       data: {
@@ -165,133 +172,21 @@ export class ChartComponent implements AfterViewInit {
     this.componentInitialized.next(true)
   }
 
-
-  //this method process the dataset necessary for drawing the interpolated line graph
-  private buildPoints(chartInfo: ChartInformation): Chart.ChartData {
-    // the x axis point associated to an interval count will be the the middle between the higher and lower bound of an interval
-    const xPoints: Array<number> = chartInfo.intervals.map(interval => {
-      return (parseFloat(interval.higherBound) + parseFloat(interval.lowerBound)) / 2
-    })
-
-    const dataPoints: Array<number> = chartInfo.intervals.map(interval => interval.count)
+  abstract draw();
 
 
-    return {
-      labels: xPoints,
-      datasets: [
-        {
-          label: 'Interpolated line plot for the `' + chartInfo.treeNodeName + '` analyte', //'Cubic interpolation (monotone)',
-          data: dataPoints,
-          borderColor: ChartComponent.BACKGROUND_COLOURS[0],
-          fill: false,
-          cubicInterpolationMode: 'monotone',
-        },
-        // {
-        //   label: 'Cubic interpolation',
-        //   data: dataPoints,
-        //   borderColor: ChartComponent.BACKGROUND_COLOURS[1],
-        //   fill: false,
-        //   tension: 0.4
-        // },
-        // {
-        //   label: 'Linear interpolation (default)',
-        //   data: dataPoints,
-        //   borderColor: ChartComponent.BACKGROUND_COLOURS[2],
-        //   fill: false
-        // }
-      ]
-    };
-  }
+}
 
-  // this method builds the config necessary for drawing the interpolated line graph
-  private buildConfig(data: Chart.ChartData): Object /*Chart.ChartConfiguration*/ {
+export class HistogramChartComponent extends ChartComponent {
 
-
-
-    const refIntervalX1 = data.labels[1]
-
-    return {
-      type: 'line',
-      data: data,
-      options: {
-        annotation: {
-          annotations: [{
-            type: 'line',
-            mode: 'vertical',
-            scaleID: 'x-axis-0',
-            value: refIntervalX1,
-            borderColor: 'red',
-            label: {
-              content: "Test",
-              enabled: true,
-              position: "top"
-            }
-
-          }],
-        },
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          },
-          title: {
-            display: true,
-            text: 'Interpolated line plot for the `' + this.chartInfo.treeNodeName + '` analyte',
-          },
-        },
-        interaction: {
-          intersect: false,
-        },
-        scales: {
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Value [' + this.chartInfo.unit + ']',
-            }
-          }],
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Frequency',
-            }
-          }],
-        }
-      },
-    };
-  }
-
-  /*
-  * Given ChartInformation object this function will a line graph on the canvas. The points of the curves are interconnected using interpolation methods
-  * see for reference https://github.com/chartjs/Chart.js/blob/master/docs/samples/line/interpolation.md
-  */
-  drawInterpolatedLine() {
-    const chart = this.chart
-
-    if (!(this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0)) {
-      chart.data.labels = [];
-      chart.data.datasets[0].data = [];
-
-      chart.update()
-
-      return
-
-    }
-
-
-    const data = this.buildPoints(this.chartInfo)
-
-    const config = this.buildConfig(data)
-
-    chart.config = config
-    chart.data = data
-
-    chart.update()
+  constructor(public element: ElementRef) {
+    super(element, 'bar')
   }
 
   /*
   * Given ChartInformation object this function will draw the histogram on the canvas
   */
-  drawHistogram() {
+  draw() {
     const chart = this.chart
 
     if (!(this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0)) {
@@ -373,4 +268,134 @@ export class ChartComponent implements AfterViewInit {
       }
     };
   }
+}
+
+export class LineChartComponent extends ChartComponent {
+  constructor(public element: ElementRef) {
+    super(element, 'line')
+  }
+
+  //this method process the dataset necessary for drawing the interpolated line graph
+  private buildPoints(chartInfo: ChartInformation): Chart.ChartData {
+    // the x axis point associated to an interval count will be the the middle between the higher and lower bound of an interval
+    const xPoints: Array<number> = chartInfo.intervals.map(interval => {
+      return (parseFloat(interval.higherBound) + parseFloat(interval.lowerBound)) / 2
+    })
+
+    const dataPoints: Array<number> = chartInfo.intervals.map(interval => interval.count)
+
+
+    return {
+      labels: xPoints,
+      datasets: [
+        {
+          label: 'Interpolated line plot for the `' + chartInfo.treeNodeName + '` analyte', //'Cubic interpolation (monotone)',
+          data: dataPoints,
+          borderColor: ChartComponent.getBackgroundColor(0),
+          fill: false,
+          cubicInterpolationMode: 'monotone',
+        },
+        // {
+        //   label: 'Cubic interpolation',
+        //   data: dataPoints,
+        //   borderColor: ChartComponent.BACKGROUND_COLOURS[1],
+        //   fill: false,
+        //   tension: 0.4
+        // },
+        // {
+        //   label: 'Linear interpolation (default)',
+        //   data: dataPoints,
+        //   borderColor: ChartComponent.BACKGROUND_COLOURS[2],
+        //   fill: false
+        // }
+      ]
+    };
+  }
+
+  // this method builds the config necessary for drawing the interpolated line graph
+  private buildConfig(data: Chart.ChartData): Object /*Chart.ChartConfiguration*/ {
+
+
+
+    const refIntervalX1 = data.labels[1]
+
+    return {
+      type: 'line',
+      data: data,
+      options: {
+        annotation: {
+          annotations: [{
+            type: 'line',
+            mode: 'vertical',
+            scaleID: 'x-axis-0',
+            value: refIntervalX1,
+            borderColor: 'red',
+            label: {
+              content: "Test",
+              enabled: true,
+              position: "top"
+            }
+
+          }],
+        },
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Interpolated line plot for the `' + this.chartInfo.treeNodeName + '` analyte',
+          },
+        },
+        interaction: {
+          intersect: false,
+        },
+        scales: {
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Value [' + this.chartInfo.unit + ']',
+            }
+          }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Frequency',
+            }
+          }],
+        }
+      },
+    };
+  }
+
+  /*
+  * Given ChartInformation object this function will a line graph on the canvas. The points of the curves are interconnected using interpolation methods
+  * see for reference https://github.com/chartjs/Chart.js/blob/master/docs/samples/line/interpolation.md
+  */
+  draw() {
+    const chart = this.chart
+
+    if (!(this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0)) {
+      chart.data.labels = [];
+      chart.data.datasets[0].data = [];
+
+      chart.update()
+
+      return
+
+    }
+
+
+    const data = this.buildPoints(this.chartInfo)
+
+    const config = this.buildConfig(data)
+
+    chart.config = config
+    chart.data = data
+
+    chart.update()
+  }
+
+
 }
