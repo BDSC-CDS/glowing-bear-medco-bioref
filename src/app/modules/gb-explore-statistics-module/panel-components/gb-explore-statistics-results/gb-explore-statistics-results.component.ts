@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ElementRef, Injector, ReflectiveInjector, Type, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import Chart from 'chart.js';
+import * as ChartAnnotation from 'chartjs-plugin-annotation';
 import { Subject } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
-import * as ChartAnnotation from 'chartjs-plugin-annotation';
 
 @Component({
   selector: 'gb-explore-statistics-results',
@@ -64,50 +64,36 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
     chartsInfo.forEach(chartInfo => {
 
-      // Create a histogram based on the chart info
-      this.buildChart('bar', chartInfo, HistogramChartComponent);
+      //create a histogram
+      this.buildChart(chartInfo, HistogramChartComponent)
 
-      // Create a plot with interpolated lines
-      this.buildChart('line', chartInfo, LineChartComponent)
+      // create a smooth line graph
+      this.buildChart(chartInfo, LineChartComponent)
 
     });
-
 
 
     this.openStatsResultsAccordion = true;
   }
 
+  private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
+    const lineFactory = this.componentFactoryResolver.resolveComponentFactory(componentType);
+    const component = this.canvasContainer.createComponent(lineFactory).instance;
 
-  /*
-  * This method acts as a factory to dynamically build the graph (histogram, line plot, ...).
-  * It takes as parameters the method from the ChartComponent which will be used to draw the graph.
-  * */
-  private buildChart<C extends ChartComponent>(chartType: string, chartInfo: ChartInformation, chartClass: Type<C>): void {
-    const childComponentFactory = this.componentFactoryResolver.resolveComponentFactory(chartClass);
-    const childComponentRef = this.canvasContainer.createComponent(childComponentFactory);
-
-    const chart = childComponentRef.instance;
-    chart.chartInfo = chartInfo
-
-    // TODO pour éviter d'avoir l'erreur :
-    // ExpressionChangedAfterItHasBeenCheckedError: Previous value: 'undefined'. Current value: '[object Object]'.
-    // Il faudrait passer la draw method au constructeur de chart component pour qu'il l'invoque dans onInit
-    // au lieu de passer une fonction tu pourrais créer deux classes une pour chaque type de graphe. Chaque classe aurait sa draw method et au final
-    // tout ce que tu passerais au factory ce serait le chart info.
-    chart.componentInitialized.subscribe(_ => chart.draw());
+    component.chartInfo = chartInfo
+    component.componentInitialized.subscribe(_ => component.draw());
   }
+
+
+
 
 }
 
 
-
-
+const chartSelector = 'gb-explore-stats-canvas'
+const chartTemplate = `<div><canvas #canvasElement>{{chart}}</canvas></div>`
 
 // See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
-@Component({
-  selector: 'gb-explore-stats-canvas',
-  template: `<div><canvas #canvasElement>{{chart}}</canvas></div>`
-})
 export abstract class ChartComponent implements AfterViewInit {
   private static BACKGROUND_COLOURS: string[] = [
     'rgba(68, 0, 203, 0.5)',
@@ -124,9 +110,6 @@ export abstract class ChartComponent implements AfterViewInit {
   protected chart: Chart
 
   chartInfo: ChartInformation
-
-
-
 
 
   @ViewChild('canvasElement', { static: false })
@@ -177,10 +160,18 @@ export abstract class ChartComponent implements AfterViewInit {
 
 }
 
+@Component({
+  selector: chartSelector,
+  template: chartTemplate
+})
 export class HistogramChartComponent extends ChartComponent {
 
   constructor(public element: ElementRef) {
     super(element, 'bar')
+  }
+
+  ngAfterViewInit() {
+    super.ngAfterViewInit()
   }
 
   /*
@@ -270,9 +261,17 @@ export class HistogramChartComponent extends ChartComponent {
   }
 }
 
+@Component({
+  selector: chartSelector,
+  template: chartTemplate
+})
 export class LineChartComponent extends ChartComponent {
   constructor(public element: ElementRef) {
     super(element, 'line')
+  }
+
+  ngAfterViewInit() {
+    super.ngAfterViewInit()
   }
 
   //this method process the dataset necessary for drawing the interpolated line graph
