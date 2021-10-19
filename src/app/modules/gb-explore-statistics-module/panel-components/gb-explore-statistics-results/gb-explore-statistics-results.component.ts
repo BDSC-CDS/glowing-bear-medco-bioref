@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, Type, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import Chart from 'chart.js';
 import * as ChartAnnotation from 'chartjs-plugin-annotation';
 import { Subject } from 'rxjs';
@@ -20,8 +20,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
   @ViewChild('exploreStatsCanvasContainer', { read: ViewContainerRef }) canvasContainer: ViewContainerRef;
 
-
-  openStatsResultsAccordion = false
 
   private _displayLoadingIcon: boolean = false
 
@@ -48,7 +46,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    //TODO debug: Il faudrait qu'on build les chart dans le after view init des composants enfants
     this.exploreStatisticsService.chartsDataSubject.subscribe((chartsInfo: ChartInformation[]) => {
       this.displayCharts(chartsInfo);
     })
@@ -72,8 +69,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
 
     });
 
-
-    this.openStatsResultsAccordion = true;
   }
 
   private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
@@ -81,7 +76,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     const component = this.canvasContainer.createComponent(lineFactory).instance;
 
     component.chartInfo = chartInfo
-    component.componentInitialized.subscribe(_ => component.draw());
   }
 
 
@@ -94,7 +88,7 @@ const chartSelector = 'gb-explore-stats-canvas'
 const chartTemplate = `<div><canvas #canvasElement>{{chart}}</canvas></div>`
 
 // See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
-export abstract class ChartComponent implements AfterViewInit {
+export abstract class ChartComponent implements AfterViewInit, OnDestroy {
   private static BACKGROUND_COLOURS: string[] = [
     'rgba(68, 0, 203, 0.5)',
     'rgba(54, 162, 235, 0.5)',
@@ -107,15 +101,13 @@ export abstract class ChartComponent implements AfterViewInit {
   private context: CanvasRenderingContext2D; // not sure it is necessary to put this as an attribute of the class
   private chartType: string
 
-  protected chart: Chart
+  @ViewChild('canvasElement', { static: false })
+  private canvasRef: ElementRef<HTMLCanvasElement>;
 
   chartInfo: ChartInformation
 
+  chart: Chart
 
-  @ViewChild('canvasElement', { static: false })
-  canvasRef: ElementRef<HTMLCanvasElement>;
-
-  componentInitialized: Subject<boolean> = new Subject()
 
   // the colour is chosen in BACKGROUND_COLOURS modulo the length of BACKGROUND_COLOURS
   static getBackgroundColor(index: number): string {
@@ -127,35 +119,31 @@ export abstract class ChartComponent implements AfterViewInit {
   }
 
 
+  protected getNewChart(): Chart {
+    return new Chart(this.context, {
+      type: this.chartType,
+    })
+  }
+
+
+  ngOnInit(): void {
+
+  }
+
   ngAfterViewInit(): void {
+
+    //TODO debug: ExpressionChangedAfterItHasBeenCheckedError (maybe use angular chart js?)
     // the reference to the `canvas` on which the chart will be drawn. See the @Component to see the canvas.
     this.context = this.canvasRef.nativeElement.getContext('2d');
 
-
-    //TODO prochaine etape appeler la methode draw directement (et aussi update)
-    this.chart = new Chart(this.context, {
-      type: this.chartType,
-      data: {
-        labels: [],
-        datasets: [{
-          data: []
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            ticks: {
-              min: 0
-            }
-          }]
-        }
-      }
-    })
-
-    this.componentInitialized.next(true)
+    this.chart = this.getNewChart();
+    this.draw()
   }
 
   abstract draw();
+
+  ngOnDestroy() {
+  }
 
 
 }
