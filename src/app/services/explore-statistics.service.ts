@@ -1,5 +1,5 @@
 import { Injectable, Output } from '@angular/core';
-import { forkJoin, Observable, of, ReplaySubject, Subject } from 'rxjs';
+import { forkJoin, interval, Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ApiI2b2Panel } from '../models/api-request-models/medco-node/api-i2b2-panel';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
@@ -50,6 +50,10 @@ export class ChartInformation {
             })
         })
 
+    }
+
+    numberOfObservations(): number {
+        return this.intervals.map(i => i.count).reduce((x1, x2) => x1 + x2)
     }
 
 }

@@ -45,7 +45,8 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
       // create a smooth line graph
       this.buildChart(chartInfo, LineChartComponent)
 
-      this.buildReferenceInterval(chartInfo)
+      this.buildReferenceInterval(chartInfo, ReferenceIntervalHistogram)
+      this.buildReferenceInterval(chartInfo, ReferenceIntervalLine)
 
     });
 
@@ -59,8 +60,8 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
   }
 
 
-  private buildReferenceInterval(chartInfo: ChartInformation) {
-    const componentRef = Utils.buildComponent(this.componentFactoryResolver, this.canvasContainer, ReferenceInterval)
+  private buildReferenceInterval<R extends ReferenceInterval>(chartInfo: ChartInformation, refIntervalType: Type<R>) {
+    const componentRef = Utils.buildComponent(this.componentFactoryResolver, this.canvasContainer, refIntervalType)
     this.componentRefs.push(componentRef)
 
     const component = componentRef.instance
@@ -120,7 +121,7 @@ class Utils {
   templateUrl: './gb-reference-interval.component.html',
   styleUrls: ['./gb-reference-interval.component.css'],
 })
-export class ReferenceInterval implements OnDestroy {
+export abstract class ReferenceInterval implements OnDestroy {
 
   @ViewChild('chartContainer', { read: ViewContainerRef }) chartContainer: ViewContainerRef;
 
@@ -135,6 +136,8 @@ export class ReferenceInterval implements OnDestroy {
   private _chartInfo: ChartInformation
 
   private componentRefs: Array<ComponentRef<any>> = []
+
+  protected chartType: Type<ChartComponent>;
 
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver) {
@@ -156,11 +159,15 @@ export class ReferenceInterval implements OnDestroy {
   }
 
   ngAfterViewInit() {
-    this.buildChart(this._chartInfo, HistogramChartComponent)
+    this.buildChart(this._chartInfo, this.chartType)
   }
 
   ngOnDestroy(): void {
     this.componentRefs.forEach(component => component.destroy())
+  }
+
+  numberOfObservations() {
+    return this._chartInfo.numberOfObservations()
   }
 
   get nbEntries(): number { return this._nbEntries; }
@@ -175,6 +182,28 @@ export class ReferenceInterval implements OnDestroy {
     this._chartInfo = chartInfo
   }
 
+}
+
+@Component({
+  templateUrl: './gb-reference-interval.component.html',
+  styleUrls: ['./gb-reference-interval.component.css'],
+})
+export class ReferenceIntervalLine extends ReferenceInterval {
+  constructor(componentFactoryResolver: ComponentFactoryResolver) {
+    super(componentFactoryResolver)
+    this.chartType = LineChartComponent
+  }
+}
+
+@Component({
+  templateUrl: './gb-reference-interval.component.html',
+  styleUrls: ['./gb-reference-interval.component.css'],
+})
+export class ReferenceIntervalHistogram extends ReferenceInterval {
+  constructor(componentFactoryResolver: ComponentFactoryResolver) {
+    super(componentFactoryResolver)
+    this.chartType = HistogramChartComponent
+  }
 }
 
 
@@ -221,10 +250,6 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy {
   }
 
 
-  ngOnInit(): void {
-
-  }
-
   ngAfterViewInit(): void {
 
     //TODO debug: ExpressionChangedAfterItHasBeenCheckedError (maybe use angular chart js?)
@@ -252,8 +277,6 @@ export class HistogramChartComponent extends ChartComponent {
 
   constructor(public element: ElementRef) {
     super(element, 'bar')
-
-    //TODO make those hardcoded values parameters of the constructor
   }
 
   ngAfterViewInit() {
