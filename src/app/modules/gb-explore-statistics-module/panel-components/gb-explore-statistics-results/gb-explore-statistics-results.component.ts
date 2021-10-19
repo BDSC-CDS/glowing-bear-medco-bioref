@@ -8,7 +8,6 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import Chart from 'chart.js';
 import * as ChartAnnotation from 'chartjs-plugin-annotation';
-import { Subject } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 
 @Component({
@@ -16,10 +15,12 @@ import { ChartInformation, ExploreStatisticsService } from '../../../../services
   templateUrl: './gb-explore-statistics-results.component.html',
   styleUrls: ['./gb-explore-statistics-results.component.css'],
 })
-export class GbExploreStatisticsResultsComponent implements AfterViewInit {
+export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDestroy {
 
-  @ViewChild('exploreStatsCanvasContainer', { read: ViewContainerRef }) canvasContainer: ViewContainerRef;
+  @ViewChild('exploreStatsCanvasContainer', { read: ViewContainerRef })
+  canvasContainer: ViewContainerRef;
 
+  private componentRefs: Array<ComponentRef<any>> = []
 
   private _displayLoadingIcon: boolean = false
 
@@ -28,6 +29,43 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     private componentFactoryResolver: ComponentFactoryResolver,
     private cdref: ChangeDetectorRef) { }
 
+
+
+  private displayCharts(chartsInfo: ChartInformation[]) {
+
+
+    // Clean the content of the canvas container: remove the previous charts from the canvas container
+    this.canvasContainer.clear()
+
+    chartsInfo.forEach(chartInfo => {
+
+      //create a histogram
+      this.buildChart(chartInfo, HistogramChartComponent)
+
+      // create a smooth line graph
+      this.buildChart(chartInfo, LineChartComponent)
+
+      this.buildReferenceInterval(chartInfo)
+
+    });
+
+  }
+
+
+  private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
+    const componentRef = Utils.buildChart(this.componentFactoryResolver, this.canvasContainer, chartInfo, componentType)
+
+    this.componentRefs.push(componentRef)
+  }
+
+
+  private buildReferenceInterval(chartInfo: ChartInformation) {
+    const componentRef = Utils.buildComponent(this.componentFactoryResolver, this.canvasContainer, ReferenceInterval)
+    this.componentRefs.push(componentRef)
+
+    const component = componentRef.instance
+    component.chartInfo = chartInfo
+  }
 
   get displayLoadingIcon() {
     return this._displayLoadingIcon
@@ -51,37 +89,94 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit {
     })
   }
 
-
-
-  private displayCharts(chartsInfo: ChartInformation[]) {
-
-
-    // Clean the content of the canvas container: remove the previous charts from the canvas container
-    this.canvasContainer.clear()
-
-    chartsInfo.forEach(chartInfo => {
-
-      //create a histogram
-      this.buildChart(chartInfo, HistogramChartComponent)
-
-      // create a smooth line graph
-      this.buildChart(chartInfo, LineChartComponent)
-
+  ngOnDestroy() {
+    this.componentRefs.forEach(element => {
+      element.destroy()
     });
-
   }
-
-  private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
-    const lineFactory = this.componentFactoryResolver.resolveComponentFactory(componentType);
-    const component = this.canvasContainer.createComponent(lineFactory).instance;
-
-    component.chartInfo = chartInfo
-  }
-
-
-
 
 }
+
+class Utils {
+  public static buildComponent<C>(componentFactoryResolver: ComponentFactoryResolver, newComponentContainer: ViewContainerRef, componentType: Type<C>): ComponentRef<C> {
+    const componentFactory = componentFactoryResolver.resolveComponentFactory(componentType);
+    return newComponentContainer.createComponent(componentFactory);
+  }
+
+
+  public static buildChart<C extends ChartComponent>(componentFactoryResolver: ComponentFactoryResolver, newComponentContainer: ViewContainerRef,
+    chartInfo: ChartInformation, componentType: Type<C>): ComponentRef<C> {
+    const componentRef = Utils.buildComponent(componentFactoryResolver, newComponentContainer, componentType)
+
+    const component = componentRef.instance
+    component.chartInfo = chartInfo
+
+    return componentRef
+  }
+}
+
+
+@Component({
+  templateUrl: './gb-reference-interval.component.html',
+  styleUrls: ['./gb-reference-interval.component.css'],
+})
+export class ReferenceInterval implements OnDestroy {
+
+  @ViewChild('chartContainer', { read: ViewContainerRef }) chartContainer: ViewContainerRef;
+
+  private _nbEntries: number
+  private _lowQuantile: number
+  private _lowBoundCI1: number
+  private _highBoundCI1: number
+  private _highQuantile: number
+  private _lowBoundCI2: number
+  private _highBoundCI2: number
+
+  private _chartInfo: ChartInformation
+
+  private componentRefs: Array<ComponentRef<any>> = []
+
+
+  constructor(private componentFactoryResolver: ComponentFactoryResolver) {
+    this._nbEntries = 1
+    this._lowQuantile = 2
+    this._lowBoundCI1 = 3
+    this._highBoundCI1 = 4
+    this._highQuantile = 5
+    this._lowBoundCI2 = 6
+    this._highBoundCI2 = 7
+  }
+
+
+
+
+  private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
+    const componentRef = Utils.buildChart(this.componentFactoryResolver, this.chartContainer, chartInfo, componentType)
+    this.componentRefs.push(componentRef)
+  }
+
+  ngAfterViewInit() {
+    this.buildChart(this._chartInfo, HistogramChartComponent)
+  }
+
+  ngOnDestroy(): void {
+    this.componentRefs.forEach(component => component.destroy())
+  }
+
+  get nbEntries(): number { return this._nbEntries; }
+  get lowQuantile(): number { return this._lowQuantile; }
+  get lowBoundCI1(): number { return this._lowBoundCI1; }
+  get highBoundCI1(): number { return this._highBoundCI1; }
+  get highQuantile(): number { return this._highQuantile; }
+  get lowBoundCI2(): number { return this._lowBoundCI2; }
+  get highBoundCI2(): number { return this._highBoundCI2; }
+
+  public set chartInfo(chartInfo: ChartInformation) {
+    this._chartInfo = chartInfo
+  }
+
+}
+
 
 
 const chartSelector = 'gb-explore-stats-canvas'
@@ -154,8 +249,11 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy {
 })
 export class HistogramChartComponent extends ChartComponent {
 
+
   constructor(public element: ElementRef) {
     super(element, 'bar')
+
+    //TODO make those hardcoded values parameters of the constructor
   }
 
   ngAfterViewInit() {

@@ -21,7 +21,7 @@ import { GbConstraintComponent } from '../gb-explore-module/constraint-component
 import { GbSelectionModule } from '../gb-explore-module/gb-selection-component/gb-selection.module';
 import { GbExploreStatisticsComponent } from './gb-explore-statistics.component';
 import { routing } from './gb-explore-statistics.routing';
-import { ChartComponent, GbExploreStatisticsResultsComponent, HistogramChartComponent, LineChartComponent } from './panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
+import { GbExploreStatisticsResultsComponent, HistogramChartComponent, LineChartComponent } from './panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
 import { GbExploreStatisticsSettingsComponent } from './panel-components/gb-explore-statistics-settings/gb-explore-statistics-settings.component';
 
 
