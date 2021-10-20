@@ -6,8 +6,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
-import Chart from 'chart.js';
-import * as ChartAnnotation from 'chartjs-plugin-annotation';
+import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, registerables, ScriptableLineSegmentContext } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
+import { zip } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 
 @Component({
@@ -73,10 +74,8 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
   }
 
   ngOnInit() {
-
-    const namedChartAnnotation = ChartAnnotation;
-    namedChartAnnotation["id"] = "annotation";
-    Chart.pluginService.register(namedChartAnnotation);
+    Chart.register(annotationPlugin);
+    Chart.register(...registerables) // for the x and y scales options in the config of chart js
 
     this.exploreStatisticsService.displayLoadingIcon.subscribe((display: boolean) => {
       this._displayLoadingIcon = display
@@ -222,8 +221,7 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy {
     'rgba(255, 159, 64, 0.5)']
 
 
-  private context: CanvasRenderingContext2D; // not sure it is necessary to put this as an attribute of the class
-  private chartType: string
+  private context: CanvasRenderingContext2D;
 
   @ViewChild('canvasElement', { static: false })
   private canvasRef: ElementRef<HTMLCanvasElement>;
@@ -238,29 +236,23 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy {
     return ChartComponent.BACKGROUND_COLOURS[index % ChartComponent.BACKGROUND_COLOURS.length]
   }
 
-  constructor(public element: ElementRef, chartType: string) {
-    this.chartType = chartType
+  constructor(public element: ElementRef, protected chartJSType: ChartType) {
   }
 
 
-  protected getNewChart(): Chart {
-    return new Chart(this.context, {
-      type: this.chartType,
-    })
-  }
 
 
   ngAfterViewInit(): void {
 
     //TODO debug: ExpressionChangedAfterItHasBeenCheckedError (maybe use angular chart js?)
     // the reference to the `canvas` on which the chart will be drawn. See the @Component to see the canvas.
-    this.context = this.canvasRef.nativeElement.getContext('2d');
+    const context = this.canvasRef.nativeElement.getContext('2d');
 
-    this.chart = this.getNewChart();
-    this.draw()
+    this.chart = this.draw(context)
+    this.chart.update()
   }
 
-  abstract draw();
+  abstract draw(context: CanvasRenderingContext2D);
 
   ngOnDestroy() {
   }
@@ -286,41 +278,46 @@ export class HistogramChartComponent extends ChartComponent {
   /*
   * Given ChartInformation object this function will draw the histogram on the canvas
   */
-  draw() {
-    const chart = this.chart
+  draw(context: CanvasRenderingContext2D): Chart {
 
     if (!(this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0)) {
-      chart.data.labels = [];
-      chart.data.datasets[0].data = [];
 
-      chart.update()
-
-      return
+      return new Chart(context,
+        {
+          type: this.chartJSType,
+          data: {
+            datasets: []
+          }
+        }
+      )
 
     }
 
     // When the interval is the last one the right bound is inclusive, otherwise it is exclusive.
     const getRightBound = (i: number) => i < (this.chartInfo.intervals.length - 1) ? '[' : ']'
 
-    chart.data.labels = this.chartInfo.intervals.map((int, i) => {
+    const labels = this.chartInfo.intervals.map((int, i) => {
       return '[ ' + parseFloat(int.lowerBound) + ', ' + parseFloat(int.higherBound) + ' ' + getRightBound(i)
-    });
-    chart.data.datasets[0] = {
-      data: this.chartInfo.intervals.map(i => i.count),
-      backgroundColor: ChartComponent.getBackgroundColor(0) //this.chartInfo.intervals.map(_ => ChartComponent.getBackgroundColor(0))
+    })
+    const data = {
+      labels,
+      datasets: [{
+        data: this.chartInfo.intervals.map(i => i.count),
+        backgroundColor: ChartComponent.getBackgroundColor(0) //this.chartInfo.intervals.map(_ => ChartComponent.getBackgroundColor(0))
+      }]
     }
 
 
-    chart.options = this.buildHistogramOptions()
 
-    const minDisplayed = this.findMinDisplayed();
-    chart.options.scales.yAxes = [{
-      ticks: {
-        min: minDisplayed
+    return new Chart(context,
+      {
+        type: this.chartJSType,
+        data,
+        options: this.buildHistogramOptions(),
       }
-    }]
+    );
 
-    chart.update();
+
   }
 
 
@@ -343,28 +340,33 @@ export class HistogramChartComponent extends ChartComponent {
     return minDisplayed;
   }
 
-  private buildHistogramOptions(): Chart.ChartOptions {
+  private buildHistogramOptions(): ChartOptions {
+
+
     return {
-      legend: {
-        display: false
-      },
-      title: {
-        text: 'Histogram for the `' + this.chartInfo.treeNodeName + '` analyte',
-        display: true
+      plugins: {
+        title: {
+          text: 'Histogram for the `' + this.chartInfo.treeNodeName + '` analyte',
+          display: true
+        },
+        legend: {
+          display: false,
+        },
       },
       scales: {
-        xAxes: [{
-          scaleLabel: {
+        x: {
+          title: {
             display: true,
-            labelString: 'Value [' + this.chartInfo.unit + ']',
-          }
-        }],
-        yAxes: [{
-          scaleLabel: {
+            text: 'Value [' + this.chartInfo.unit + ']'
+          },
+        },
+        y: {
+          title: {
             display: true,
-            labelString: 'Frequency',
-          }
-        }]
+            text: 'Frequency'
+          },
+          suggestedMin: this.findMinDisplayed()
+        }
       }
     };
   }
@@ -383,95 +385,93 @@ export class LineChartComponent extends ChartComponent {
     super.ngAfterViewInit()
   }
 
-  //this method process the dataset necessary for drawing the interpolated line graph
-  private buildPoints(chartInfo: ChartInformation): Chart.ChartData {
-    // the x axis point associated to an interval count will be the the middle between the higher and lower bound of an interval
-    const xPoints: Array<number> = chartInfo.intervals.map(interval => {
+  // buildPoints  processes the dataset necessary for drawing the interpolated line graph
+  private buildPoints(chartInfo: ChartInformation): ChartData {
+    // the x axis points associated to an interval count will be the the middle between the higher and lower bound of an interval
+    const xValues: Array<number> = chartInfo.intervals.map(interval => {
       return (parseFloat(interval.higherBound) + parseFloat(interval.lowerBound)) / 2
     })
 
-    const dataPoints: Array<number> = chartInfo.intervals.map(interval => interval.count)
+    const yValues: Array<number> = chartInfo.intervals.map(interval => interval.count)
+
+
+    //TODO replace those hardcoded values
+    const confInterval1Low = 1
+    const confInterval1High = 2
+
+    const confInterval2Low = 4
+    const confInterval2High = 5
+
+    const segmentColour = (ctx: ScriptableLineSegmentContext) => {
+      //the index of the current data point
+      const currentIndex = ctx.p0DataIndex
+      // is the index of the current point within the first confidence interval or the second confidence interval
+      const isConfidenceInterval = (currentIndex >= confInterval1Low && currentIndex <= confInterval1High) || (currentIndex >= confInterval2Low && currentIndex <= confInterval2High)
+      if (isConfidenceInterval) {
+        return 'red'
+      }
+
+      return 'black'
+    }
 
 
     return {
-      labels: xPoints,
+      labels: xValues,
       datasets: [
         {
-          label: 'Interpolated line plot for the `' + chartInfo.treeNodeName + '` analyte', //'Cubic interpolation (monotone)',
-          data: dataPoints,
+          data: yValues,
           borderColor: ChartComponent.getBackgroundColor(0),
-          fill: false,
+          fill: {
+            target: 1,
+            above: 'rgb(255, 0, 0)' //colour of the fill above the origin
+          },
           cubicInterpolationMode: 'monotone',
-        },
-        // {
-        //   label: 'Cubic interpolation',
-        //   data: dataPoints,
-        //   borderColor: ChartComponent.BACKGROUND_COLOURS[1],
-        //   fill: false,
-        //   tension: 0.4
-        // },
-        // {
-        //   label: 'Linear interpolation (default)',
-        //   data: dataPoints,
-        //   borderColor: ChartComponent.BACKGROUND_COLOURS[2],
-        //   fill: false
-        // }
+          segment: {
+            borderColor: segmentColour
+          }
+        }
+        // getDatasetSlice(false, 0, 2),
+        // getDatasetSlice('+1', 1, 4),
+        // getDatasetSlice(false, 3)
       ]
     };
   }
 
   // this method builds the config necessary for drawing the interpolated line graph
-  private buildConfig(data: Chart.ChartData): Object /*Chart.ChartConfiguration*/ {
+  private buildConfig(data: ChartData): ChartConfiguration {
 
 
-
-    const refIntervalX1 = data.labels[1]
 
     return {
-      type: 'line',
+      type: this.chartJSType,
       data: data,
       options: {
-        annotation: {
-          annotations: [{
-            type: 'line',
-            mode: 'vertical',
-            scaleID: 'x-axis-0',
-            value: refIntervalX1,
-            borderColor: 'red',
-            label: {
-              content: "Test",
-              enabled: true,
-              position: "top"
-            }
-
-          }],
-        },
         responsive: true,
         plugins: {
-          legend: {
-            position: 'top',
-          },
           title: {
             display: true,
             text: 'Interpolated line plot for the `' + this.chartInfo.treeNodeName + '` analyte',
+          },
+          legend: {
+            display: false,
           },
         },
         interaction: {
           intersect: false,
         },
         scales: {
-          xAxes: [{
-            scaleLabel: {
+          x: {
+            title: {
               display: true,
-              labelString: 'Value [' + this.chartInfo.unit + ']',
+              text: 'Value [' + this.chartInfo.unit + ']',
             }
-          }],
-          yAxes: [{
-            scaleLabel: {
+          },
+          y: {
+            title: {
               display: true,
-              labelString: 'Frequency',
+              text: 'Frequency',
             }
-          }],
+          },
         }
       },
     };
@@ -481,29 +481,47 @@ export class LineChartComponent extends ChartComponent {
   * Given ChartInformation object this function will a line graph on the canvas. The points of the curves are interconnected using interpolation methods
   * see for reference https://github.com/chartjs/Chart.js/blob/master/docs/samples/line/interpolation.md
   */
-  draw() {
-    const chart = this.chart
-
-    if (!(this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0)) {
-      chart.data.labels = [];
-      chart.data.datasets[0].data = [];
-
-      chart.update()
-
-      return
+  draw(context: CanvasRenderingContext2D): Chart {
+    const chartInfoAvailable = this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0
+    if (!chartInfoAvailable) {
+      const data = {
+        datasets: []
+      }
+      return new Chart(context, { type: this.chartJSType, data, })
 
     }
 
 
     const data = this.buildPoints(this.chartInfo)
 
-    const config = this.buildConfig(data)
 
-    chart.config = config
-    chart.data = data
+    const config = this.buildConfig(data) as any
 
-    chart.update()
+    const refIntervalX1 = data.labels[1]
+    config.options.plugins.annotation = {
+      annotations: {
+        line1: {
+          type: 'line',
+          xMin: refIntervalX1,
+          xMax: refIntervalX1,
+          borderColor: 'black',
+          borderDash: [5, 15],
+          label: {
+            content: "2.5%",
+            enabled: true,
+            rotation: 90, //rotation in degrees
+            xAdjust: 10,
+            backgroundColor: 'rgba(0,0,0,0)',
+            color: 'black'
+          }
+        }
+      }
+    };
+
+
+
+
+    return new Chart(context, config,)
+
   }
-
-
 }
