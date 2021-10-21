@@ -419,6 +419,7 @@ export class LineChartComponent extends ChartComponent {
       labels: xValues,
       datasets: [
         {
+          label: 'interpolated',
           data: yValues,
           borderColor: ChartComponent.getBackgroundColor(0),
           fill: {
@@ -431,6 +432,7 @@ export class LineChartComponent extends ChartComponent {
           }
         },
         {
+          label: 'histogram',
           data: yValues,
           type: 'bar'
         }
@@ -457,7 +459,7 @@ export class LineChartComponent extends ChartComponent {
             text: 'Interpolated line plot for the `' + this.chartInfo.treeNodeName + '` analyte',
           },
           legend: {
-            display: false,
+            display: true,
           },
         },
         interaction: {
