@@ -429,6 +429,10 @@ export class LineChartComponent extends ChartComponent {
           segment: {
             borderColor: segmentColour
           }
+        },
+        {
+          data: yValues,
+          type: 'bar'
         }
         // getDatasetSlice(false, 0, 2),
         // getDatasetSlice('+1', 1, 4),
@@ -500,7 +504,7 @@ export class LineChartComponent extends ChartComponent {
     const refIntervalX1 = data.labels[1]
     config.options.plugins.annotation = {
       annotations: {
-        line1: {
+        line1: { //vertical line denoting the 2.5 percentile
           type: 'line',
           xMin: refIntervalX1,
           xMax: refIntervalX1,
