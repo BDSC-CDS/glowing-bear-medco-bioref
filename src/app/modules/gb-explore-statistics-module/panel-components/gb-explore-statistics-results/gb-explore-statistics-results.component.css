@@ -25,3 +25,9 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+.parent-flex {
+  display: flex;
+  flex-wrap: wrap;
+}
+

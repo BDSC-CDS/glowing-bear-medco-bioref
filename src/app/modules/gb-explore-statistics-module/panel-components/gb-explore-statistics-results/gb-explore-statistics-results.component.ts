@@ -8,13 +8,16 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, registerables, ScriptableLineSegmentContext } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { zip } from 'rxjs';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
+
+const childFlexCss = './child-flex.css'
+const resultsCss = './gb-explore-statistics-results.component.css'
+const refIntervalCss = './gb-reference-interval.component.css'
 
 @Component({
   selector: 'gb-explore-statistics-results',
   templateUrl: './gb-explore-statistics-results.component.html',
-  styleUrls: ['./gb-explore-statistics-results.component.css'],
+  styleUrls: [resultsCss],
 })
 export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDestroy {
 
@@ -116,9 +119,10 @@ class Utils {
 }
 
 
+const referenceIntervalTemplate = './gb-reference-interval.component.html';
 @Component({
-  templateUrl: './gb-reference-interval.component.html',
-  styleUrls: ['./gb-reference-interval.component.css'],
+  templateUrl: referenceIntervalTemplate,
+  styleUrls: [refIntervalCss, resultsCss, childFlexCss],
 })
 export abstract class ReferenceInterval implements OnDestroy {
 
@@ -184,8 +188,8 @@ export abstract class ReferenceInterval implements OnDestroy {
 }
 
 @Component({
-  templateUrl: './gb-reference-interval.component.html',
-  styleUrls: ['./gb-reference-interval.component.css'],
+  templateUrl: referenceIntervalTemplate,
+  styleUrls: [refIntervalCss, resultsCss, childFlexCss],
 })
 export class ReferenceIntervalLine extends ReferenceInterval {
   constructor(componentFactoryResolver: ComponentFactoryResolver) {
@@ -195,8 +199,8 @@ export class ReferenceIntervalLine extends ReferenceInterval {
 }
 
 @Component({
-  templateUrl: './gb-reference-interval.component.html',
-  styleUrls: ['./gb-reference-interval.component.css'],
+  templateUrl: referenceIntervalTemplate,
+  styleUrls: [refIntervalCss, resultsCss, childFlexCss],
 })
 export class ReferenceIntervalHistogram extends ReferenceInterval {
   constructor(componentFactoryResolver: ComponentFactoryResolver) {
@@ -208,7 +212,12 @@ export class ReferenceIntervalHistogram extends ReferenceInterval {
 
 
 const chartSelector = 'gb-explore-stats-canvas'
-const chartTemplate = `<div><canvas #canvasElement>{{chart}}</canvas></div>`
+const chartTemplate = `
+  <div>
+    <canvas #canvasElement>{{chart}}</canvas>
+  </div>
+  `
+
 
 // See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
 export abstract class ChartComponent implements AfterViewInit, OnDestroy {
@@ -221,10 +230,10 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy {
     'rgba(255, 159, 64, 0.5)']
 
 
-  private context: CanvasRenderingContext2D;
-
   @ViewChild('canvasElement', { static: false })
   private canvasRef: ElementRef<HTMLCanvasElement>;
+
+  protected chartJSType: ChartType
 
   chartInfo: ChartInformation
 
@@ -236,7 +245,8 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy {
     return ChartComponent.BACKGROUND_COLOURS[index % ChartComponent.BACKGROUND_COLOURS.length]
   }
 
-  constructor(public element: ElementRef, protected chartJSType: ChartType) {
+  constructor(public element: ElementRef, chartJSType: ChartType) {
+    this.chartJSType = chartJSType
   }
 
 
@@ -262,7 +272,8 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy {
 
 @Component({
   selector: chartSelector,
-  template: chartTemplate
+  template: chartTemplate,
+  styleUrls: [resultsCss, childFlexCss],
 })
 export class HistogramChartComponent extends ChartComponent {
 
@@ -374,7 +385,8 @@ export class HistogramChartComponent extends ChartComponent {
 
 @Component({
   selector: chartSelector,
-  template: chartTemplate
+  template: chartTemplate,
+  styleUrls: [resultsCss, childFlexCss],
 })
 export class LineChartComponent extends ChartComponent {
   constructor(public element: ElementRef) {
