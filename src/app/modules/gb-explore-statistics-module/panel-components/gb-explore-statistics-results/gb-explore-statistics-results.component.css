@@ -26,8 +26,9 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-.parent-flex {
-  display: flex;
-  flex-wrap: wrap;
+@media only screen and (min-width: 1300px) {
+  .parent-flex {
+    display: flex;
+    flex-wrap: wrap;
+  }
 }
-
