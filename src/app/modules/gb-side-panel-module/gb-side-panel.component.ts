@@ -6,10 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {Component} from '@angular/core';
+import { Component } from '@angular/core';
 import { AuthenticationService } from 'src/app/services/authentication.service';
-import {NavbarService} from '../../services/navbar.service';
-import {SavedCohortsPatientListService} from '../../services/saved-cohorts-patient-list.service';
+import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
+import { NavbarService } from '../../services/navbar.service';
+import { SavedCohortsPatientListService } from '../../services/saved-cohorts-patient-list.service';
 
 @Component({
   selector: 'gb-side-panel',
@@ -19,16 +20,22 @@ import {SavedCohortsPatientListService} from '../../services/saved-cohorts-patie
 export class GbSidePanelComponent {
 
   constructor(public navbarService: NavbarService,
-              public savedCohortsPatientListService: SavedCohortsPatientListService,
-              private authService: AuthenticationService) { }
+    public savedCohortsPatientListService: SavedCohortsPatientListService,
+    private authService: AuthenticationService,
+    private exploreStatsService: ExploreStatisticsService) { }
 
   userHasExploreStatsRole(): boolean {
     return this.authService.hasExploreStatsRole()
   }
 
-  inExploreTab(): boolean {
+  inExploreStatsTab(): boolean {
     return this.navbarService.isExploreStatistics
   }
+
+  exportStatsPDF(): void {
+    this.exploreStatsService.sendExportAsPDFSignal()
+  }
+
 
 
 }

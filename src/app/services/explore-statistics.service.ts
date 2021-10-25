@@ -8,6 +8,7 @@ import { CombinationConstraint } from '../models/constraint-models/combination-c
 import { Constraint } from '../models/constraint-models/constraint';
 import { TreeNode } from '../models/tree-models/tree-node';
 import { ErrorHelper } from '../utilities/error-helper';
+import { PDF } from '../utilities/files/pdf';
 import { ApiEndpointService } from './api-endpoint.service';
 import { MedcoNetworkService } from './api/medco-network.service';
 import { ConstraintMappingService } from './constraint-mapping.service';
@@ -69,6 +70,7 @@ export class ChartInformation {
 })
 export class ExploreStatisticsService {
 
+
     // 1 minute timeout
     private static TIMEOUT_MS = 1000 * 60 * 1;
 
@@ -77,6 +79,9 @@ export class ExploreStatisticsService {
 
     // Emits whenever the explore statitistics query has been launched.
     @Output() displayLoadingIcon: Subject<boolean> = new ReplaySubject(1)
+
+    // Emits whenever an export of the statistical results as a pdf document needs to be generated
+    exportAsPDF: Subject<any> = new Subject();
 
     // This observable emits the latest query's cohort inclusion criteria
     inclusionConstraint: Subject<Constraint> = new ReplaySubject(1)
@@ -139,7 +144,7 @@ export class ExploreStatisticsService {
 
 
         forkJoin([updatedInclusionObs, updatedExclusionObs]).subscribe(updatedConstraints => {
-             this.processQuery(updatedConstraints, bucketSize, minObservation);
+            this.processQuery(updatedConstraints, bucketSize, minObservation);
         })
 
 
@@ -259,6 +264,16 @@ export class ExploreStatisticsService {
             throw ErrorHelper.handleNewError(errorMsg);
         }
         return cohortConstraint;
+    }
+
+    // send a signal that launches the export of the statistical results as a PDF
+    sendExportAsPDFSignal() {
+        //TODO if no result is displayed in the explore statistics tab throw an error
+        if (! this.navbarService.isExploreStatistics) {
+            throw ErrorHelper.handleNewError("Cannot export the PDF outside of the statistics tab.");
+        }
+
+        this.exportAsPDF.next(1)
     }
 
 

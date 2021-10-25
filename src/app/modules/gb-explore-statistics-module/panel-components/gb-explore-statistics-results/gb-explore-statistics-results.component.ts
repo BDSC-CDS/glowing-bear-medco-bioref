@@ -8,11 +8,17 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, registerables, ScriptableLineSegmentContext } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { PDF } from 'src/app/utilities/files/pdf';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 
 const childFlexCss = './child-flex.css'
 const resultsCss = './gb-explore-statistics-results.component.css'
 const refIntervalCss = './gb-reference-interval.component.css'
+
+
+interface SVGConvertible {
+  toPDF(): any
+}
 
 @Component({
   selector: 'gb-explore-statistics-results',
@@ -31,7 +37,9 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
   constructor(private exploreStatisticsService: ExploreStatisticsService,
     private componentFactoryResolver: ComponentFactoryResolver,
-    private cdref: ChangeDetectorRef) { }
+    private cdref: ChangeDetectorRef) {
+
+    }
 
 
 
@@ -61,6 +69,11 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     const componentRef = Utils.buildChart(this.componentFactoryResolver, this.canvasContainer, chartInfo, componentType)
 
     this.componentRefs.push(componentRef)
+
+
+    this.exploreStatisticsService.exportAsPDF.subscribe(_ => {
+      componentRef.instance.toPDF()
+    })
   }
 
 
@@ -70,6 +83,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
     const component = componentRef.instance
     component.chartInfo = chartInfo
+
   }
 
   get displayLoadingIcon() {
@@ -220,7 +234,7 @@ const chartTemplate = `
 
 
 // See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
-export abstract class ChartComponent implements AfterViewInit, OnDestroy {
+export abstract class ChartComponent implements AfterViewInit, OnDestroy, SVGConvertible {
   private static BACKGROUND_COLOURS: string[] = [
     'rgba(68, 0, 203, 0.5)',
     'rgba(54, 162, 235, 0.5)',
@@ -249,7 +263,22 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy {
     this.chartJSType = chartJSType
   }
 
+  toPDF() {
+    console.log("Exporting chart to PDF")
+    const pdf = new PDF()
+    const exportedChart = this.canvasRef.nativeElement.toDataURL('image/svg', 'high')
+    const height = this.canvasRef.nativeElement.height
+    const width = this.canvasRef.nativeElement.width
 
+    const ratio = height / width
+
+    const pdfWidth = pdf.getWidth()
+    const imgHeight = ratio * pdfWidth
+
+    pdf.addImageFromDataURL(exportedChart, 0, 0, pdfWidth, imgHeight)
+    pdf.export("chartTest.pdf")
+
+  }
 
 
   ngAfterViewInit(): void {
