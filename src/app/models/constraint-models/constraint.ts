@@ -52,11 +52,11 @@ export class Constraint {
   }
 
   get shortTextRepresentation(): string {
-    return this._textRepresentation;
+    return this._shortTextRepresentation;
   }
 
   set shortTextRepresentation(value: string) {
-    this._textRepresentation = value;
+    this._shortTextRepresentation = value;
   }
 
   get parentConstraint(): Constraint {
