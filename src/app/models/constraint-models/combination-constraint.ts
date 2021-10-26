@@ -20,12 +20,14 @@ export class CombinationConstraint extends Constraint {
   private _isRoot: boolean;
 
 
+  public static readonly groupTextRepresentation = 'Group';
+
   constructor() {
     super();
     this._children = [];
     this.combinationState = CombinationState.And;
     this.isRoot = false;
-    this.textRepresentation = 'Group';
+    this.textRepresentation = CombinationConstraint.groupTextRepresentation;
   }
 
   get className(): string {
@@ -149,7 +151,7 @@ export class CombinationConstraint extends Constraint {
       this.textRepresentation = '(' + this.children.map(({ textRepresentation }) => textRepresentation)
         .join(this.combinationState === CombinationState.And ? ' and ' : ' or ') + ')'
     } else {
-      this.textRepresentation = 'Group';
+      this.textRepresentation = CombinationConstraint.groupTextRepresentation;
     }
   }
 }

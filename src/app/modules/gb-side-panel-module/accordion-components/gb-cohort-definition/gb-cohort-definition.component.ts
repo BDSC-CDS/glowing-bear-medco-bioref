@@ -6,17 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {Component, ElementRef, AfterViewInit, ViewChild, AfterViewChecked, Output} from '@angular/core';
-import {TreeNode} from '../../../../models/tree-models/tree-node';
-import {OverlayPanel} from 'primeng';
-import {trigger, transition, animate, style} from '@angular/animations';
-import {DropMode} from '../../../../models/drop-mode';
-import {TreeNodeService} from '../../../../services/tree-node.service';
-import {QueryService} from '../../../../services/query.service';
-import {ConstraintService} from '../../../../services/constraint.service';
-import {TreeNodeType} from '../../../../models/tree-models/tree-node-type';
-import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
+import { AfterViewChecked, AfterViewInit, Component } from '@angular/core';
+import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
 import { Constraint } from 'src/app/models/constraint-models/constraint';
+import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 
 @Component({
   selector: 'gb-cohort-definition',
@@ -26,10 +19,22 @@ import { Constraint } from 'src/app/models/constraint-models/constraint';
 
 export class GbCohortDefinitionComponent implements AfterViewInit, AfterViewChecked {
 
-  inclusionConstraint: string = new Constraint().textRepresentation
-  exclusionConstraint: string = new Constraint().textRepresentation
+  private _inclusionConstraint: string
+  private _exclusionConstraint: string
+
+  private transformTextRepresentation(rep: string): string {
+    if (rep === undefined || rep === '' || rep == CombinationConstraint.groupTextRepresentation) {
+      return 'None'
+    }
+
+    return rep
+  }
 
   constructor(private exploreStatisticsService: ExploreStatisticsService) {
+    const defaultRep = new Constraint().textRepresentation
+    this.inclusionConstraint = defaultRep
+    this.exclusionConstraint = defaultRep
+
     this.exploreStatisticsService.inclusionConstraint.subscribe(constraint => {
       this.inclusionConstraint = constraint.textRepresentation
     })
@@ -37,6 +42,23 @@ export class GbCohortDefinitionComponent implements AfterViewInit, AfterViewChec
     this.exploreStatisticsService.exclusionConstraint.subscribe(constraint => {
       this.exclusionConstraint = constraint.textRepresentation
     })
+  }
+
+  set inclusionConstraint(representation: string) {
+    this._inclusionConstraint = this.transformTextRepresentation(representation)
+  }
+
+  set exclusionConstraint(representation: string) {
+    this._exclusionConstraint = this.transformTextRepresentation(representation)
+  }
+
+  get inclusionConstraint(): string {
+    return this._inclusionConstraint
+  }
+
+
+  get exclusionConstraint(): string {
+    return this._exclusionConstraint
   }
 
   ngAfterViewInit() {
