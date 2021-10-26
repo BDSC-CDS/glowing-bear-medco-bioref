@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, HostBinding, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, registerables, ScriptableLineSegmentContext } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { PDF } from 'src/app/utilities/files/pdf';
@@ -138,8 +138,13 @@ const referenceIntervalTemplate = './gb-reference-interval.component.html';
 @Component({
   templateUrl: referenceIntervalTemplate,
   styleUrls: [refIntervalCss, resultsCss, childFlexCss],
+  host: {
+    "[class.hidden]": "hide" //https://stackoverflow.com/questions/61965535/apply-css-class-conditionally-to-angular-component-host
+  }
 })
 export abstract class ReferenceInterval implements OnDestroy {
+
+
 
   @ViewChild('chartContainer', { read: ViewContainerRef }) chartContainer: ViewContainerRef;
 
@@ -157,6 +162,7 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   protected chartType: Type<ChartComponent>;
 
+  @Input() hide: boolean = false
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver) {
     this._nbEntries = 1
@@ -170,7 +176,6 @@ export abstract class ReferenceInterval implements OnDestroy {
 
 
 
-
   private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
     const componentRef = Utils.buildChart(this.componentFactoryResolver, this.chartContainer, chartInfo, componentType)
     this.componentRefs.push(componentRef)
@@ -178,6 +183,11 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   ngAfterViewInit() {
     this.buildChart(this._chartInfo, this.chartType)
+  }
+
+
+  remove() {
+    this.hide = true
   }
 
   ngOnDestroy(): void {
