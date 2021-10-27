@@ -26,8 +26,6 @@ import {ApiQueryDefinition} from '../../models/api-request-models/medco-node/api
 import {MedcoNetworkService} from '../../services/api/medco-network.service';
 import {ErrorHelper} from '../../utilities/error-helper';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
-import { ConstraintMappingService } from 'src/app/services/constraint-mapping.service';
-import { ConstraintReverseMappingService } from 'src/app/services/constraint-reverse-mapping.service';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 
 @Component({
