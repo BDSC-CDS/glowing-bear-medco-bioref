@@ -9,6 +9,7 @@
  */
 
 import { TreeNode } from '../tree-models/tree-node';
+import { ConstraintVisitor } from './constraintVisitor';
 
 export class Constraint {
 
@@ -37,6 +38,12 @@ export class Constraint {
     this.textRepresentation = '';
     this.parentConstraint = null;
     this._panelTimingSameInstance = null;
+  }
+
+
+  // visitor pattern https://refactoring.guru/design-patterns/visitor
+  accept<T>(v: ConstraintVisitor<T>): T {
+    return v.visitConstraint(this)
   }
 
   get textRepresentation(): string {

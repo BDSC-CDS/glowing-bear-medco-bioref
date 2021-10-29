@@ -27,17 +27,6 @@ interface ResultType {
   handleFuncStart?: (e: Event) => void;
 }
 
-const getPathList = (path: string) => {
-  const splittedPath = path.split('/').filter(value => value !== '');
-
-  const pathList: string[] = [];
-
-  splittedPath.forEach((_, index) => {
-    pathList.push(splittedPath.slice(0, index + 1).reduce((result, value) => `${result}${value}/`, '/'));
-  });
-
-  return pathList;
-}
 
 /**
  * This service manage the API calls to the backend for the search functionality.
@@ -77,7 +66,7 @@ export class TermSearchService {
         ...result, {
           name: displayName,
           isBold: !result.find(({ isBold }) => isBold) && displayName.toLowerCase().indexOf(this.searchTerm.toLowerCase()) !== -1
-      }], []).reverse(),
+        }], []).reverse(),
       handleFuncStart: (function (event) {
         event.stopPropagation();
         this.treeNodeService.selectedTreeNode = dataObject;
@@ -118,12 +107,7 @@ export class TermSearchService {
         this.isNoResults = true;
       }
       nodes.forEach((node) => {
-        const splittedNodePath = node.path.split('/');
-        const realAppliedPath = `${splittedNodePath.length > 1 ? `/${splittedNodePath[1]}` : ''}${node.appliedPath}${node.appliedPath[node.appliedPath.length - 1] !== '/' ? '/' : ''}`
-        const pathList = [
-          ...(node.appliedPath !== '@' ? getPathList(realAppliedPath) : []),
-          ...getPathList(node.path)
-        ];
+        const { pathElements: pathList, realAppliedPath } = node.splitTreeNodePath();
 
         let displayNameListLength = pathList.length;
         let displayNameList: string[] = [];
@@ -198,3 +182,6 @@ export class TermSearchService {
     this._isNoResults = value;
   }
 }
+
+
+

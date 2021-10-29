@@ -7,6 +7,7 @@
  */
 
 import { Constraint } from './constraint';
+import { ConstraintVisitor } from './constraintVisitor';
 
 export class NegationConstraint extends Constraint {
 
@@ -15,6 +16,11 @@ export class NegationConstraint extends Constraint {
   constructor(constraint: Constraint) {
     super();
     this.constraint = constraint;
+  }
+
+  // visitor pattern https://refactoring.guru/design-patterns/visitor
+  accept<T>(v: ConstraintVisitor<T>): T {
+    return v.visitNegationConstraint(this)
   }
 
   get constraint(): Constraint {

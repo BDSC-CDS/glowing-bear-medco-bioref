@@ -5,10 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, ElementRef, HostBinding, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
-import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, registerables, ScriptableLineSegmentContext } from 'chart.js';
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
+import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { PDF } from 'src/app/utilities/files/pdf';
 import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 import { ChartComponent, HistogramChartComponent, LineChartComponent } from './gb-chart.component';
 
@@ -115,7 +114,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
 }
 
-class Utils {
+export class Utils {
   public static buildComponent<C>(componentFactoryResolver: ComponentFactoryResolver, newComponentContainer: ViewContainerRef, componentType: Type<C>): ComponentRef<C> {
     const componentFactory = componentFactoryResolver.resolveComponentFactory(componentType);
     return newComponentContainer.createComponent(componentFactory);

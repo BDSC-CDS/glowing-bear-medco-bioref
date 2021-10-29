@@ -12,6 +12,7 @@ import { Constraint } from './constraint';
 import { CombinationState } from './combination-state';
 import { Concept } from './concept';
 import { TreeNode } from '../tree-models/tree-node';
+import { ConstraintVisitor } from './constraintVisitor';
 
 export class CombinationConstraint extends Constraint {
 
@@ -28,6 +29,11 @@ export class CombinationConstraint extends Constraint {
     this.combinationState = CombinationState.And;
     this.isRoot = false;
     this.textRepresentation = CombinationConstraint.groupTextRepresentation;
+  }
+
+  // visitor pattern https://refactoring.guru/design-patterns/visitor
+  accept<T>(v: ConstraintVisitor<T>): T {
+    return v.visitCombinationConstraint(this)
   }
 
   get className(): string {

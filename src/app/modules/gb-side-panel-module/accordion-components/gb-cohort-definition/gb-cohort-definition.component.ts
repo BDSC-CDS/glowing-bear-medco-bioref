@@ -6,10 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component } from '@angular/core';
+import { Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
 import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
 import { Constraint } from 'src/app/models/constraint-models/constraint';
+import { Utils } from 'src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
+import { HTMLExportVisitor } from './constraintVisitor/htmlExportVisitor';
 
 @Component({
   selector: 'gb-cohort-definition',
@@ -17,10 +19,41 @@ import { ExploreStatisticsService } from 'src/app/services/explore-statistics.se
   styleUrls: ['./gb-cohort-definition.component.css']
 })
 
-export class GbCohortDefinitionComponent {
+export class GbCohortDefinitionComponent implements OnDestroy {
 
-  private _inclusionConstraint: string
-  private _exclusionConstraint: string
+  @ViewChild('testTemplate', { read: ViewContainerRef })
+  testTemplate: ViewContainerRef
+
+  private _inclusionConstraintStr: string
+  private _exclusionConstraintStr: string
+
+  private testContraint: Constraint
+  private testComponentRef: ComponentRef<any>;
+
+
+
+
+
+  constructor(private exploreStatisticsService: ExploreStatisticsService, private componentFactoryResolver: ComponentFactoryResolver) {
+    const defaultRep = new Constraint().textRepresentation
+    this.inclusionConstraintStr = defaultRep
+    this.exclusionConstraintStr = defaultRep
+
+
+    this.exploreStatisticsService.inclusionConstraint.subscribe(constraint => {
+      this.inclusionConstraintStr = constraint.textRepresentation
+
+      this.testContraint = constraint
+
+
+    })
+
+    this.exploreStatisticsService.exclusionConstraint.subscribe(constraint => {
+
+      this.exclusionConstraintStr = constraint.textRepresentation
+    })
+  }
+
 
 
   private transformTextRepresentation(rep: string): string {
@@ -31,35 +64,41 @@ export class GbCohortDefinitionComponent {
     return rep
   }
 
-  constructor(private exploreStatisticsService: ExploreStatisticsService) {
-    const defaultRep = new Constraint().textRepresentation
-    this.inclusionConstraint = defaultRep
-    this.exclusionConstraint = defaultRep
 
-    this.exploreStatisticsService.inclusionConstraint.subscribe(constraint => {
-      this.inclusionConstraint = constraint.textRepresentation
-    })
-
-    this.exploreStatisticsService.exclusionConstraint.subscribe(constraint => {
-      this.exclusionConstraint = constraint.textRepresentation
-    })
-  }
-
-  set inclusionConstraint(representation: string) {
-    this._inclusionConstraint = this.transformTextRepresentation(representation)
-  }
-
-  set exclusionConstraint(representation: string) {
-    this._exclusionConstraint = this.transformTextRepresentation(representation)
-  }
-
-  get inclusionConstraint(): string {
-    return this._inclusionConstraint
+  ngOnDestroy(): void {
+    if (this.testComponentRef !== undefined) {
+      this.testComponentRef.destroy()
+    }
   }
 
 
-  get exclusionConstraint(): string {
-    return this._exclusionConstraint
+  ngAfterViewInit() {
+
+    if (this.testContraint === undefined) {
+      return
+    }
+    console.log("About to enter the HTMLExportVisitor!")
+    const visitor = new HTMLExportVisitor(this.componentFactoryResolver, this.testTemplate)
+    this.testComponentRef = this.testContraint.accept(visitor)
   }
+
+
+  set inclusionConstraintStr(representation: string) {
+    this._inclusionConstraintStr = this.transformTextRepresentation(representation)
+  }
+
+  set exclusionConstraintStr(representation: string) {
+    this._exclusionConstraintStr = this.transformTextRepresentation(representation)
+  }
+
+  get inclusionConstraintStr(): string {
+    return this._inclusionConstraintStr
+  }
+
+
+  get exclusionConstraintStr(): string {
+    return this._exclusionConstraintStr
+  }
+
 
 }

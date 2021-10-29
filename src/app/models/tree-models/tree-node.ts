@@ -1,9 +1,9 @@
 import { TreeNode as PrimeNgTreeNode } from 'primeng';
-import { DropMode } from '../drop-mode';
-import { ValueType } from '../constraint-models/value-type';
-import { TreeNodeType } from './tree-node-type';
-import { MedcoEncryptionDescriptor } from './medco-encryption-descriptor';
 import { ApiValueMetadata } from '../api-response-models/medco-node/api-value-metadata';
+import { ValueType } from '../constraint-models/value-type';
+import { DropMode } from '../drop-mode';
+import { MedcoEncryptionDescriptor } from './medco-encryption-descriptor';
+import { TreeNodeType } from './tree-node-type';
 
 export class TreeNode implements PrimeNgTreeNode {
 
@@ -157,4 +157,35 @@ export class TreeNode implements PrimeNgTreeNode {
       }
     }
   }
+
+  splitTreeNodePath(): TreeNodePaths {
+    return TreeNode.splitTreeNodePath(this.path, this.appliedPath)
+  }
+
+  static splitTreeNodePath(path: string, appliedPath: string): TreeNodePaths {
+    const splittedNodePath = path.split('/');
+    const realAppliedPath = `${splittedNodePath.length > 1 ? `/${splittedNodePath[1]}` : ''}${appliedPath}${appliedPath[appliedPath.length - 1] !== '/' ? '/' : ''}`;
+    const pathList = [
+      ...(appliedPath !== '@' ? TreeNode.getPathList(realAppliedPath) : []),
+      ...TreeNode.getPathList(path)
+    ];
+    return { pathElements: pathList, realAppliedPath };
+  }
+
+  private static getPathList(path: string) {
+    const splittedPath = path.split('/').filter(value => value !== '');
+
+    const pathList: string[] = [];
+
+    splittedPath.forEach((_, index) => {
+      pathList.push(splittedPath.slice(0, index + 1).reduce((result, value) => `${result}${value}/`, '/'));
+    });
+
+    return pathList;
+  }
+}
+
+type TreeNodePaths = {
+  pathElements: string[],
+  realAppliedPath: string
 }
