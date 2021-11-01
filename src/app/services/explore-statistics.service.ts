@@ -164,8 +164,13 @@ export class ExploreStatisticsService {
 
         const analytes = Array.from(uniqueAnalytes);
 
+        if (analytes.length == 0) {
+            ErrorHelper.handleNewError('No analytes have been specified. An analyte is a numerical medical concept for which the constraint is set with value "any"');
+        }
+
         // the analytes split into two groups: modifiers and concepts
         const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } = this.extractConceptsAndModifiers(analytes);
+
 
         const apiRequest: ApiExploreStatistics = {
             ID: ExploreStatisticsService.getNewQueryID(),
