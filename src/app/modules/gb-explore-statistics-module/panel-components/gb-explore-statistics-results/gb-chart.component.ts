@@ -329,24 +329,16 @@ export class LineChartComponent extends ChartComponent {
 
         const config = this.buildConfig(data) as any
 
-        const refIntervalX1 = data.labels[1]
+        const xCI1Lower = data.labels[1]
+        const xCI1Higher = data.labels[2]
+        const xCI2Lower = data.labels[3]
+        const xCI2Higher = data.labels[4]
         config.options.plugins.annotation = {
             annotations: {
-                line1: { //vertical line denoting the 2.5 percentile
-                    type: 'line',
-                    xMin: refIntervalX1,
-                    xMax: refIntervalX1,
-                    borderColor: 'black',
-                    borderDash: [5, 15],
-                    label: {
-                        content: "2.5%",
-                        enabled: true,
-                        rotation: 90, //rotation in degrees
-                        xAdjust: 10,
-                        backgroundColor: 'rgba(0,0,0,0)',
-                        color: 'black'
-                    }
-                }
+                CI1LowerBound: this.verticalDashLineConfig(xCI1Lower, "1.25%"),
+                CI1HigherBound: this.verticalDashLineConfig(xCI1Higher, "3.75%"),
+                CI2LowerBound: this.verticalDashLineConfig(xCI2Lower, "96%"),
+                CI2HigherBound: this.verticalDashLineConfig(xCI2Higher, "99%"),
             }
         };
 
@@ -355,5 +347,23 @@ export class LineChartComponent extends ChartComponent {
 
         return new Chart(context, config,)
 
+    }
+
+    private verticalDashLineConfig(refIntervalX1: unknown, labelContent: string) {
+        return {
+            type: 'line',
+            xMin: refIntervalX1,
+            xMax: refIntervalX1,
+            borderColor: 'black',
+            borderDash: [5, 15],
+            label: {
+                content: labelContent,
+                enabled: true,
+                rotation: 90,
+                xAdjust: 10,
+                backgroundColor: 'rgba(0,0,0,0)',
+                color: 'black'
+            }
+        };
     }
 }
