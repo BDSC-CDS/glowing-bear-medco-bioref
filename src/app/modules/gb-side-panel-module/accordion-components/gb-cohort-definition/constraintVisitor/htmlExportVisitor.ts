@@ -18,7 +18,7 @@ import { Utils } from "src/app/modules/gb-explore-statistics-module/panel-compon
 
 @Component({
     template: `
-    <ng-template #templateRef>
+    <div>
         <div>
             <span *ngFor="let elem of pathElements">
                 {{elem}}
@@ -27,7 +27,7 @@ import { Utils } from "src/app/modules/gb-explore-statistics-module/panel-compon
         <div>
             applied path: {{appliedPath}}
         </div>
-    </ng-template>
+    </div>
     `
 })
 class ConceptConstraintSummaryComponent {
@@ -47,15 +47,15 @@ class ConceptConstraintSummaryComponent {
 //TODO trouver un truc pour que quand tu insères un nouvel enfant dynamiquement l'opérateur soit également ajouté ensuite
 @Component({
     template: `
-    <ng-template #templateRef>
+    <div>
         <div>
-            <template #childrenContainer>
-            </template>
+            <ng-template #childrenContainer>
+            </ng-template>
         </div>
         <div>
             {{operator}}
         </div>
-    </ng-template>
+    </div>
     `
 })
 class CombinationConstraintSummaryComponent implements OnDestroy, AfterViewInit {
@@ -67,7 +67,7 @@ class CombinationConstraintSummaryComponent implements OnDestroy, AfterViewInit 
     @ViewChild('childrenContainer', { read: ViewContainerRef }) //TODO test if can set this field as private
     childrenContainer: ViewContainerRef;
 
-    private containerRefSubject: Subject<ViewContainerRef>  = new Subject()
+    private containerRefSubject: Subject<ViewContainerRef> = new Subject()
 
     set state(state: CombinationState) {
         switch (state) {
@@ -103,11 +103,9 @@ class CombinationConstraintSummaryComponent implements OnDestroy, AfterViewInit 
 
 @Component({
     template: `
-    <ng-template #templateRef>
-        <div>{{textRepresentation}}</div>
-    </ng-template>
+    <div>{{textRepresentation}}</div>
 `})
-class ConceptSummaryComponent  {
+class ConceptSummaryComponent {
     @Input()
     textRepresentation: string
     constructor(c: Constraint) {

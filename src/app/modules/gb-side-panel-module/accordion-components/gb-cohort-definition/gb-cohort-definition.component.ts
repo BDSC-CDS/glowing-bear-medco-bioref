@@ -80,6 +80,7 @@ export class GbCohortDefinitionComponent implements OnDestroy {
     console.log("About to enter the HTMLExportVisitor!")
     const visitor = new HTMLExportVisitor(this.componentFactoryResolver, this.testTemplate)
     this.testComponentRef = this.testContraint.accept(visitor)
+    console.log("Test component ref")
   }
 
 
