@@ -19,7 +19,7 @@ import { Utils } from "src/app/modules/gb-explore-statistics-module/panel-compon
 @Component({
     template: `
     <div>
-        <div>
+        <div *ngIf="pathElements !== undefined">
             <span *ngFor="let elem of pathElements">
                 {{elem}}
             </span>

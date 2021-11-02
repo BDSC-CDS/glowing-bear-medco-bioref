@@ -228,18 +228,35 @@ export class LineChartComponent extends ChartComponent {
         const confInterval2Low = 4
         const confInterval2High = 5
 
-        const segmentColour = (ctx: ScriptableLineSegmentContext) => {
-            //the index of the current data point
-            const currentIndex = ctx.p0DataIndex
-            // is the index of the current point within the first confidence interval or the second confidence interval
-            const isConfidenceInterval = (currentIndex >= confInterval1Low && currentIndex <= confInterval1High) || (currentIndex >= confInterval2Low && currentIndex <= confInterval2High)
-            if (isConfidenceInterval) {
-                return 'red'
-            }
-
-            return 'black'
+        function inExtremes(x: number): boolean {
+            return x < confInterval1Low || x > confInterval2High
         }
 
+        function inConfidenceInterval(x: number): boolean {
+            return (x >= confInterval1Low && x <= confInterval1High) || (x >= confInterval2Low && x <= confInterval2High);
+        }
+
+
+        function color(x: number): string {
+            if (inExtremes(x)) {
+                return 'rgb(0, 80, 166, .7)' //dark blue
+            }
+
+            if (inConfidenceInterval(x)) {
+                return 'rgb(189, 12, 12, .5)' //light red
+            }
+
+            return 'rgb(20, 129, 210, .3)' //pale blue
+        }
+
+
+        const segmentColour = (ctx: ScriptableLineSegmentContext) => {
+            console.log("segment colour ctx ", ctx)
+            //the index of the current data point
+            const currentIndex = ctx.p0DataIndex //or ctx.p0.parsed.x
+            // is the index of the current point within the first confidence interval or the second confidence interval
+            return color(currentIndex)
+        }
 
         return {
             labels: xValues,
@@ -260,13 +277,17 @@ export class LineChartComponent extends ChartComponent {
                 {
                     label: 'histogram',
                     data: yValues,
-                    type: 'bar'
+                    type: 'bar',
+                    backgroundColor: (ctx) => { //this function defines the colour of the histogram bars
+                        console.log("Context: Background colour bar ", ctx);
+
+                        return color(ctx.parsed.x)
+                    },
                 }
-                // getDatasetSlice(false, 0, 2),
-                // getDatasetSlice('+1', 1, 4),
-                // getDatasetSlice(false, 3)
             ]
         };
+
+
     }
 
     // this method builds the config necessary for drawing the interpolated line graph
