@@ -34,5 +34,6 @@ export class ApiExploreStatistics {
   cohortDefinition: {
     queryTiming: ApiI2b2Timing;
     panels: ApiI2b2Panel[];
+    isPanelEmpty: boolean;
   }
 }

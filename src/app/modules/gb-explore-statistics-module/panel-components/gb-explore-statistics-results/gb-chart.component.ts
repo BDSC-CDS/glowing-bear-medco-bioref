@@ -251,7 +251,6 @@ export class LineChartComponent extends ChartComponent {
 
 
         const segmentColour = (ctx: ScriptableLineSegmentContext) => {
-            console.log("segment colour ctx ", ctx)
             //the index of the current data point
             const currentIndex = ctx.p0DataIndex //or ctx.p0.parsed.x
             // is the index of the current point within the first confidence interval or the second confidence interval
@@ -279,8 +278,6 @@ export class LineChartComponent extends ChartComponent {
                     data: yValues,
                     type: 'bar',
                     backgroundColor: (ctx) => { //this function defines the colour of the histogram bars
-                        console.log("Context: Background colour bar ", ctx);
-
                         return color(ctx.parsed.x)
                     },
                 }

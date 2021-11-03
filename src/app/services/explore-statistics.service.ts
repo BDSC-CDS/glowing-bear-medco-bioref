@@ -71,6 +71,8 @@ export class ChartInformation {
 export class ExploreStatisticsService {
 
 
+    private isEmptyConstraint: boolean = true
+
     // 1 minute timeout
     private static TIMEOUT_MS = 1000 * 60 * 1;
 
@@ -160,7 +162,7 @@ export class ExploreStatisticsService {
         console.log('Analytes ', uniqueAnalytes);
 
 
-        const cohortConstraint: Constraint = this.prepareCohort(upToDateInclusionConstraint, upToDateExclusionConstraint);
+        const cohortConstraint = this.prepareCohort(upToDateInclusionConstraint, upToDateExclusionConstraint);
 
         const analytes = Array.from(uniqueAnalytes);
 
@@ -181,7 +183,8 @@ export class ExploreStatisticsService {
             minObservation,
             cohortDefinition: {
                 queryTiming: this.queryService.lastTiming,
-                panels: this.constraintMappingService.mapConstraint(cohortConstraint)
+                panels: this.constraintMappingService.mapConstraint(cohortConstraint),
+                isPanelEmpty: this.isEmptyConstraint
             }
         };
 
@@ -201,9 +204,9 @@ export class ExploreStatisticsService {
             const serverResponse: ApiExploreStatisticsResponse = answers[0];
 
 
-            if (serverResponse.results === undefined) {
+            if (serverResponse.results === undefined || serverResponse.results === null) {
                 this.displayLoadingIcon.next(false);
-                ErrorHelper.handleNewError('Please verify you selected an analyte.');
+                ErrorHelper.handleNewError('Empty server response. Please verify you selected an analyte.');
                 return;
             }
 
@@ -219,6 +222,7 @@ export class ExploreStatisticsService {
             });
 
         }, err => {
+            ErrorHelper.handleNewError('An error occured during the request execution.')
             this.displayLoadingIcon.next(false);
         });
     }
@@ -250,31 +254,55 @@ export class ExploreStatisticsService {
         return { conceptsPaths, modifiers };
     }
 
-    private prepareCohort(upToDateInclusionConstraint: Constraint, upToDateExclusionConstraint: Constraint): Constraint {
-        const filteredInclusionConstraint = upToDateInclusionConstraint.constraintWithoutAnalytes();
-        const cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, upToDateExclusionConstraint);
+    private isEmptyCombinationConstraint(constraint: Constraint): boolean {
+        if (constraint instanceof CombinationConstraint) {
+            const children = (constraint as CombinationConstraint).children
+            return children === undefined || children.length === 0
+        }
+        return false
+    }
 
+    private constraintIsEmpty(constraint: Constraint): boolean {
+
+        return constraint === undefined || this.isEmptyCombinationConstraint(constraint)
+    }
+
+    private prepareCohort(upToDateInclusionConstraint: Constraint, upToDateExclusionConstraint: Constraint): Constraint {
+        let filteredInclusionConstraint = upToDateInclusionConstraint.constraintWithoutAnalytes();
+        let cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, upToDateExclusionConstraint);
+
+
+        if (cohortConstraint === undefined) {
+            cohortConstraint = new CombinationConstraint()
+        }
+
+        const isInclusionEmpty = this.constraintIsEmpty(filteredInclusionConstraint)
+        if (isInclusionEmpty) { // empty constraint
+            filteredInclusionConstraint = new CombinationConstraint()
+        }
+
+        const isExclusionEmpty = this.constraintIsEmpty(upToDateExclusionConstraint)
+        if (isExclusionEmpty) { // empty constraint
+            upToDateExclusionConstraint = new CombinationConstraint()
+        }
 
         this.inclusionConstraint.next(filteredInclusionConstraint)
         this.exclusionConstraint.next(upToDateExclusionConstraint)
 
-        console.log('Cohort constraint ', cohortConstraint);
-
-        if (cohortConstraint === undefined) {
-            throw ErrorHelper.handleNewError('Undefined population. Please select criterias which are not analytes');
-        }
 
         const errorMsg = cohortConstraint.inputValueValidity();
         if (errorMsg !== '') {
             throw ErrorHelper.handleNewError(errorMsg);
         }
+
+        this.isEmptyConstraint = isExclusionEmpty && isInclusionEmpty
         return cohortConstraint;
     }
 
     // send a signal that launches the export of the statistical results as a PDF
     sendExportAsPDFSignal() {
         //TODO if no result is displayed in the explore statistics tab throw an error
-        if (! this.navbarService.isExploreStatistics) {
+        if (!this.navbarService.isExploreStatistics) {
             throw ErrorHelper.handleNewError("Cannot export the PDF outside of the statistics tab.");
         }
 
