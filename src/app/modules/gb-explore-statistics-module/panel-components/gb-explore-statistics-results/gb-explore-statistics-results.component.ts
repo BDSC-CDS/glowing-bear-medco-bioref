@@ -51,13 +51,13 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
     chartsInfo.forEach(chartInfo => {
 
-      //create a histogram
-      this.buildChart(chartInfo, HistogramChartComponent)
+      // //create a histogram
+      // this.buildChart(chartInfo, HistogramChartComponent)
 
-      // create a smooth line graph
-      this.buildChart(chartInfo, LineChartComponent)
+      // // create a smooth line graph
+      // this.buildChart(chartInfo, LineChartComponent)
 
-      this.buildReferenceInterval(chartInfo, ReferenceIntervalHistogram)
+      // this.buildReferenceInterval(chartInfo, ReferenceIntervalHistogram)
       this.buildReferenceInterval(chartInfo, ReferenceIntervalLine)
 
     });

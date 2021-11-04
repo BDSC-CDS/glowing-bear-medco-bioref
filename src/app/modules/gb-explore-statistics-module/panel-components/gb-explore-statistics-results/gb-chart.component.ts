@@ -203,6 +203,12 @@ export class HistogramChartComponent extends ChartComponent {
     styleUrls: [resultsCss, childFlexCss],
 })
 export class LineChartComponent extends ChartComponent {
+
+    private confInterval1Low: number
+    private confInterval1High: number
+
+    private confInterval2Low: number
+    private confInterval2High: number
     constructor(public element: ElementRef) {
         super(element, 'line')
     }
@@ -221,19 +227,22 @@ export class LineChartComponent extends ChartComponent {
         const yValues: Array<number> = chartInfo.intervals.map(interval => interval.count)
 
 
-        //TODO replace those hardcoded values
-        const confInterval1Low = 1
-        const confInterval1High = 2
 
-        const confInterval2Low = 4
-        const confInterval2High = 5
+        //TODO replace those hardcoded values
+        this.confInterval1Low = xValues[1]
+        this.confInterval1High = xValues[2]
+
+        this.confInterval2Low = xValues[4]
+        this.confInterval2High = xValues[5]
+
+        const _this = this
 
         function inExtremes(x: number): boolean {
-            return x < confInterval1Low || x > confInterval2High
+            return x < _this.confInterval1Low || x > _this.confInterval2High
         }
 
         function inConfidenceInterval(x: number): boolean {
-            return (x >= confInterval1Low && x <= confInterval1High) || (x >= confInterval2Low && x <= confInterval2High);
+            return (x >= _this.confInterval1Low && x <= _this.confInterval1High) || (x >= _this.confInterval2Low && x <= _this.confInterval2High);
         }
 
 
@@ -347,16 +356,12 @@ export class LineChartComponent extends ChartComponent {
 
         const config = this.buildConfig(data) as any
 
-        const xCI1Lower = data.labels[1]
-        const xCI1Higher = data.labels[2]
-        const xCI2Lower = data.labels[3]
-        const xCI2Higher = data.labels[4]
         config.options.plugins.annotation = {
             annotations: {
-                CI1LowerBound: this.verticalDashLineConfig(xCI1Lower, "1.25%"),
-                CI1HigherBound: this.verticalDashLineConfig(xCI1Higher, "3.75%"),
-                CI2LowerBound: this.verticalDashLineConfig(xCI2Lower, "96%"),
-                CI2HigherBound: this.verticalDashLineConfig(xCI2Higher, "99%"),
+                CI1LowerBound: this.verticalDashLineConfig(this.confInterval1Low, "1.25%"),
+                CI1HigherBound: this.verticalDashLineConfig(this.confInterval1High, "3.75%"),
+                CI2LowerBound: this.verticalDashLineConfig(this.confInterval2Low, "96%"),
+                CI2HigherBound: this.verticalDashLineConfig(this.confInterval2High, "99%"),
             }
         };
 
