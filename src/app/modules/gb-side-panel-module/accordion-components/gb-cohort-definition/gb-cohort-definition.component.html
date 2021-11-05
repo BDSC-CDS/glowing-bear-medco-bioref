@@ -1,20 +1,16 @@
 <div class="cohort-definition">
     <div>
-        <b>test template</b>
-        <div>
-            <ng-template #testTemplate></ng-template>
-        </div>
-    </div>
-    <div>
         <b>Inclusion constraints</b>
         <div>
-            {{inclusionConstraintStr}}
+            <span *ngIf="noInclusionConstraint">None</span>
+            <ng-template #inclusionTemplate></ng-template>
         </div>
     </div>
     <div>
         <b>Exclusion constraints</b>
         <div>
-            {{exclusionConstraintStr}}
+            <span *ngIf="noExclusionConstraint">None</span>
+            <ng-template #exclusionTemplate></ng-template>
         </div>
     </div>
 </div>

@@ -1,6 +1,5 @@
-import { AfterViewInit, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, TemplateRef, Type, ViewChild, ViewContainerRef } from "@angular/core";
-import { utils } from "elliptic";
-import { forkJoin, Observable, Subject } from "rxjs";
+import { AfterViewInit, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from "@angular/core";
+import { Observable, Subject } from "rxjs";
 import { CohortConstraint } from "src/app/models/constraint-models/cohort-constraint";
 import { CombinationConstraint } from "src/app/models/constraint-models/combination-constraint";
 import { CombinationState } from "src/app/models/constraint-models/combination-state";
@@ -15,59 +14,55 @@ import { TreeNode } from "src/app/models/tree-models/tree-node";
 import { Utils } from "src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component";
 
 
+const ulLeftPadding = '2em';
 
 @Component({
+    styles: [
+        `
+        li {
+            display: inline-block;
+        }
+        .delimiter {
+            padding-right: .5em;
+        }
+        `,
+        'ul {padding-left: '+ulLeftPadding+'; }'
+    ],
     template: `
     <div>
-        <div *ngIf="pathElements !== undefined">
-            <span *ngFor="let elem of pathElements">
-                {{elem}}
-            </span>
-        </div>
-        <div>
-            applied path: {{appliedPath}}
-        </div>
+        <ul>
+            <li *ngFor="let elem of pathElements; let i = index">
+                <span> {{elem}} </span>
+                <span *ngIf="!isLastElement(i)" class="delimiter"> &gt; </span>
+            </li>
+        </ul>
     </div>
     `
 })
-class ConceptConstraintSummaryComponent {
+export class ConceptConstraintSummaryComponent {
     @Input()
-    pathElements: string[]
-    @Input()
-    appliedPath: string
+    pathElements: string[] = []
 
-    set conceptPath(conceptPath: string) {
-        const { pathElements, realAppliedPath } = TreeNode.splitTreeNodePath(conceptPath, '')
+    isLastElement(index: number): boolean {
+        return this.pathElements.length === (index + 1)
+    }
+
+    set conceptPath(pathElements: string[]) {
         this.pathElements = pathElements
-        this.appliedPath = realAppliedPath
     }
 }
 
 
-//TODO trouver un truc pour que quand tu insères un nouvel enfant dynamiquement l'opérateur soit également ajouté ensuite
 @Component({
     template: `
     <div>
-        <div>
-            <ng-template #childrenContainer>
-            </ng-template>
-        </div>
-        <div>
-            {{operator}}
-        </div>
+        {{operator}}
     </div>
     `
+
 })
-class CombinationConstraintSummaryComponent implements OnDestroy, AfterViewInit {
-
-    children: ComponentRef<any>[]
-
+export class OperatorComponent {
     operator: string
-
-    @ViewChild('childrenContainer', { read: ViewContainerRef }) //TODO test if can set this field as private
-    childrenContainer: ViewContainerRef;
-
-    private containerRefSubject: Subject<ViewContainerRef> = new Subject()
 
     set state(state: CombinationState) {
         switch (state) {
@@ -78,9 +73,49 @@ class CombinationConstraintSummaryComponent implements OnDestroy, AfterViewInit 
                 this.operator = 'OR'
                 break;
             default:
+                this.operator = 'UNKNOWN OPERATOR'
                 console.error("We should not be there missing case!")
                 break
         }
+    }
+
+}
+
+
+@Component({
+    styles: [
+        '.outerDiv { margin-left: '+ulLeftPadding+'; }'
+    ],
+    template: `
+    <div class="outerDiv">
+        <ng-template #childrenContainer>
+        </ng-template>
+    </div>
+    `
+})
+export class CombinationConstraintSummaryComponent implements OnDestroy, AfterViewInit {
+
+
+    @Input()
+    children: ComponentRef<any>[] = []
+
+    _state: CombinationState
+
+    @ViewChild('childrenContainer', { read: ViewContainerRef }) //TODO test if can set this field as private
+    childrenContainer: ViewContainerRef;
+
+    private containerRefSubject: Subject<ViewContainerRef> = new Subject()
+
+    constructor(private componentFactoryResolver: ComponentFactoryResolver) { }
+
+    set state(state: CombinationState) {
+        this._state = state
+    }
+
+    addOperator() {
+        const operatorComponent = Utils.buildComponent(this.componentFactoryResolver, this.childrenContainer, OperatorComponent)
+        operatorComponent.instance.state = this._state
+        this.children.push(operatorComponent)
     }
 
     ngAfterViewInit() {
@@ -105,8 +140,8 @@ class CombinationConstraintSummaryComponent implements OnDestroy, AfterViewInit 
     template: `
     <div>{{textRepresentation}}</div>
 `})
-class ConceptSummaryComponent {
-    @Input()
+@Input()
+export class ConceptSummaryComponent {
     textRepresentation: string
     constructor(c: Constraint) {
         this.textRepresentation = c.textRepresentation
@@ -138,19 +173,25 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
         const componentInstance = componentRef.instance
         componentInstance.state = cc.combinationState
 
-        // trouver le view container ref qui fait référence au combination constraint et le passer à buildNewComponent
+        componentInstance.children = []
 
         componentInstance.containerRef.subscribe(containerRef => {
 
-            console.log("TODO REMOVE: Constraint container ref", containerRef)
             // Building the children components. The containerRef element is a reference to the DOM element which contain those children components.
-            const childrenComponents: ComponentRef<any>[] = cc.children.map(child => {
+            cc.children.forEach((child, index) => {
                 const childVisitor = new HTMLExportVisitor(this.componentFactoryResolver, containerRef)
                 console.log("Before child accept method", child)
-                return child.accept(childVisitor)
+                const childRef = child.accept(childVisitor)
+                componentInstance.children.push(childRef)
+
+
+                if ((index + 1) === cc.children.length) {
+                    return
+                }
+                // add an operator component after the new child. This operator component displays the OR, AND in a pretty way
+                componentInstance.addOperator();
             })
 
-            componentInstance.children = childrenComponents
         })
 
 
@@ -158,9 +199,22 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
     }
 
     visitConceptConstraint(c: ConceptConstraint): ComponentRef<any> {
-        const componentRef = this.buildNewComponent(ConceptConstraintSummaryComponent)
-        componentRef.instance.conceptPath = c.concept.path
         console.log("In visit concept constraint", c)
+
+        var displayNames: string[] = []
+        //retrieving the display name of the ancestors tree nodes
+        var currentNode: TreeNode = c.treeNode
+        for (;true;) {
+            if (currentNode === undefined || currentNode === null){
+                break;
+            }
+            displayNames.push(currentNode.displayName)
+            console.log("current : ", currentNode.path, "  child:", c.treeNode.displayName)
+            currentNode = currentNode.parent
+        }
+
+        const componentRef = this.buildNewComponent(ConceptConstraintSummaryComponent)
+        componentRef.instance.conceptPath = displayNames.reverse()
         return componentRef
     }
 

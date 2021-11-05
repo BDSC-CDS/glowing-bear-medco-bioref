@@ -6,10 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
-import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
+import { Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, ViewChild, ViewContainerRef } from '@angular/core';
 import { Constraint } from 'src/app/models/constraint-models/constraint';
-import { Utils } from 'src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { HTMLExportVisitor } from './constraintVisitor/htmlExportVisitor';
 
@@ -21,85 +19,69 @@ import { HTMLExportVisitor } from './constraintVisitor/htmlExportVisitor';
 
 export class GbCohortDefinitionComponent implements OnDestroy {
 
-  @ViewChild('testTemplate', { read: ViewContainerRef })
-  testTemplate: ViewContainerRef
+  @ViewChild('inclusionTemplate', { read: ViewContainerRef })
+  inclusionTemplate: ViewContainerRef
 
-  private _inclusionConstraintStr: string
-  private _exclusionConstraintStr: string
+  @ViewChild('exclusionTemplate', { read: ViewContainerRef })
+  exclusionTemplate: ViewContainerRef
+  @Input()
+  noInclusionConstraint: boolean = true;
+  @Input()
+  noExclusionConstraint: boolean = true;
 
-  private testContraint: Constraint
-  private testComponentRef: ComponentRef<any>;
-
+  private inclusionConstraint: Constraint
+  private exclusionConstraint: Constraint
+  private inclusionComponentRef: ComponentRef<any>;
+  private exclusionTemplateRef: ComponentRef<any>;
 
 
 
 
   constructor(private exploreStatisticsService: ExploreStatisticsService, private componentFactoryResolver: ComponentFactoryResolver) {
-    const defaultRep = new Constraint().textRepresentation
-    this.inclusionConstraintStr = defaultRep
-    this.exclusionConstraintStr = defaultRep
-
 
     this.exploreStatisticsService.inclusionConstraint.subscribe(constraint => {
-      this.inclusionConstraintStr = constraint.textRepresentation
-
-      this.testContraint = constraint
-
-
+      this.inclusionConstraint = constraint
     })
 
     this.exploreStatisticsService.exclusionConstraint.subscribe(constraint => {
-
-      this.exclusionConstraintStr = constraint.textRepresentation
+      this.exclusionConstraint = constraint
     })
   }
 
 
 
-  private transformTextRepresentation(rep: string): string {
-    if (rep === undefined || rep === '' || rep == CombinationConstraint.groupTextRepresentation) {
-      return 'None'
+  ngOnDestroy(): void {
+    if (this.inclusionComponentRef !== undefined) {
+      this.inclusionComponentRef.destroy()
     }
 
-    return rep
-  }
-
-
-  ngOnDestroy(): void {
-    if (this.testComponentRef !== undefined) {
-      this.testComponentRef.destroy()
+    if (this.exclusionTemplateRef !== undefined) {
+      this.exclusionTemplateRef.destroy()
     }
   }
 
 
   ngAfterViewInit() {
 
-    if (this.testContraint === undefined) {
-      return
+    if (this.inclusionConstraint === undefined) {
+      this.noInclusionConstraint = true
+    } else {
+      this.noInclusionConstraint = false
+      const visitor = new HTMLExportVisitor(this.componentFactoryResolver, this.inclusionTemplate)
+      this.inclusionComponentRef = this.inclusionConstraint.accept(visitor)
     }
-    console.log("About to enter the HTMLExportVisitor!")
-    const visitor = new HTMLExportVisitor(this.componentFactoryResolver, this.testTemplate)
-    this.testComponentRef = this.testContraint.accept(visitor)
-    console.log("Test component ref")
+
+    if (this.exclusionConstraint === undefined) {
+      this.noExclusionConstraint = true
+    } else {
+      this.noExclusionConstraint = false
+      const visitor = new HTMLExportVisitor(this.componentFactoryResolver, this.exclusionTemplate)
+      this.exclusionTemplateRef = this.exclusionConstraint.accept(visitor)
+    }
+
   }
 
 
-  set inclusionConstraintStr(representation: string) {
-    this._inclusionConstraintStr = this.transformTextRepresentation(representation)
-  }
-
-  set exclusionConstraintStr(representation: string) {
-    this._exclusionConstraintStr = this.transformTextRepresentation(representation)
-  }
-
-  get inclusionConstraintStr(): string {
-    return this._inclusionConstraintStr
-  }
-
-
-  get exclusionConstraintStr(): string {
-    return this._exclusionConstraintStr
-  }
 
 
 }

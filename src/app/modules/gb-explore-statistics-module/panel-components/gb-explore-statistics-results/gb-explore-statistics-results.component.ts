@@ -157,7 +157,7 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   private _chartInfo: ChartInformation
 
-  private componentRefs: Array<ComponentRef<any>> = []
+  private componentRefs: Array<ComponentRef<ChartComponent>> = []
 
   protected chartType: Type<ChartComponent>;
 
@@ -165,7 +165,7 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver) {
     this._nbEntries = 1
-    this._lowQuantile = 2
+    this._lowQuantile = 2 //TODO use this?
     this._lowBoundCI1 = 3
     this._highBoundCI1 = 4
     this._highQuantile = 5
