@@ -84,6 +84,10 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     const component = componentRef.instance
     component.chartInfo = chartInfo
 
+    this.exploreStatisticsService.exportAsPDF.subscribe(_ => {
+      component.toPDF()
+    })
+
   }
 
   get displayLoadingIcon() {
@@ -173,6 +177,9 @@ export abstract class ReferenceInterval implements OnDestroy {
     this._highBoundCI2 = 7
   }
 
+  toPDF() {
+    this.componentRefs.forEach(c => c.instance.toPDF())
+  }
 
 
   private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
