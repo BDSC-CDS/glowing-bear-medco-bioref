@@ -91,7 +91,7 @@ export class TreeNodeService {
       (treeNodes: TreeNode[]) => {
         parentNode.attachChildTree(treeNodes);
         parentNode.attachModifierData(treeNodes);
-        this.processTreeNodes(parentNode.children, constraintService);
+        this.processTreeNodes(parentNode.children, constraintService, parentNode);
         this._isLoading = false;
         if (treeNodes.length === 0) {
           parentNode.leaf = true
@@ -112,14 +112,14 @@ export class TreeNodeService {
    * @param treeNodes
    * @param constraintService
    */
-  processTreeNodes(treeNodes: TreeNode[], constraintService: ConstraintService) {
+  processTreeNodes(treeNodes: TreeNode[], constraintService: ConstraintService, parentNode?: TreeNode) {
     if (!treeNodes) {
       return;
     }
     for (let node of treeNodes) {
-      this.processTreeNode(node, constraintService);
+      this.processTreeNode(node, constraintService, parentNode);
       if (node.hasChildren()) {
-        this.processTreeNodes(node.children, constraintService);
+        this.processTreeNodes(node.children, constraintService, node);
       }
     }
   }
@@ -131,7 +131,11 @@ export class TreeNodeService {
    * @param {Object} node
    * @param {ConstraintService} constraintService
    */
-  processTreeNode(node: TreeNode, constraintService: ConstraintService) {
+  processTreeNode(node: TreeNode, constraintService: ConstraintService, parentNode?: TreeNode) {
+
+    if (node.parent === undefined || node.parent === null) {
+      node.parent = parentNode
+    }
 
     // generate label
     node.label = node.displayName;

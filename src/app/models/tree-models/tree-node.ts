@@ -50,7 +50,7 @@ export class TreeNode implements PrimeNgTreeNode {
   parent: TreeNode;
   partialSelected: boolean;
 
-  clone(): TreeNode {
+  clone(clonedParent?: TreeNode, cloneChildren: boolean = true): TreeNode {
     let copy: TreeNode = new TreeNode();
 
     copy.path = this.path;
@@ -59,6 +59,12 @@ export class TreeNode implements PrimeNgTreeNode {
     copy.description = this.description;
 
     copy.appliedPath = this.appliedPath;
+
+    if (clonedParent !== undefined && clonedParent !== null) {
+      copy.parent = clonedParent
+    } else if (this.parent !== undefined && this.parent !== null) {
+      copy.parent = this.parent.clone(undefined, cloneChildren = false)
+    }
 
     copy.nodeType = this.nodeType;
     copy.valueType = this.valueType;
@@ -77,7 +83,8 @@ export class TreeNode implements PrimeNgTreeNode {
       copy.encryptionDescriptor.id = this.encryptionDescriptor.id
     }
 
-    copy.children = this.children.map((child) => child.clone());
+
+
     copy.icon = this.icon;
     copy.label = this.label;
     copy.expandedIcon = this.expandedIcon;
@@ -86,6 +93,11 @@ export class TreeNode implements PrimeNgTreeNode {
     copy.expanded = this.expanded;
     copy.styleClass = this.styleClass;
     copy.partialSelected = this.partialSelected;
+
+    if (cloneChildren) {
+      copy.children = this.children.map((child) => child.clone(copy));
+    }
+
     return copy
   }
 
