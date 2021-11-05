@@ -63,7 +63,7 @@ export class TreeNode implements PrimeNgTreeNode {
     if (clonedParent !== undefined && clonedParent !== null) {
       copy.parent = clonedParent
     } else if (this.parent !== undefined && this.parent !== null) {
-      copy.parent = this.parent.clone(undefined, cloneChildren = false)
+      copy.parent = this.parent.clone(undefined, false)
     }
 
     copy.nodeType = this.nodeType;
@@ -84,7 +84,7 @@ export class TreeNode implements PrimeNgTreeNode {
     }
 
 
-
+    copy.comment = this.comment
     copy.icon = this.icon;
     copy.label = this.label;
     copy.expandedIcon = this.expandedIcon;
@@ -94,8 +94,12 @@ export class TreeNode implements PrimeNgTreeNode {
     copy.styleClass = this.styleClass;
     copy.partialSelected = this.partialSelected;
 
-    if (cloneChildren) {
-      copy.children = this.children.map((child) => child.clone(copy));
+    if (cloneChildren && this.children) {
+      const copiedChildren = this.children.map(child => {
+        return child.clone(copy, true)
+      })
+      copy.children = copiedChildren
+      console.log("Entering the copy children if statement", copy.children)
     }
 
     return copy
