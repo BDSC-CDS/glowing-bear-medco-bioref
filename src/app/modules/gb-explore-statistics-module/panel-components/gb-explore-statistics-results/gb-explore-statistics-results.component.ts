@@ -8,7 +8,7 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { ChartInformation, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
+import { ChartInformation, ConfidenceInterval, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 import { ChartComponent, HistogramChartComponent, LineChartComponent } from './gb-chart.component';
 
 const childFlexCss = './child-flex.css'
@@ -39,7 +39,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     private componentFactoryResolver: ComponentFactoryResolver,
     private cdref: ChangeDetectorRef) {
 
-    }
+  }
 
 
 
@@ -62,18 +62,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
     });
 
-  }
-
-
-  private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
-    const componentRef = Utils.buildChart(this.componentFactoryResolver, this.canvasContainer, chartInfo, componentType)
-
-    this.componentRefs.push(componentRef)
-
-
-    this.exploreStatisticsService.exportAsPDF.subscribe(_ => {
-      componentRef.instance.toPDF()
-    })
   }
 
 
@@ -147,17 +135,25 @@ const referenceIntervalTemplate = './gb-reference-interval.component.html';
 })
 export abstract class ReferenceInterval implements OnDestroy {
 
-
-
   @ViewChild('chartContainer', { read: ViewContainerRef }) chartContainer: ViewContainerRef;
 
-  private _nbEntries: number
-  private _lowQuantile: number
-  private _lowBoundCI1: number
-  private _highBoundCI1: number
-  private _highQuantile: number
-  private _lowBoundCI2: number
-  private _highBoundCI2: number
+
+  @Input()
+  middleCI1: number
+  @Input()
+  lowBoundCI1: number
+  @Input()
+  highBoundCI1: number
+
+  @Input()
+  middleCI2: number
+  @Input()
+  lowBoundCI2: number
+  @Input()
+  highBoundCI2: number
+
+  @Input()
+  CI2: ConfidenceInterval
 
   private _chartInfo: ChartInformation
 
@@ -168,23 +164,28 @@ export abstract class ReferenceInterval implements OnDestroy {
   @Input() hide: boolean = false
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver) {
-    this._nbEntries = 1
-    this._lowQuantile = 2 //TODO use this?
-    this._lowBoundCI1 = 3
-    this._highBoundCI1 = 4
-    this._highQuantile = 5
-    this._lowBoundCI2 = 6
-    this._highBoundCI2 = 7
-  }
 
-  toPDF() {
-    this.componentRefs.forEach(c => c.instance.toPDF())
   }
-
 
   private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
     const componentRef = Utils.buildChart(this.componentFactoryResolver, this.chartContainer, chartInfo, componentType)
     this.componentRefs.push(componentRef)
+    const CI1 = chartInfo.CI1
+    const CI2 = chartInfo.CI2
+
+    this.middleCI1 = CI1.middle
+    this.lowBoundCI1 = CI1.lowerBound
+    this.highBoundCI1 = CI1.higherBound
+
+    this.middleCI2 = CI2.middle
+    this.lowBoundCI2 = CI2.lowerBound
+    this.highBoundCI2 = CI2.higherBound
+  }
+
+
+
+  toPDF() {
+    this.componentRefs.forEach(c => c.instance.toPDF())
   }
 
   ngAfterViewInit() {
@@ -203,14 +204,6 @@ export abstract class ReferenceInterval implements OnDestroy {
   numberOfObservations() {
     return this._chartInfo.numberOfObservations()
   }
-
-  get nbEntries(): number { return this._nbEntries; }
-  get lowQuantile(): number { return this._lowQuantile; }
-  get lowBoundCI1(): number { return this._lowBoundCI1; }
-  get highBoundCI1(): number { return this._highBoundCI1; }
-  get highQuantile(): number { return this._highQuantile; }
-  get lowBoundCI2(): number { return this._lowBoundCI2; }
-  get highBoundCI2(): number { return this._highBoundCI2; }
 
   public set chartInfo(chartInfo: ChartInformation) {
     this._chartInfo = chartInfo

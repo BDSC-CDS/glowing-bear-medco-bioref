@@ -1,6 +1,6 @@
 import { Injectable, Output } from '@angular/core';
 import { forkJoin, interval, Observable, of, ReplaySubject, Subject } from 'rxjs';
-import { timeout } from 'rxjs/operators';
+import { map, timeout } from 'rxjs/operators';
 import { ApiI2b2Panel } from '../models/api-request-models/medco-node/api-i2b2-panel';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
 import { ApiExploreStatisticResult, ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
@@ -18,39 +18,63 @@ import { CryptoService } from './crypto.service';
 import { NavbarService } from './navbar.service';
 import { QueryService } from './query.service';
 
+export class ConfidenceInterval {
+    constructor(private _lowerBound: number, private _middle: number, private _higherBound: number) {
+    }
+
+    get lowerBound() {
+        return this._lowerBound
+    }
+
+    get middle() {
+        return this._middle
+    }
+
+    get higherBound() {
+        return this._higherBound
+    }
+}
+
 // this class represents contains the following info: how many observations there are in a interval of a histogram for a concept
 export class Interval {
     count: number
     higherBound: string
     lowerBound: string
 
-    constructor(lowerBound, higherBound, decryptedCount) {
+    constructor(lowerBound: string, higherBound: string, decryptedCount: number) {
         this.higherBound = higherBound
         this.lowerBound = lowerBound
         this.count = decryptedCount
     }
 }
 
+
+
 // This class contains all information necessary to build a histogram chart with chart.js
 export class ChartInformation {
-    intervals: Interval[]
+    readonly intervals: Interval[]
     readonly unit: string
+    readonly CI1: ConfidenceInterval
+    readonly CI2: ConfidenceInterval
     readonly readable: Observable<any>
 
-    constructor(apiResponse: ApiExploreStatisticResult, cryptoService: CryptoService,
+    constructor(intervals: Interval[], unit: string,
         public readonly treeNodeName: string, public readonly cohortName: string) {
-        this.unit = apiResponse.unit
 
-        const encCounts: string[] = apiResponse.intervals.map((i: ApiInterval) => i.encCount)
-        const decryptedCounts = cryptoService.decryptIntegersWithEphemeralKey(encCounts)
-        this.readable = decryptedCounts
-        decryptedCounts.subscribe(counts => {
-            this.intervals = counts.map((count, intervalIndex) => {
-                const apiInterval = apiResponse.intervals[intervalIndex]
-                return new Interval(apiInterval.lowerBound, apiInterval.higherBound, count)
-            })
-        })
+        this.intervals = intervals
+        this.unit = unit
 
+        this.CI1 = ChartInformation.computeCI1(intervals)
+        this.CI2 = ChartInformation.computeCI2(intervals)
+    }
+
+    private static computeCI1(intervals: Interval[]): ConfidenceInterval {
+        return new ConfidenceInterval(1,2,3)
+    }
+
+
+    private static computeCI2(intervals: Interval[]): ConfidenceInterval {
+        return new ConfidenceInterval(4,5,6)
     }
 
     numberOfObservations(): number {
@@ -210,12 +234,27 @@ export class ExploreStatisticsService {
                 return;
             }
 
-            const chartsInformations = serverResponse.results.map((result: ApiExploreStatisticResult) => new ChartInformation(result, this.cryptoService, result.analyteName, cohortConstraint.textRepresentation)
-            );
+            const chartsInformationsObservables: Observable<ChartInformation>[] = serverResponse.results.map((result: ApiExploreStatisticResult) => {
+
+                const encCounts: string[] = result.intervals.map((i: ApiInterval) => i.encCount)
+
+                const decryptedCounts = this.cryptoService.decryptIntegersWithEphemeralKey(encCounts)
+
+                return decryptedCounts.pipe(
+                    map(counts => {
+                        const intervals = counts.map((count, intervalIndex) => {
+                            const apiInterval = result.intervals[intervalIndex]
+                            return new Interval(apiInterval.lowerBound, apiInterval.higherBound, count)
+                        })
+
+                        return new ChartInformation(intervals, result.unit, result.analyteName, cohortConstraint.textRepresentation)
+                    }),
+                )
+            });
 
 
 
-            forkJoin(chartsInformations.map(ci => ci.readable)).subscribe(_ => {
+            forkJoin(chartsInformationsObservables).subscribe((chartsInformations: ChartInformation[]) => {
                 // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
                 this.chartsDataSubject.next(chartsInformations);
                 this.displayLoadingIcon.next(false);
@@ -226,6 +265,9 @@ export class ExploreStatisticsService {
             this.displayLoadingIcon.next(false);
         });
     }
+
+
+
 
     private sendRequest(apiRequest: ApiExploreStatistics): Observable<ApiExploreStatisticsResponse[]> {
         return forkJoin(this.medcoNetworkService.nodes

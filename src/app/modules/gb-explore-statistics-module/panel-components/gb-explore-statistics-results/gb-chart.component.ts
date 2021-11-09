@@ -2,7 +2,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, ScriptableLineSegmentContext } from 'chart.js';
 import { PDF } from 'src/app/utilities/files/pdf';
-import { ChartInformation } from '../../../../services/explore-statistics.service';
+import { ChartInformation, ConfidenceInterval } from '../../../../services/explore-statistics.service';
 import { SVGConvertible } from './gb-explore-statistics-results.component';
 
 
@@ -202,13 +202,11 @@ export class HistogramChartComponent extends ChartComponent {
     template: chartTemplate,
     styleUrls: [resultsCss, childFlexCss],
 })
+
 export class LineChartComponent extends ChartComponent {
+    private CI1: ConfidenceInterval
+    private CI2: ConfidenceInterval
 
-    private confInterval1Low: number
-    private confInterval1High: number
-
-    private confInterval2Low: number
-    private confInterval2High: number
     constructor(public element: ElementRef) {
         super(element, 'line')
     }
@@ -226,23 +224,18 @@ export class LineChartComponent extends ChartComponent {
 
         const yValues: Array<number> = chartInfo.intervals.map(interval => interval.count)
 
+        this.CI1 = chartInfo.CI1
+        this.CI2 = chartInfo.CI2
 
-
-        //TODO replace those hardcoded values
-        this.confInterval1Low = xValues[1]
-        this.confInterval1High = xValues[2]
-
-        this.confInterval2Low = xValues[4]
-        this.confInterval2High = xValues[5]
 
         const _this = this
 
         function inExtremes(x: number): boolean {
-            return x < _this.confInterval1Low || x > _this.confInterval2High
+            return x < _this.CI1.lowerBound || x > _this.CI2.higherBound
         }
 
         function inConfidenceInterval(x: number): boolean {
-            return (x >= _this.confInterval1Low && x <= _this.confInterval1High) || (x >= _this.confInterval2Low && x <= _this.confInterval2High);
+            return (x >= _this.CI1.lowerBound && x <= _this.CI1.higherBound) || (x >= _this.CI2.lowerBound && x <= _this.CI2.higherBound);
         }
 
 
@@ -305,6 +298,7 @@ export class LineChartComponent extends ChartComponent {
             type: this.chartJSType,
             data: data,
             options: {
+                aspectRatio: 1.5,
                 responsive: true,
                 plugins: {
                     title: {
@@ -336,6 +330,7 @@ export class LineChartComponent extends ChartComponent {
         };
     }
 
+
     /*
     * Given ChartInformation object this function will a line graph on the canvas. The points of the curves are interconnected using interpolation methods
     * see for reference https://github.com/chartjs/Chart.js/blob/master/docs/samples/line/interpolation.md
@@ -358,10 +353,13 @@ export class LineChartComponent extends ChartComponent {
 
         config.options.plugins.annotation = {
             annotations: {
-                CI1LowerBound: this.verticalDashLineConfig(this.confInterval1Low, "1.25%"),
-                CI1HigherBound: this.verticalDashLineConfig(this.confInterval1High, "3.75%"),
-                CI2LowerBound: this.verticalDashLineConfig(this.confInterval2Low, "96%"),
-                CI2HigherBound: this.verticalDashLineConfig(this.confInterval2High, "99%"),
+                CI1LowerBound: this.verticalDashLineConfig(this.CI1.lowerBound),
+                CI1Middle: this.verticalLineConfig(this.CI1.middle),
+                CI1HigherBound: this.verticalDashLineConfig(this.CI1.higherBound),
+
+                CI2LowerBound: this.verticalDashLineConfig(this.CI2.lowerBound),
+                CI2Middle: this.verticalLineConfig(this.CI2.middle),
+                CI2HigherBound: this.verticalDashLineConfig(this.CI2.higherBound),
             }
         };
 
@@ -372,21 +370,22 @@ export class LineChartComponent extends ChartComponent {
 
     }
 
-    private verticalDashLineConfig(refIntervalX1: unknown, labelContent: string) {
+    private verticalLineConfig(refIntervalX: unknown) {
         return {
             type: 'line',
-            xMin: refIntervalX1,
-            xMax: refIntervalX1,
+            xMin: refIntervalX,
+            xMax: refIntervalX,
+            borderColor: 'red'
+        }
+    }
+
+    private verticalDashLineConfig(refIntervalX: unknown) {
+        return {
+            type: 'line',
+            xMin: refIntervalX,
+            xMax: refIntervalX,
             borderColor: 'black',
             borderDash: [5, 15],
-            label: {
-                content: labelContent,
-                enabled: true,
-                rotation: 90,
-                xAdjust: 10,
-                backgroundColor: 'rgba(0,0,0,0)',
-                color: 'black'
-            }
         };
     }
 }
