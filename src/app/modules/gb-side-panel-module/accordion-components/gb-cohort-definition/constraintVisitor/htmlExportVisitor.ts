@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from "@angular/core";
+import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from "@angular/core";
 import { Observable, Subject } from "rxjs";
 import { CohortConstraint } from "src/app/models/constraint-models/cohort-constraint";
 import { CombinationConstraint } from "src/app/models/constraint-models/combination-constraint";
@@ -29,19 +29,28 @@ const ulLeftPadding = '2em';
         'ul {padding-left: '+ulLeftPadding+'; }'
     ],
     template: `
-    <div>
-        <ul>
-            <li *ngFor="let elem of pathElements; let i = index">
-                <span> {{elem}} </span>
-                <span *ngIf="!isLastElement(i)" class="delimiter"> &gt; </span>
-            </li>
-        </ul>
+    <div class="concept-constraint-definition">
+        <p-accordionTab>
+            <p-header draggable="true">
+                <span>{{displayName}}</span>
+            </p-header>
+            <ul>
+                <li *ngFor="let elem of pathElements; let i = index">
+                    <span> {{elem}} </span>
+                    <span *ngIf="!isLastElement(i)" class="delimiter"> &gt; </span>
+                </li>
+            </ul>
+        </p-accordionTab>
     </div>
     `
 })
 export class ConceptConstraintSummaryComponent {
     @Input()
     pathElements: string[] = []
+    @Input()
+    displayName: string;
+
+    constructor(private ref: ChangeDetectorRef) {}
 
     isLastElement(index: number): boolean {
         return this.pathElements.length === (index + 1)
@@ -49,14 +58,34 @@ export class ConceptConstraintSummaryComponent {
 
     set conceptPath(pathElements: string[]) {
         this.pathElements = pathElements
+        this.ref.detectChanges()
     }
 }
 
 
 @Component({
+    styles: [
+        `span {
+            color: var(--gb-clinical-green);
+            background-color: transparent;
+            border-color: var(--gb-clinical-green);
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            border: 1px solid;
+            font-size: 1rem;
+            border-radius: 0.25rem;
+            padding: 0.1em .5em;
+        }`,
+        `div {
+            margin-bottom: 1em;
+        }`
+    ],
     template: `
     <div>
-        {{operator}}
+        <span>
+            {{operator}}
+        </span>
     </div>
     `
 
@@ -67,13 +96,13 @@ export class OperatorComponent {
     set state(state: CombinationState) {
         switch (state) {
             case CombinationState.And:
-                this.operator = 'AND'
+                this.operator = 'and'
                 break;
             case CombinationState.Or:
-                this.operator = 'OR'
+                this.operator = 'or'
                 break;
             default:
-                this.operator = 'UNKNOWN OPERATOR'
+                this.operator = 'unknown operator'
                 console.error("We should not be there missing case!")
                 break
         }
@@ -214,7 +243,9 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
         }
 
         const componentRef = this.buildNewComponent(ConceptConstraintSummaryComponent)
-        componentRef.instance.conceptPath = displayNames.reverse()
+        const componentInstance = componentRef.instance
+        componentInstance.conceptPath = displayNames.reverse()
+        componentInstance.displayName = c.treeNode.displayName
         return componentRef
     }
 

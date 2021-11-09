@@ -411,6 +411,8 @@ p-accordiontab[ng-reflect-header="Ontology"] .term-search p-button[label="Search
   margin-top: 8px;
 }
 
+.concept-constraint-definition p-header button:hover,
+.concept-constraint-definition p-header button,
 form.term-search p-header button,
 form.term-search p-header button:hover {
   float: right;
@@ -419,28 +421,33 @@ form.term-search p-header button:hover {
   background-color: transparent !important;
 }
 
+.concept-constraint-definition .ui-accordion-header,
+.concept-constraint-definition .ui-accordion-header:hover,
 form.term-search .ui-accordion-header,
 form.term-search .ui-accordion-header:hover {
   padding: 0em ;
   padding-bottom: 2px;
   color: #8d8d8d;
   background-color: #ffffff !important;
-  border: none;
-  border-radius: 0em;
-  border-bottom-color: #bebebe;
-  border-bottom-style: solid;
-  border-bottom-width: 1px;
+  border: none !important;
+  border-radius: 0em !important;
+  border-bottom-color: #bebebe !important;
+  border-bottom-style: solid !important;
+  border-bottom-width: 1px !important;
 }
 
+
+.concept-constraint-definition .ui-accordion-header a,
 form.term-search .ui-accordion-header a {
   padding: 0em !important;
-  color: #404040;
+  color: #404040 !important;
   background-color: #ffffff;
   border: none;
   border-radius: 0em;
   font-size: 13px;
 }
 
+.concept-constraint-definition .ui-accordion .ui-accordion-header p,
 form.term-search .ui-accordion .ui-accordion-header p {
   padding: 1em;
   padding-bottom: 0em;
@@ -458,52 +465,70 @@ form.term-search .no-result-text {
   margin-top: 12px;
 }
 
+.concept-constraint-definition .ui-accordion-content,
 form.term-search .ui-accordion-content {
   border: none;
   padding: 0.5em;
 }
 
+
+.concept-constraint-definition .ui-togglebutton,
 form.term-search .ui-togglebutton {
   background-color: var(--gb-clinical-green);
   padding: 0em;
 }
 
+.concept-constraint-definition .ui-togglebutton:not(.ui-state-disabled).ui-state-active,
 form.term-search .ui-togglebutton:not(.ui-state-disabled).ui-state-active {
   background-color: var(--gb-clinical-green);
 }
 
+
+.concept-constraint-definition .ui-togglebutton:not(.ui-state-disabled):not(.ui-state-active),
 form.term-search
   .ui-togglebutton:not(.ui-state-disabled):not(.ui-state-active) {
   background-color: #ffffff;
   color: #404040;
 }
 
+.concept-constraint-definition .ui-togglebutton.ui-button.ui-state-focus,
 form.term-search .ui-togglebutton.ui-button.ui-state-focus {
   box-shadow: none;
 }
 
+.concept-constraint-definition p-header > .ui-button-text,
 form.term-search p-header > .ui-button-text {
   padding: 0.1em 0.2em 0.1em 1.9em;
   color: #404040 !important;
 
 }
 
+.concept-constraint-definition a:focus,
+.concept-constraint-definition a:hover,
 form.term-search a:focus,
 form.term-search a:hover {
   text-decoration: none;
   outline: none;
 }
 
+
+.concept-constraint-definition .ui-accordion .ui-accordion-header.ui-state-active {
+   color: #404040 !important;
+}
+
+.concept-constraint-definition .ui-dialog-footer button,
 form.term-search .ui-dialog-footer button {
   height: auto;
   color: #8b8b8b;
 }
 
+.concept-constraint-definition  .ui-dialog-footer button:hover,
 form.term-search .ui-dialog-footer button:hover {
   background-color: var(--gb-clinical-green);
   color: white;
 }
 
+.concept-constraint-definition .ui-dialog-footer button:first-of-type
 form.term-search .ui-dialog-footer button:first-of-type {
   background-color: red;
   color: white;
@@ -517,6 +542,7 @@ form.term-search .pi-spin {
   color: transparent;
 }
 
+.concept-constraint-definition .ui-accordion-toggle-icon,
 form.term-search .ui-accordion-toggle-icon {
   color: #404040;
 }
