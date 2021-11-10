@@ -140,34 +140,41 @@ export class ConstraintService {
     }
   }
 
-  public getAnalytes(): TreeNode[]  {
+  public getAnalytes(): TreeNode[] {
     if (!this.hasInclusionConstraint()) {
       return []
     }
     return this.rootInclusionConstraint.getAnalytes()
   }
 
-  /**
-   * Generate the constraint corresponding to the query.
-   */
-  public generateConstraintHelper(inclusionConstraint: Constraint, exclusionConstraint: Constraint): Constraint {
+  public generateConstraintHelper2(inclusionConstraint: Constraint, exclusionConstraint: Constraint,
+    hasInclusionConstraint: Boolean, hasExclusionConstraint: Boolean): Constraint {
+
     let resultConstraint: Constraint;
-    if (!this.hasInclusionConstraint() && !this.hasExclusionConstraint()) {
+    if (!hasInclusionConstraint && !hasExclusionConstraint) {
       throw ErrorHelper.handleNewError('Empty constraints');
 
-    } else if (this.hasInclusionConstraint() && !this.hasExclusionConstraint()) {
+    } else if (hasInclusionConstraint && !hasExclusionConstraint) {
       resultConstraint = inclusionConstraint;
 
-    } else if (!this.hasInclusionConstraint() && this.hasExclusionConstraint()) {
+    } else if (!hasInclusionConstraint && hasExclusionConstraint) {
       resultConstraint = new NegationConstraint(exclusionConstraint);
 
-    } else if (this.hasInclusionConstraint() && this.hasExclusionConstraint()) {
+    } else if (hasInclusionConstraint && hasExclusionConstraint) {
       resultConstraint = new CombinationConstraint();
       (resultConstraint as CombinationConstraint).addChild(inclusionConstraint);
       (resultConstraint as CombinationConstraint).addChild(new NegationConstraint(exclusionConstraint));
     }
 
     return resultConstraint;
+  }
+
+
+  /**
+   * Generate the constraint corresponding to the query.
+   */
+  public generateConstraintHelper(inclusionConstraint: Constraint, exclusionConstraint: Constraint): Constraint {
+    return this.generateConstraintHelper2(inclusionConstraint, exclusionConstraint, this.hasInclusionConstraint(), this.hasExclusionConstraint())
   }
 
   /**

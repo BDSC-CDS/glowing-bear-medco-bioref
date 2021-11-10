@@ -7,6 +7,7 @@ import { ApiExploreStatisticResult, ApiExploreStatisticsResponse, ApiInterval } 
 import { CombinationConstraint } from '../models/constraint-models/combination-constraint';
 import { Constraint } from '../models/constraint-models/constraint';
 import { TreeNode } from '../models/tree-models/tree-node';
+import { ConstraintHelper } from '../utilities/constraint-utilities/constraint-helper';
 import { ErrorHelper } from '../utilities/error-helper';
 import { PDF } from '../utilities/files/pdf';
 import { ApiEndpointService } from './api-endpoint.service';
@@ -136,7 +137,7 @@ export class ExploreStatisticsService {
 
 
     // The panels returned by the constraint service have a tendency to be out of date. Use this method to refresh them.
-    private refreshConstraint(constraint: Constraint): Observable<Constraint> {
+    private refreshConstraint(constraint: CombinationConstraint): Observable<CombinationConstraint> {
         const i2b2Panels: ApiI2b2Panel[] = this.constraintMappingService.mapConstraint(constraint)
 
         if (i2b2Panels.length == 0) {
@@ -145,7 +146,16 @@ export class ExploreStatisticsService {
             return of(new CombinationConstraint())
         }
 
-        return this.reverseConstraintMappingService.mapPanels(i2b2Panels)
+        const mappedConstraint = this.reverseConstraintMappingService.mapPanels(i2b2Panels)
+
+        return mappedConstraint.pipe(map(c => {
+            if (mappedConstraint instanceof CombinationConstraint) {
+                return mappedConstraint as CombinationConstraint
+            }
+            const comb = new CombinationConstraint()
+            comb.addChild(c)
+            return comb
+        }))
     }
 
 
@@ -177,7 +187,7 @@ export class ExploreStatisticsService {
     }
 
 
-    private processQuery(updatedConstraints: [Constraint, Constraint], bucketSize: number, minObservation: number) {
+    private processQuery(updatedConstraints: [CombinationConstraint, CombinationConstraint], bucketSize: number, minObservation: number) {
         const [upToDateInclusionConstraint, upToDateExclusionConstraint] = updatedConstraints
 
         console.log("Updated inclusion and exclusion constraints", upToDateInclusionConstraint, upToDateExclusionConstraint);
@@ -309,9 +319,13 @@ export class ExploreStatisticsService {
         return constraint === undefined || this.isEmptyCombinationConstraint(constraint)
     }
 
-    private prepareCohort(upToDateInclusionConstraint: Constraint, upToDateExclusionConstraint: Constraint): Constraint {
+    private prepareCohort(upToDateInclusionConstraint: CombinationConstraint, upToDateExclusionConstraint: CombinationConstraint): Constraint {
         let filteredInclusionConstraint = upToDateInclusionConstraint.constraintWithoutAnalytes();
-        let cohortConstraint = this.constraintService.generateConstraintHelper(filteredInclusionConstraint, upToDateExclusionConstraint);
+
+        let cohortConstraint = this.constraintService.generateConstraintHelper2(filteredInclusionConstraint,
+             upToDateExclusionConstraint,
+             ConstraintHelper.hasNonEmptyChildren(filteredInclusionConstraint),
+             ConstraintHelper.hasNonEmptyChildren(upToDateExclusionConstraint));
 
 
         if (cohortConstraint === undefined) {

@@ -29,18 +29,13 @@ const ulLeftPadding = '2em';
         'ul {padding-left: '+ulLeftPadding+'; }'
     ],
     template: `
-    <div class="concept-constraint-definition">
-        <p-accordionTab>
-            <p-header draggable="true">
-                <span>{{displayName}}</span>
-            </p-header>
-            <ul>
-                <li *ngFor="let elem of pathElements; let i = index">
-                    <span> {{elem}} </span>
-                    <span *ngIf="!isLastElement(i)" class="delimiter"> &gt; </span>
-                </li>
-            </ul>
-        </p-accordionTab>
+    <div>
+        <ul>
+            <li *ngFor="let elem of pathElements; let i = index">
+                <span> {{elem}} </span>
+                <span *ngIf="!isLastElement(i)" class="delimiter"> &gt; </span>
+            </li>
+        </ul>
     </div>
     `
 })
@@ -76,6 +71,7 @@ export class ConceptConstraintSummaryComponent {
             font-size: 1rem;
             border-radius: 0.25rem;
             padding: 0.1em .5em;
+            font-style:italic;
         }`,
         `div {
             margin-bottom: 1em;
@@ -110,13 +106,27 @@ export class OperatorComponent {
 
 }
 
-
+//todo create a variable out of the border color
 @Component({
     styles: [
-        '.outerDiv { margin-left: '+ulLeftPadding+'; }'
+        `
+        .combinationConstraint {
+            padding: .5em;
+            transition: .3s;
+            border-left: transparent solid;
+            margin-top: .5em;
+            margin-bottom: .5em;
+        }
+        .combinationConstraint .combinationConstraint {
+            margin-left: 2em;
+        }
+        .combinationConstraint:hover {
+            border-left: rgba(255, 160, 71, 0.6) solid;
+        }
+        `
     ],
     template: `
-    <div class="outerDiv">
+    <div class="combinationConstraint">
         <ng-template #childrenContainer>
         </ng-template>
     </div>
@@ -170,11 +180,8 @@ export class CombinationConstraintSummaryComponent implements OnDestroy, AfterVi
     <div>{{textRepresentation}}</div>
 `})
 @Input()
-export class ConceptSummaryComponent {
+export class SimpleConceptSummaryComponent {
     textRepresentation: string
-    constructor(c: Constraint) {
-        this.textRepresentation = c.textRepresentation
-    }
 }
 
 // a Visitor (c.f. design patterns) which recursively visits constraints in order to create an HTML DOM representing those constraints for the side panel
@@ -188,13 +195,15 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
         return Utils.buildComponent(this.componentFactoryResolver, this.parentContainerRef, componentType)
     }
 
-
+    // build a component which will wrap the simple text representation of the constraint.
+    private buildSimpleTextComponent(c: Constraint): ComponentRef<any> {
+        const componentRef = this.buildNewComponent(SimpleConceptSummaryComponent)
+        componentRef.instance.textRepresentation = c.textRepresentation
+        return componentRef
+    }
 
     visitConstraint(c: Constraint): ComponentRef<any> {
-        const componentRef = this.buildNewComponent(ConceptSummaryComponent)
-        componentRef.instance.textRepresentation = c.textRepresentation
-        console.log("In visit constraint", c)
-        return componentRef
+        return this.buildSimpleTextComponent(c)
     }
 
     visitCombinationConstraint(cc: CombinationConstraint): ComponentRef<any> {
@@ -249,20 +258,26 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
         return componentRef
     }
 
+    visitNegationConstraint(c: NegationConstraint): ComponentRef<any> {
+        /* In principle this function is not visited.
+         * A negation constraint is only created when we are creating the i2b2 panels and passing them to the backend.
+         */
+        console.warn("This is not supposed to happen")
+        return c.constraint.accept(this)
+    }
     visitCohortConstraint(c: CohortConstraint): ComponentRef<any> {
-        throw new Error("Method not implemented.");
+        return this.buildSimpleTextComponent(c)
+        //TODO create a bogus cohort to test this component
     }
     visitGenomicAnnotationConstraint(c: GenomicAnnotationConstraint): ComponentRef<any> {
-        throw new Error("Method not implemented.");
-    }
-    visitNegationConstraint(c: NegationConstraint): ComponentRef<any> {
-        throw new Error("Method not implemented.");
+        return this.buildSimpleTextComponent(c)
+        //TODO create a bogus genomic annotation to test this component
     }
     visitTimeConstraint(c: TimeConstraint): ComponentRef<any> {
-        throw new Error("Method not implemented.");
+        return this.buildSimpleTextComponent(c)
     }
     visitValueConstraint(c: ValueConstraint): ComponentRef<any> {
-        throw new Error("Method not implemented.");
+        return this.buildSimpleTextComponent(c)
     }
 
 }

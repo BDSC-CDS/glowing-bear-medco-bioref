@@ -132,7 +132,7 @@ export class CombinationConstraint extends Constraint {
   }
 
 
-  constraintWithoutAnalytes(): Constraint {
+  constraintWithoutAnalytes(): CombinationConstraint {
     const cloneObj = this.clone()
     const children = cloneObj.children.map(c => c.constraintWithoutAnalytes())
     const filteredChildren = children.filter(c => c !== undefined)

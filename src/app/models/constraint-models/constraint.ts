@@ -13,12 +13,8 @@ import { ConstraintVisitor } from './constraintVisitor';
 
 export class Constraint {
 
-  // Whether or not the shorter text represenstation of the constraint is the same as the longer text representation
-  protected shortTextRepresentationIsSimilar = true
   // The textual representation of this constraint
   protected _textRepresentation: string;
-  // The shorter textual representation of the constraint. Omitting information like the path of the constraint.
-  protected _shortTextRepresentation: string;
   // The parent constraint
   protected _parentConstraint: Constraint;
   // i2b2 timing policiy
@@ -53,18 +49,8 @@ export class Constraint {
   set textRepresentation(value: string) {
     this._textRepresentation = value;
 
-    if(this.shortTextRepresentationIsSimilar) {
-      this.shortTextRepresentation = value
-    }
   }
 
-  get shortTextRepresentation(): string {
-    return this._shortTextRepresentation;
-  }
-
-  set shortTextRepresentation(value: string) {
-    this._shortTextRepresentation = value;
-  }
 
   get parentConstraint(): Constraint {
     return this._parentConstraint;

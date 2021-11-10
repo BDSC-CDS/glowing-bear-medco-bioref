@@ -7,8 +7,17 @@
  */
 
 import { Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, ViewChild, ViewContainerRef } from '@angular/core';
+import { CohortConstraint } from 'src/app/models/constraint-models/cohort-constraint';
+import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
+import { ConceptConstraint } from 'src/app/models/constraint-models/concept-constraint';
 import { Constraint } from 'src/app/models/constraint-models/constraint';
+import { ConstraintVisitor } from 'src/app/models/constraint-models/constraintVisitor';
+import { GenomicAnnotationConstraint } from 'src/app/models/constraint-models/genomic-annotation-constraint';
+import { NegationConstraint } from 'src/app/models/constraint-models/negation-constraint';
+import { TimeConstraint } from 'src/app/models/constraint-models/time-constraint';
+import { ValueConstraint } from 'src/app/models/constraint-models/value-constraint';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
+import { ConstraintHelper } from 'src/app/utilities/constraint-utilities/constraint-helper';
 import { HTMLExportVisitor } from './constraintVisitor/htmlExportVisitor';
 
 @Component({
@@ -60,28 +69,56 @@ export class GbCohortDefinitionComponent implements OnDestroy {
     }
   }
 
+  //for cosmetic purpose we wrap constraints that are on their own at root level in a combination constraint
+  private wrapConstraint(c: Constraint) {
+    if (c instanceof CombinationConstraint) {
+      return c
+    }
+
+    const comb = new CombinationConstraint()
+    comb.addChild(c)
+    return comb
+  }
+
+  private constraintIsEmpty(c: Constraint): boolean {
+    if (c === undefined || c === null) {
+      return true
+    }
+
+    if (!(c instanceof CombinationConstraint)) {
+      return false
+    }
+
+    //we are dealing with a combination constraint
+    const comb = c as CombinationConstraint
+    if (comb.children === undefined || comb.children.length === 0) {
+      return true
+    }
+
+    return !ConstraintHelper.hasNonEmptyChildren(comb)
+  }
 
   ngAfterViewInit() {
 
-    if (this.inclusionConstraint === undefined) {
+
+
+    if (this.constraintIsEmpty(this.inclusionConstraint)) {
       this.noInclusionConstraint = true
     } else {
       this.noInclusionConstraint = false
       const visitor = new HTMLExportVisitor(this.componentFactoryResolver, this.inclusionTemplate)
+      // const wrapped = this.wrapConstraint(this.inclusionConstraint)
       this.inclusionComponentRef = this.inclusionConstraint.accept(visitor)
     }
 
-    if (this.exclusionConstraint === undefined) {
+    if (this.constraintIsEmpty(this.exclusionConstraint)) {
       this.noExclusionConstraint = true
     } else {
       this.noExclusionConstraint = false
       const visitor = new HTMLExportVisitor(this.componentFactoryResolver, this.exclusionTemplate)
+      // const wrapped = this.wrapConstraint(this.exclusionConstraint)
       this.exclusionTemplateRef = this.exclusionConstraint.accept(visitor)
     }
 
   }
-
-
-
-
 }
