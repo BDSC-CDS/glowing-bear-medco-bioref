@@ -254,7 +254,7 @@ export class LineChartComponent extends ChartComponent {
 
         const segmentColour = (ctx: ScriptableLineSegmentContext) => {
             //the index of the current data point
-            const currentIndex = ctx.p0DataIndex //or ctx.p0.parsed.x
+            const currentIndex = ctx.p0.parsed.x
             // is the index of the current point within the first confidence interval or the second confidence interval
             return color(currentIndex)
         }
@@ -314,6 +314,7 @@ export class LineChartComponent extends ChartComponent {
                 },
                 scales: {
                     x: {
+                        type: 'linear',
                         title: {
                             display: true,
                             text: 'Value [' + this.chartInfo.unit + ']',

@@ -74,7 +74,7 @@ export class ChartInformation {
 
 
     private static computeCI2(intervals: Interval[]): ConfidenceInterval {
-        return new ConfidenceInterval(4,5,6)
+        return new ConfidenceInterval(7,8,9)
     }
 
     numberOfObservations(): number {
