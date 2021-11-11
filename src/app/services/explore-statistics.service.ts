@@ -149,8 +149,8 @@ export class ExploreStatisticsService {
         const mappedConstraint = this.reverseConstraintMappingService.mapPanels(i2b2Panels)
 
         return mappedConstraint.pipe(map(c => {
-            if (mappedConstraint instanceof CombinationConstraint) {
-                return mappedConstraint as CombinationConstraint
+            if (c instanceof CombinationConstraint) {
+                return c as CombinationConstraint
             }
             const comb = new CombinationConstraint()
             comb.addChild(c)
