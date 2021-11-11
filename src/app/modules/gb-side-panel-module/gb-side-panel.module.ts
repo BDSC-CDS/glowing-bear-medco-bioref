@@ -34,7 +34,7 @@ import {SavedCohortsPatientListService} from '../../services/saved-cohorts-patie
 import {ExploreCohortsService} from '../../services/api/medco-node/explore-cohorts.service';
 import { GbCohortDefinitionComponent } from './accordion-components/gb-cohort-definition/gb-cohort-definition.component';
 import { BrowserModule } from '@angular/platform-browser';
-import { CombinationConstraintSummaryComponent, ConceptConstraintSummaryComponent, SimpleConceptSummaryComponent } from './accordion-components/gb-cohort-definition/constraintVisitor/htmlExportVisitor';
+import { CombinationConstraintSummaryComponent, PathDisplayer, SimpleConceptSummaryComponent } from './accordion-components/gb-cohort-definition/constraintVisitor/htmlExportVisitor';
 
 @NgModule({
   imports: [
@@ -63,7 +63,7 @@ import { CombinationConstraintSummaryComponent, ConceptConstraintSummaryComponen
     GbCohortDefinitionComponent,
     SimpleConceptSummaryComponent,
     CombinationConstraintSummaryComponent,
-    ConceptConstraintSummaryComponent
+    PathDisplayer
   ],
   providers: [TreeDragDropService, ConfirmationService, SurvivalService, ExploreCohortsService, SavedCohortsPatientListService],
   exports: [GbSidePanelComponent]

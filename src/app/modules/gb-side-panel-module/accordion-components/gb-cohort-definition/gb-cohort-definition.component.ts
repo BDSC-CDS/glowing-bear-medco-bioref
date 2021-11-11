@@ -16,16 +16,19 @@ import { GenomicAnnotationConstraint } from 'src/app/models/constraint-models/ge
 import { NegationConstraint } from 'src/app/models/constraint-models/negation-constraint';
 import { TimeConstraint } from 'src/app/models/constraint-models/time-constraint';
 import { ValueConstraint } from 'src/app/models/constraint-models/value-constraint';
+import { TreeNode } from 'src/app/models/tree-models/tree-node';
+import { Utils } from 'src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { ConstraintHelper } from 'src/app/utilities/constraint-utilities/constraint-helper';
 import { HTMLExportVisitor } from './constraintVisitor/htmlExportVisitor';
+
+type AnalytePath = String[]
 
 @Component({
   selector: 'gb-cohort-definition',
   templateUrl: './gb-cohort-definition.component.html',
   styleUrls: ['./gb-cohort-definition.component.css']
 })
-
 export class GbCohortDefinitionComponent implements OnDestroy {
 
   @ViewChild('inclusionTemplate', { read: ViewContainerRef })
@@ -37,12 +40,13 @@ export class GbCohortDefinitionComponent implements OnDestroy {
   noInclusionConstraint: boolean = true;
   @Input()
   noExclusionConstraint: boolean = true;
+  @Input()
+  analytesPaths: AnalytePath[] = []
 
   private inclusionConstraint: Constraint
   private exclusionConstraint: Constraint
   private inclusionComponentRef: ComponentRef<any>;
   private exclusionTemplateRef: ComponentRef<any>;
-
 
 
 
@@ -54,6 +58,15 @@ export class GbCohortDefinitionComponent implements OnDestroy {
 
     this.exploreStatisticsService.exclusionConstraint.subscribe(constraint => {
       this.exclusionConstraint = constraint
+    })
+
+    this.exploreStatisticsService.analytesSubject.subscribe(analytes => {
+      const newElements: AnalytePath[] = []
+      analytes.forEach(analyte => {
+        newElements.push(Utils.extractDisplayablePath(analyte))
+      })
+
+      this.analytesPaths = newElements
     })
   }
 
@@ -67,17 +80,6 @@ export class GbCohortDefinitionComponent implements OnDestroy {
     if (this.exclusionTemplateRef !== undefined) {
       this.exclusionTemplateRef.destroy()
     }
-  }
-
-  //for cosmetic purpose we wrap constraints that are on their own at root level in a combination constraint
-  private wrapConstraint(c: Constraint) {
-    if (c instanceof CombinationConstraint) {
-      return c
-    }
-
-    const comb = new CombinationConstraint()
-    comb.addChild(c)
-    return comb
   }
 
   private constraintIsEmpty(c: Constraint): boolean {

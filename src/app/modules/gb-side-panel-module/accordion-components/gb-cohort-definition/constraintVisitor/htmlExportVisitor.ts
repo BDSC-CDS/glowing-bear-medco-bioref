@@ -17,6 +17,7 @@ import { Utils } from "src/app/modules/gb-explore-statistics-module/panel-compon
 const ulLeftPadding = '2em';
 
 @Component({
+    selector: 'path-displayer',
     styles: [
         `
         li {
@@ -26,7 +27,7 @@ const ulLeftPadding = '2em';
             padding-right: .5em;
         }
         `,
-        'ul {padding-left: '+ulLeftPadding+'; }'
+        'ul {padding-left: ' + ulLeftPadding + '; }'
     ],
     template: `
     <div>
@@ -39,19 +40,17 @@ const ulLeftPadding = '2em';
     </div>
     `
 })
-export class ConceptConstraintSummaryComponent {
+export class PathDisplayer {
     @Input()
     pathElements: string[] = []
-    @Input()
-    displayName: string;
 
-    constructor(private ref: ChangeDetectorRef) {}
+    constructor(private ref: ChangeDetectorRef) { }
 
     isLastElement(index: number): boolean {
         return this.pathElements.length === (index + 1)
     }
 
-    set conceptPath(pathElements: string[]) {
+    set path(pathElements: string[]) {
         this.pathElements = pathElements
         this.ref.detectChanges()
     }
@@ -236,25 +235,11 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
         return componentRef
     }
 
+
     visitConceptConstraint(c: ConceptConstraint): ComponentRef<any> {
-        console.log("In visit concept constraint", c)
-
-        var displayNames: string[] = []
-        //retrieving the display name of the ancestors tree nodes
-        var currentNode: TreeNode = c.treeNode
-        for (;true;) {
-            if (currentNode === undefined || currentNode === null){
-                break;
-            }
-            displayNames.push(currentNode.displayName)
-            console.log("current : ", currentNode.path, "  child:", c.treeNode.displayName)
-            currentNode = currentNode.parent
-        }
-
-        const componentRef = this.buildNewComponent(ConceptConstraintSummaryComponent)
+        const componentRef = this.buildNewComponent(PathDisplayer)
         const componentInstance = componentRef.instance
-        componentInstance.conceptPath = displayNames.reverse()
-        componentInstance.displayName = c.treeNode.displayName
+        componentInstance.path = Utils.extractDisplayablePath(c.treeNode)
         return componentRef
     }
 

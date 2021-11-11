@@ -8,6 +8,7 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { TreeNode } from 'src/app/models/tree-models/tree-node';
 import { ChartInformation, ConfidenceInterval, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 import { ChartComponent, HistogramChartComponent, LineChartComponent } from './gb-chart.component';
 
@@ -122,6 +123,22 @@ export class Utils {
 
     return componentRef
   }
+
+  //retrieving the display name of the ancestors tree nodes and assemble those display name in a list
+  static extractDisplayablePath(treeNode: TreeNode) {
+    let currentNode: TreeNode = treeNode
+    let displayNames: string[] = []
+    for (; true;) {
+      if (currentNode === undefined || currentNode === null) {
+        break;
+      }
+      displayNames.push(currentNode.displayName)
+      currentNode = currentNode.parent
+    }
+
+    return displayNames.reverse()
+  }
+
 }
 
 

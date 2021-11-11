@@ -110,10 +110,13 @@ export class ExploreStatisticsService {
     // Emits whenever an export of the statistical results as a pdf document needs to be generated
     exportAsPDF: Subject<any> = new Subject();
 
-    // This observable emits the latest query's cohort inclusion criteria
+    // This observable emits the latest query's cohort inclusion criteria for the explore statistics query
     inclusionConstraint: Subject<Constraint> = new ReplaySubject(1)
-    // This observable emits the latest query's cohort exclusion criteria
+    // This observable emits the latest query's cohort exclusion criteria for the explore statistics query
     exclusionConstraint: Subject<Constraint> = new ReplaySubject(1)
+    // This observable emits the latest explore statistics query set of analytes
+    analytesSubject: Subject<Set<TreeNode>> = new ReplaySubject(1)
+
 
     private static getNewQueryID(): string {
         let d = new Date()
@@ -194,6 +197,7 @@ export class ExploreStatisticsService {
 
         const uniqueAnalytes = new Set(upToDateInclusionConstraint.getAnalytes());
         console.log('Analytes ', uniqueAnalytes);
+        this.analytesSubject.next(uniqueAnalytes)
 
 
         const cohortConstraint = this.prepareCohort(upToDateInclusionConstraint, upToDateExclusionConstraint);
