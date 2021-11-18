@@ -19,7 +19,16 @@ export class ApiExploreStatisticsResponse {
     name: string
     milliseconds: number
   }[]
+  // The ID of the record saved in the medco db which contains information about the patient set of the cohort corresponding to the inclusion/exclusion criterias specified by the user
+  cohortQueryID: number
+  // ID returned by the i2b2 query about the cohort based on the inclusion and exclusion constraints fed the input of the front end query.
+  patientSetID: number
+  // list of encrypted masked patient IDs.
+  encryptedPatientList: string[]
+  //per site count of the patient matching the cohort linked to the inclusion and exclusion criterias of the query
+  encryptedCohortCount: string
 
+  // Each item of this array contains the histogram of a specific analyte (concept or modifier).
   results: ApiExploreStatisticResult[]
 }
 

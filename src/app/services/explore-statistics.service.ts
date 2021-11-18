@@ -1,15 +1,17 @@
 import { Injectable, Output } from '@angular/core';
-import { forkJoin, interval, Observable, of, ReplaySubject, Subject } from 'rxjs';
+import { forkJoin, Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { map, timeout } from 'rxjs/operators';
 import { ApiI2b2Panel } from '../models/api-request-models/medco-node/api-i2b2-panel';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
 import { ApiExploreStatisticResult, ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
+import { ApiNodeMetadata } from '../models/api-response-models/medco-network/api-node-metadata';
+import { ApiExploreQueryResult } from '../models/api-response-models/medco-node/api-explore-query-result';
 import { CombinationConstraint } from '../models/constraint-models/combination-constraint';
 import { Constraint } from '../models/constraint-models/constraint';
+import { ExploreQueryType } from '../models/query-models/explore-query-type';
 import { TreeNode } from '../models/tree-models/tree-node';
 import { ConstraintHelper } from '../utilities/constraint-utilities/constraint-helper';
 import { ErrorHelper } from '../utilities/error-helper';
-import { PDF } from '../utilities/files/pdf';
 import { ApiEndpointService } from './api-endpoint.service';
 import { MedcoNetworkService } from './api/medco-network.service';
 import { ConstraintMappingService } from './constraint-mapping.service';
@@ -111,12 +113,13 @@ export class ExploreStatisticsService {
     exportAsPDF: Subject<any> = new Subject();
 
     // This observable emits the latest query's cohort inclusion criteria for the explore statistics query
-    inclusionConstraint: Subject<Constraint> = new ReplaySubject(1)
+    inclusionConstraint: Subject<CombinationConstraint> = new ReplaySubject(1)
     // This observable emits the latest query's cohort exclusion criteria for the explore statistics query
-    exclusionConstraint: Subject<Constraint> = new ReplaySubject(1)
+    exclusionConstraint: Subject<CombinationConstraint> = new ReplaySubject(1)
     // This observable emits the latest explore statistics query set of analytes
     analytesSubject: Subject<Set<TreeNode>> = new ReplaySubject(1)
-
+    // This observable emits the query IDs of the latest statistics query. The identifiers are a link to the the row in the DB related to the cohort .
+    patientQueryIDsSubject: Subject<number[]> = new ReplaySubject(1)
 
     private static getNewQueryID(): string {
         let d = new Date()
@@ -189,6 +192,39 @@ export class ExploreStatisticsService {
 
     }
 
+    //the explore statistics servers answers contains the patient list for the cohort and the count per site in case the user is authorized to see such information
+    private parseCohortFromAnswer(answers: ApiExploreStatisticsResponse[]) {
+
+        if (this.queryService.queryType !== ExploreQueryType.PATIENT_LIST) {
+            throw ErrorHelper.handleNewError("Unable parse the cohort content of the statistics query. User is not authorized to see the patient list.")
+        }
+        const nodes: ApiNodeMetadata[] = this.medcoNetworkService.nodes
+        const exploreResults: ApiExploreQueryResult[] = answers.map(statAnswer => {
+            const exploreResult = new ApiExploreQueryResult()
+            exploreResult.status = 'available'
+            exploreResult.encryptedPatientList = statAnswer.encryptedPatientList
+            exploreResult.queryID = statAnswer.cohortQueryID
+            exploreResult.encryptedCount = statAnswer.encryptedCohortCount
+
+            return exploreResult
+        })
+
+        if (nodes.length !== exploreResults.length) {
+            throw ErrorHelper.handleNewError("Different number of server nodes and server responses received")
+        }
+
+        const zipped: [ApiNodeMetadata, ApiExploreQueryResult][] = []
+        for (let i = 0; i < nodes.length; i++) {
+            zipped.push([nodes[i], exploreResults[i]])
+        }
+
+
+
+        this.queryService.parseExploreQueryResults(zipped).subscribe(exploreResults => {
+            console.log("Parsed explore results ", exploreResults)
+        })
+    }
+
 
     private processQuery(updatedConstraints: [CombinationConstraint, CombinationConstraint], bucketSize: number, minObservation: number) {
         const [upToDateInclusionConstraint, upToDateExclusionConstraint] = updatedConstraints
@@ -237,6 +273,14 @@ export class ExploreStatisticsService {
             if (answers === undefined || answers.length === 0) {
                 throw ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.');
             }
+
+            if (this.queryService.queryType === ExploreQueryType.PATIENT_LIST) {
+                this.parseCohortFromAnswer(answers)
+            }
+
+            // query IDs of the cohort built from the constraints and saved in the backend nodes' DB
+            const patientQueryIDs = answers.map(a => a.cohortQueryID)
+            this.patientQueryIDsSubject.next(patientQueryIDs)
             // All servers are supposed to send the same information so we pick the element with index zero
             const serverResponse: ApiExploreStatisticsResponse = answers[0];
 

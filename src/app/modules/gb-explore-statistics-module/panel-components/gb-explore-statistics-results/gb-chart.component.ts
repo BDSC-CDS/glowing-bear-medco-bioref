@@ -66,6 +66,7 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy, SVGCon
     }
 
 
+
     ngAfterViewInit(): void {
 
         //TODO debug: ExpressionChangedAfterItHasBeenCheckedError (maybe use angular chart js?)

@@ -7,16 +7,8 @@
  */
 
 import { Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, ViewChild, ViewContainerRef } from '@angular/core';
-import { CohortConstraint } from 'src/app/models/constraint-models/cohort-constraint';
 import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
-import { ConceptConstraint } from 'src/app/models/constraint-models/concept-constraint';
 import { Constraint } from 'src/app/models/constraint-models/constraint';
-import { ConstraintVisitor } from 'src/app/models/constraint-models/constraintVisitor';
-import { GenomicAnnotationConstraint } from 'src/app/models/constraint-models/genomic-annotation-constraint';
-import { NegationConstraint } from 'src/app/models/constraint-models/negation-constraint';
-import { TimeConstraint } from 'src/app/models/constraint-models/time-constraint';
-import { ValueConstraint } from 'src/app/models/constraint-models/value-constraint';
-import { TreeNode } from 'src/app/models/tree-models/tree-node';
 import { Utils } from 'src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { ConstraintHelper } from 'src/app/utilities/constraint-utilities/constraint-helper';

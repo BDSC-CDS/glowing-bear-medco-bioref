@@ -12,21 +12,22 @@ import { AfterViewChecked, ChangeDetectorRef, Component, Input } from '@angular/
 import { FormatHelper } from '../../utilities/format-helper';
 import { QueryService } from '../../services/query.service';
 import { ExploreQueryType } from '../../models/query-models/explore-query-type';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { combineLatest, forkJoin, Observable, zip } from 'rxjs';
+import { map, take } from 'rxjs/operators';
 import { ConstraintService } from '../../services/constraint.service';
-import {ApiNodeMetadata} from '../../models/api-response-models/medco-network/api-node-metadata';
-import {CohortService} from '../../services/cohort.service';
-import {SavedCohortsPatientListService} from '../../services/saved-cohorts-patient-list.service';
-import {MessageHelper} from '../../utilities/message-helper';
-import {Cohort} from '../../models/cohort-models/cohort';
-import {OperationStatus} from '../../models/operation-status';
-import {OperationType} from '../../models/operation-models/operation-types';
-import {ApiQueryDefinition} from '../../models/api-request-models/medco-node/api-query-definition';
-import {MedcoNetworkService} from '../../services/api/medco-network.service';
-import {ErrorHelper} from '../../utilities/error-helper';
+import { ApiNodeMetadata } from '../../models/api-response-models/medco-network/api-node-metadata';
+import { CohortService } from '../../services/cohort.service';
+import { SavedCohortsPatientListService } from '../../services/saved-cohorts-patient-list.service';
+import { MessageHelper } from '../../utilities/message-helper';
+import { Cohort } from '../../models/cohort-models/cohort';
+import { OperationStatus } from '../../models/operation-status';
+import { OperationType } from '../../models/operation-models/operation-types';
+import { ApiQueryDefinition } from '../../models/api-request-models/medco-node/api-query-definition';
+import { MedcoNetworkService } from '../../services/api/medco-network.service';
+import { ErrorHelper } from '../../utilities/error-helper';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { AuthenticationService } from 'src/app/services/authentication.service';
+import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
 
 @Component({
   selector: 'gb-explore',
@@ -55,6 +56,9 @@ export class GbExploreComponent implements AfterViewChecked {
     private changeDetectorRef: ChangeDetectorRef,
     private savedCohortsPatientListService: SavedCohortsPatientListService,
     private exploreStatisticsService: ExploreStatisticsService) {
+    this.exploreStatisticsService.patientQueryIDsSubject.subscribe(resIDs => {
+      this.lastSuccessfulSet = resIDs
+    })
     this.queryService.lastSuccessfulSet.subscribe(resIDs => {
       this.lastSuccessfulSet = resIDs
     })
@@ -95,7 +99,7 @@ export class GbExploreComponent implements AfterViewChecked {
     this.queryService.execQuery();
   }
 
-  save() {
+  saveCohort(inclusionConstraint: CombinationConstraint, exclusionConstraint: CombinationConstraint) {
     if (this.cohortName === '') {
       throw ErrorHelper.handleNewUserInputError('You must provide a name for the cohort you want to save.');
     } else if (!this.cohortService.patternValidation.test(this.cohortName).valueOf()) {
@@ -122,8 +126,8 @@ export class GbExploreComponent implements AfterViewChecked {
 
     let cohort = new Cohort(
       this.cohortName,
-      this.constraintService.rootInclusionConstraint,
-      this.constraintService.rootExclusionConstraint,
+      inclusionConstraint,
+      exclusionConstraint,
       creationDates,
       updateDates,
     )
@@ -142,6 +146,24 @@ export class GbExploreComponent implements AfterViewChecked {
       MessageHelper.alert('error', 'There is no patient list cached from previous Explore Query. You may have to download the list again.')
     }
     this.cohortName = ''
+  }
+
+
+  save() {
+    if (this.authService.hasExploreStatsRole()) {
+      const s = this.exploreStatisticsService
+      const combination = zip([s.inclusionConstraint, s.exclusionConstraint])
+      combination.pipe(take(1)).subscribe((
+        [inclusionConstraint, exclusionConstraint]) => {
+          // due to the `take` call this callback is only called once
+          //https://stackoverflow.com/questions/53216501/unsubscribe-in-subscribe-callback-function
+          this.saveCohort(inclusionConstraint, exclusionConstraint)
+      })
+    }
+
+    this.saveCohort(this.constraintService.rootInclusionConstraint,
+      this.constraintService.rootExclusionConstraint)
+
   }
 
   saveIfEnter(event) {

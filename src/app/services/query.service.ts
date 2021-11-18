@@ -84,7 +84,7 @@ export class QueryService {
   /**
    * Parse and decrypt results from MedCo nodes.
    */
-  private parseExploreQueryResults(encResults: [ApiNodeMetadata, ApiExploreQueryResult][]): Observable<ExploreQueryResult> {
+  public parseExploreQueryResults(encResults: [ApiNodeMetadata, ApiExploreQueryResult][]): Observable<ExploreQueryResult> {
     if (encResults.length === 0) {
       return throwError(ErrorHelper.handleNewError('Empty results, no processing done'));
     }
