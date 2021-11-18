@@ -151,10 +151,7 @@ export class ConstraintService {
     hasInclusionConstraint: Boolean, hasExclusionConstraint: Boolean): Constraint {
 
     let resultConstraint: Constraint;
-    if (!hasInclusionConstraint && !hasExclusionConstraint) {
-      throw ErrorHelper.handleNewError('Empty constraints');
-
-    } else if (hasInclusionConstraint && !hasExclusionConstraint) {
+    if (hasInclusionConstraint && !hasExclusionConstraint) {
       resultConstraint = inclusionConstraint;
 
     } else if (!hasInclusionConstraint && hasExclusionConstraint) {
@@ -174,6 +171,9 @@ export class ConstraintService {
    * Generate the constraint corresponding to the query.
    */
   public generateConstraintHelper(inclusionConstraint: Constraint, exclusionConstraint: Constraint): Constraint {
+    if (!inclusionConstraint && !exclusionConstraint) {
+      throw ErrorHelper.handleNewError('Empty constraints');
+    }
     return this.generateConstraintHelper2(inclusionConstraint, exclusionConstraint, this.hasInclusionConstraint(), this.hasExclusionConstraint())
   }
 

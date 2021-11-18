@@ -205,7 +205,7 @@ export class ExploreStatisticsService {
         const analytes = Array.from(uniqueAnalytes);
 
         if (analytes.length == 0) {
-            ErrorHelper.handleNewError('No analytes have been specified. An analyte is a numerical medical concept for which the constraint is set with value "any"');
+            throw ErrorHelper.handleNewError('No analytes have been specified. An analyte is a numerical medical concept for which the constraint is set with value "any"');
         }
 
         // the analytes split into two groups: modifiers and concepts
@@ -235,8 +235,7 @@ export class ExploreStatisticsService {
 
         observableRequest.subscribe((answers: ApiExploreStatisticsResponse[]) => {
             if (answers === undefined || answers.length === 0) {
-                ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.');
-                return;
+                throw ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.');
             }
             // All servers are supposed to send the same information so we pick the element with index zero
             const serverResponse: ApiExploreStatisticsResponse = answers[0];
@@ -244,8 +243,7 @@ export class ExploreStatisticsService {
 
             if (serverResponse.results === undefined || serverResponse.results === null) {
                 this.displayLoadingIcon.next(false);
-                ErrorHelper.handleNewError('Empty server response. Please verify you selected an analyte.');
-                return;
+                throw ErrorHelper.handleNewError('Empty server response. Please verify you selected an analyte.');
             }
 
             const chartsInformationsObservables: Observable<ChartInformation>[] = serverResponse.results.map((result: ApiExploreStatisticResult) => {
