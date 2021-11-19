@@ -2,12 +2,14 @@ import { Injectable, Output } from '@angular/core';
 import { forkJoin, Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { map, timeout } from 'rxjs/operators';
 import { ApiI2b2Panel } from '../models/api-request-models/medco-node/api-i2b2-panel';
+import { ApiI2b2Timing } from '../models/api-request-models/medco-node/api-i2b2-timing';
 import { ApiExploreStatistics, ModifierApiObjet } from '../models/api-request-models/survival-analyis/api-explore-statistics';
 import { ApiExploreStatisticResult, ApiExploreStatisticsResponse, ApiInterval } from '../models/api-response-models/explore-statistics/explore-statistics-response';
 import { ApiNodeMetadata } from '../models/api-response-models/medco-network/api-node-metadata';
 import { ApiExploreQueryResult } from '../models/api-response-models/medco-node/api-explore-query-result';
 import { CombinationConstraint } from '../models/constraint-models/combination-constraint';
 import { Constraint } from '../models/constraint-models/constraint';
+import { ExploreQueryResult } from '../models/query-models/explore-query-result';
 import { ExploreQueryType } from '../models/query-models/explore-query-type';
 import { TreeNode } from '../models/tree-models/tree-node';
 import { ConstraintHelper } from '../utilities/constraint-utilities/constraint-helper';
@@ -103,11 +105,14 @@ export class ExploreStatisticsService {
     // 1 minute timeout
     private static TIMEOUT_MS = 1000 * 60 * 1;
 
+    private _lastQueryTiming: ApiI2b2Timing;
+    private _lastCohortDefintion: ApiI2b2Panel[] = []
     // Sends the result of the latest query when is is available
     @Output() chartsDataSubject: Subject<ChartInformation[]> = new ReplaySubject(1)
 
     // Emits whenever the explore statitistics query has been launched.
     @Output() displayLoadingIcon: Subject<boolean> = new ReplaySubject(1)
+
 
     // Emits whenever an export of the statistical results as a pdf document needs to be generated
     exportAsPDF: Subject<any> = new Subject();
@@ -219,10 +224,8 @@ export class ExploreStatisticsService {
         }
 
 
-
-        this.queryService.parseExploreQueryResults(zipped).subscribe(exploreResults => {
-            console.log("Parsed explore results ", exploreResults)
-        })
+        const resultObserver = this.queryService.getExploreResultObserver()
+        this.queryService.parseExploreQueryResults(zipped).subscribe(resultObserver)
     }
 
 
@@ -248,6 +251,9 @@ export class ExploreStatisticsService {
         const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } = this.extractConceptsAndModifiers(analytes);
 
 
+        this._lastCohortDefintion = this.constraintMappingService.mapConstraint(cohortConstraint)
+        this._lastQueryTiming = this.queryService.lastTiming
+
         const apiRequest: ApiExploreStatistics = {
             ID: ExploreStatisticsService.getNewQueryID(),
             concepts: conceptsPaths,
@@ -256,8 +262,8 @@ export class ExploreStatisticsService {
             bucketSize,
             minObservation,
             cohortDefinition: {
-                queryTiming: this.queryService.lastTiming,
-                panels: this.constraintMappingService.mapConstraint(cohortConstraint),
+                queryTiming: this._lastQueryTiming,
+                panels: this._lastCohortDefintion,
                 isPanelEmpty: this.isEmptyConstraint
             }
         };
@@ -411,5 +417,12 @@ export class ExploreStatisticsService {
         this.exportAsPDF.next(1)
     }
 
+    get lastCohortDefinition(): ApiI2b2Panel[] {
+        return this._lastCohortDefintion
+    }
+
+    get lastQueryTiming(): ApiI2b2Timing {
+        return this._lastQueryTiming
+    }
 
 }
