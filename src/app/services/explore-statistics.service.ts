@@ -178,12 +178,11 @@ export class ExploreStatisticsService {
      */
     executeQueryFromExplore(bucketSize: number, minObservation: number) {
         if (bucketSize === undefined || bucketSize <= 0) {
-            ErrorHelper.handleError('Please specify a bucket size that will define the histograms\' intervals', Error('Bucket size not specified'))
-            return
+            bucketSize = 1 //TODO remove this
         }
 
         if (minObservation === undefined) {
-            ErrorHelper.handleError('Please specify the minimal observation that exists', Error('minimal observation input undefined'))
+            minObservation = 0 //TODO remove this
         }
 
         const updatedInclusionObs = this.refreshConstraint(this.constraintService.rootInclusionConstraint)

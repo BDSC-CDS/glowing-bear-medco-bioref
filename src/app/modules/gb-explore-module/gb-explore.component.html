@@ -57,35 +57,13 @@
     </div>
   </div>
 
-
-  <div #analytesDropzones class="input-label-wrapper small-font" >
+  <div #analytesDropzones class="input-label-wrapper small-font">
     <div>
       <label>
         Analytes:
       </label>
     </div>
     <gb-analytes-dropzones></gb-analytes-dropzones>
-  </div>
-
-  <div class="input-label-wrapper small-font">
-    <div>
-      <label for="minObservation">
-        Smallest used observation:
-      </label>
-    </div>
-    <input id="minObservation" type="number" class="col-sm-2" value="0" placeholder="0" [(ngModel)]="minObservation"
-      alt="The smallest observation that will be used in the histogram ">
-  </div>
-
-
-  <div class="input-label-wrapper" style="margin-bottom: 3em; font-size: small;" >
-    <div>
-      <label for="bucketSize">
-        Bucket size:
-      </label>
-    </div>
-    <input id="bucketSize" type="number"  min="0" class="col-sm-2" value="1" placeholder="1" [(ngModel)]="bucketSize"
-      alt="The width of each interval of the histogram">
   </div>
 
   <div style="margin-top: 1em;">
