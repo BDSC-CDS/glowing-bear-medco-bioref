@@ -14,6 +14,9 @@ import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { NavbarService } from '../../services/navbar.service';
 import { SavedCohortsPatientListService } from '../../services/saved-cohorts-patient-list.service';
+import { combineLatest } from 'rxjs';
+import { take } from 'rxjs/operators';
+import { CohortService } from 'src/app/services/cohort.service';
 
 @Component({
   selector: 'gb-side-panel',
@@ -29,7 +32,8 @@ export class GbSidePanelComponent {
     public termSearchService: TermSearchService,
     public renderer: Renderer2,
     private authService: AuthenticationService,
-    private exploreStatsService: ExploreStatisticsService) { }
+    private exploreStatsService: ExploreStatisticsService,
+    private cohortService: CohortService) { }
 
   userHasExploreStatsRole(): boolean {
     return this.authService.hasExploreStatsRole()
@@ -42,6 +46,7 @@ export class GbSidePanelComponent {
   exportStatsPDF(): void {
     this.exploreStatsService.sendExportAsPDFSignal()
   }
+
 
 
 

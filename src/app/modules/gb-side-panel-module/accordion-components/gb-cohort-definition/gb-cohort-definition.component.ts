@@ -10,6 +10,7 @@ import { Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Vi
 import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
 import { Constraint } from 'src/app/models/constraint-models/constraint';
 import { Utils } from 'src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
+import { CohortService } from 'src/app/services/cohort.service';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { ConstraintHelper } from 'src/app/utilities/constraint-utilities/constraint-helper';
 import { HTMLExportVisitor } from './constraintVisitor/htmlExportVisitor';
@@ -42,7 +43,9 @@ export class GbCohortDefinitionComponent implements OnDestroy {
 
 
 
-  constructor(private exploreStatisticsService: ExploreStatisticsService, private componentFactoryResolver: ComponentFactoryResolver) {
+  constructor(private exploreStatisticsService: ExploreStatisticsService,
+    private cohortService: CohortService,
+    private componentFactoryResolver: ComponentFactoryResolver) {
 
     this.exploreStatisticsService.inclusionConstraint.subscribe(constraint => {
       this.inclusionConstraint = constraint
@@ -64,15 +67,6 @@ export class GbCohortDefinitionComponent implements OnDestroy {
 
 
 
-  ngOnDestroy(): void {
-    if (this.inclusionComponentRef !== undefined) {
-      this.inclusionComponentRef.destroy()
-    }
-
-    if (this.exclusionTemplateRef !== undefined) {
-      this.exclusionTemplateRef.destroy()
-    }
-  }
 
   private constraintIsEmpty(c: Constraint): boolean {
     if (c === undefined || c === null) {
@@ -92,10 +86,46 @@ export class GbCohortDefinitionComponent implements OnDestroy {
     return !ConstraintHelper.hasNonEmptyChildren(comb)
   }
 
+  ngOnDestroy(): void {
+    if (this.inclusionComponentRef !== undefined) {
+      this.inclusionComponentRef.destroy()
+    }
+
+    if (this.exclusionTemplateRef !== undefined) {
+      this.exclusionTemplateRef.destroy()
+    }
+  }
+
+
+
+  set cohortName(name: string) {
+    this.cohortService.cohortName = name
+  }
+  get cohortName(): string {
+    return this.cohortService.cohortName
+  }
+
+  get lastSuccessfulSet(): number[] {
+    return this.cohortService.lastSuccessfulSet
+  }
+
+  save() {
+    //TODO passer le nom de la cohorte définie dans le side panel
+    this.cohortService.saveCohortStatistics()
+  }
+
+  // otherwise writes data in input filed
+  preventDefault(event: Event) {
+    event.preventDefault()
+  }
+
+  saveIfEnter(event) {
+    if (event.keyCode === 13) {
+      this.save()
+    }
+  }
+
   ngAfterViewInit() {
-
-
-
     if (this.constraintIsEmpty(this.inclusionConstraint)) {
       this.noInclusionConstraint = true
     } else {

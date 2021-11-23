@@ -9,27 +9,16 @@
  */
 
 import { AfterViewChecked, ChangeDetectorRef, Component, Input } from '@angular/core';
-import { combineLatest, Observable } from 'rxjs';
-import { map, take } from 'rxjs/operators';
-import { ApiI2b2Panel } from 'src/app/models/api-request-models/medco-node/api-i2b2-panel';
-import { ApiI2b2Timing } from 'src/app/models/api-request-models/medco-node/api-i2b2-timing';
-import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
-import { ApiQueryDefinition } from '../../models/api-request-models/medco-node/api-query-definition';
-import { ApiNodeMetadata } from '../../models/api-response-models/medco-network/api-node-metadata';
-import { Cohort } from '../../models/cohort-models/cohort';
 import { OperationType } from '../../models/operation-models/operation-types';
-import { OperationStatus } from '../../models/operation-status';
 import { ExploreQueryType } from '../../models/query-models/explore-query-type';
-import { MedcoNetworkService } from '../../services/api/medco-network.service';
 import { CohortService } from '../../services/cohort.service';
 import { ConstraintService } from '../../services/constraint.service';
 import { QueryService } from '../../services/query.service';
-import { SavedCohortsPatientListService } from '../../services/saved-cohorts-patient-list.service';
-import { ErrorHelper } from '../../utilities/error-helper';
 import { FormatHelper } from '../../utilities/format-helper';
-import { MessageHelper } from '../../utilities/message-helper';
 
 @Component({
   selector: 'gb-explore',
@@ -38,7 +27,6 @@ import { MessageHelper } from '../../utilities/message-helper';
 })
 export class GbExploreComponent implements AfterViewChecked {
 
-  _lastPatientList: [ApiNodeMetadata[], number[][]]
 
   OperationType = OperationType
 
@@ -53,10 +41,8 @@ export class GbExploreComponent implements AfterViewChecked {
     private authService: AuthenticationService,
     private queryService: QueryService,
     private cohortService: CohortService,
-    private medcoNetworkService: MedcoNetworkService,
     public constraintService: ConstraintService,
     private changeDetectorRef: ChangeDetectorRef,
-    private savedCohortsPatientListService: SavedCohortsPatientListService,
     private exploreStatisticsService: ExploreStatisticsService) {
     this.exploreStatisticsService.patientQueryIDsSubject.subscribe(resIDs => {
       this.lastSuccessfulSet = resIDs
@@ -64,13 +50,7 @@ export class GbExploreComponent implements AfterViewChecked {
     this.queryService.lastSuccessfulSet.subscribe(resIDs => {
       this.lastSuccessfulSet = resIDs
     })
-    this.queryService.queryResults.subscribe(
-      result => {
-        if ((result) && (result.patientLists)) {
-          this._lastPatientList = [result.nodes, result.patientLists];
-        }
-      }
-    )
+
   }
 
   // without this, ExpressionChangedAfterItHasBeenCheckedError when going from Analysis to Explore
@@ -85,14 +65,14 @@ export class GbExploreComponent implements AfterViewChecked {
   }
 
 
-  displayExploreStatsButton(): boolean {
+  userHasExploreStatsRole(): boolean {
     return this.authService.hasExploreStatsRole()
   }
 
   execQuery(event) {
     event.stopPropagation();
 
-    if (this.displayExploreStatsButton()) {
+    if (this.userHasExploreStatsRole()) {
       this.execExploreStatisticsQuery(event)
       return
     }
@@ -101,84 +81,10 @@ export class GbExploreComponent implements AfterViewChecked {
     this.queryService.execQuery();
   }
 
-  private saveCohortStatistics() {
-    const s = this.exploreStatisticsService
-    const combination = combineLatest([s.inclusionConstraint, s.exclusionConstraint])
-    combination.pipe(take(1)).subscribe((
-      [inclusionConstraint, exclusionConstraint]) => {
-      // due to the `take` call this callback is only called once
-      //https://stackoverflow.com/questions/53216501/unsubscribe-in-subscribe-callback-function
-      const cohort = this.exploreStatisticsService.lastCohortDefinition
-      const timing = this.exploreStatisticsService.lastQueryTiming
-      this.saveCohort(inclusionConstraint, exclusionConstraint,
-        cohort, timing)
-    })
-  }
-
-  private saveCohortExplore() {
-    this.saveCohort(this.constraintService.rootInclusionConstraint,
-      this.constraintService.rootExclusionConstraint, this.queryService.lastDefinition, this.queryService.lastTiming)
-  }
-
-  private saveCohort(inclusionConstraint: CombinationConstraint, exclusionConstraint: CombinationConstraint,
-    cohortDefinition: ApiI2b2Panel[], queryTiming: ApiI2b2Timing) {
-    if (this.cohortName === '') {
-      throw ErrorHelper.handleNewUserInputError('You must provide a name for the cohort you want to save.');
-    } else if (!this.cohortService.patternValidation.test(this.cohortName).valueOf()) {
-      throw ErrorHelper.handleNewUserInputError(`Name ${this.cohortName} can only contain alphanumerical symbols (without ö é ç ...) and underscores "_".`);
-    }
-
-    let existingCohorts = this.cohortService.cohorts
-    if (existingCohorts.findIndex((c => c.name === this.cohortName).bind(this)) !== -1) {
-      throw ErrorHelper.handleNewUserInputError(`Name ${this.cohortName} already used.`);
-    }
-
-    let creationDates = new Array<Date>()
-    let updateDates = new Array<Date>()
-    let queryDefinitions = new Array<ApiQueryDefinition>()
-    const nunc = Date.now()
-    for (let i = 0; i < this.medcoNetworkService.nodes.length; i++) {
-      creationDates.push(new Date(nunc))
-      updateDates.push(new Date(nunc))
-      let definition = new ApiQueryDefinition()
-      definition.panels = cohortDefinition
-      definition.queryTiming = queryTiming
-      queryDefinitions.push(definition)
-    }
-
-    let cohort = new Cohort(
-      this.cohortName,
-      inclusionConstraint,
-      exclusionConstraint,
-      creationDates,
-      updateDates,
-    )
-    if (queryDefinitions.some(apiDef => (apiDef.panels) || (apiDef.queryTiming))) {
-      cohort.queryDefinition = queryDefinitions
-    }
-    cohort.patient_set_id = this.lastSuccessfulSet
-    this.cohortService.postCohort(cohort)
-    MessageHelper.alert('success', 'Cohort successfully saved.');
-
-    // handle patient list locally
-    if (this._lastPatientList) {
-      this.savedCohortsPatientListService.insertPatientList(this.cohortName, this._lastPatientList[0], this._lastPatientList[1])
-      this.savedCohortsPatientListService.statusStorage.set(this.cohortName, OperationStatus.done)
-    } else {
-      MessageHelper.alert('error', 'There is no patient list cached from previous Explore Query. You may have to download the list again.')
-    }
-    this.cohortName = ''
-  }
 
 
   save() {
-    if (this.authService.hasExploreStatsRole()) {
-      this.saveCohortStatistics()
-      return
-    }
-
-    this.saveCohortExplore()
-
+    this.cohortService.saveCohortExplore()
   }
 
   saveIfEnter(event) {
