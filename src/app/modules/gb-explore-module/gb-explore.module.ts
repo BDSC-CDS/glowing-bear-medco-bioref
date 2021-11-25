@@ -26,6 +26,7 @@ import {MultiSelectModule} from 'primeng';
 import {GbSelectionModule} from './gb-selection-component/gb-selection.module';
 
 import {TooltipModule} from 'primeng/tooltip';
+import { GbAnalyteDropzone } from './analyte-dropzone/gb-analyte-dropzone.component';
 
 @NgModule({
   imports: [
@@ -46,7 +47,8 @@ import {TooltipModule} from 'primeng/tooltip';
     RouterModule,
   ],
   declarations: [
-    GbExploreComponent
+    GbExploreComponent,
+    GbAnalyteDropzone
   ],
   entryComponents: [
     GbConstraintComponent,

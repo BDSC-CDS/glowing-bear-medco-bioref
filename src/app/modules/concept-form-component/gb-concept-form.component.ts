@@ -37,7 +37,7 @@ export class GbConceptFormComponent implements OnInit, OnChanges {
 
   constructor(private constraintService: ConstraintService,
     private element: ElementRef,
-    private treeNodeService: TreeNodeService) {
+    protected treeNodeService: TreeNodeService) {
     this.changedEventConcepts = new EventEmitter()
     this._eventHovering = false
   }
@@ -51,33 +51,36 @@ export class GbConceptFormComponent implements OnInit, OnChanges {
   }
 
 
-  private onDrop(event: DragEvent): Concept {
+  protected onDrop(event: DragEvent): Concept {
     event.preventDefault()
     event.stopPropagation()
     this._eventHovering = false
     let node = this.treeNodeService.selectedTreeNode
-    if (node) {
-      if (node.encryptionDescriptor.encrypted) {
-        MessageHelper.alert('warn', 'Cannot select this concept as it is encrypted')
-        return
-      }
-      switch (node.nodeType) {
-        case TreeNodeType.CONCEPT:
-        case TreeNodeType.CONCEPT_FOLDER:
-        case TreeNodeType.MODIFIER:
-        case TreeNodeType.MODIFIER_FOLDER:
-          let constraint = this.constraintService.generateConstraintFromTreeNode(node, node ? node.dropMode : null)
-          let concept = (<ConceptConstraint>constraint).clone().concept
-          return concept
-        case TreeNodeType.CONCEPT_CONTAINER:
-        case TreeNodeType.MODIFIER_CONTAINER:
-          MessageHelper.alert('warn', `${node.displayName} is a container and cannot be used`)
-          break;
-        default:
-          break;
-      }
+    if (!node) {
+      return null
     }
-    return null
+
+
+    if (node.encryptionDescriptor.encrypted) {
+      MessageHelper.alert('warn', 'Cannot select this concept as it is encrypted')
+      return
+    }
+
+    switch (node.nodeType) {
+      case TreeNodeType.CONCEPT:
+      case TreeNodeType.CONCEPT_FOLDER:
+      case TreeNodeType.MODIFIER:
+      case TreeNodeType.MODIFIER_FOLDER:
+        let constraint = this.constraintService.generateConstraintFromTreeNode(node, node ? node.dropMode : null)
+        let concept = (<ConceptConstraint>constraint).clone().concept
+        return concept
+      case TreeNodeType.CONCEPT_CONTAINER:
+      case TreeNodeType.MODIFIER_CONTAINER:
+        MessageHelper.alert('warn', `${node.displayName} is a container and cannot be used`)
+        break;
+      default:
+        break;
+    }
   }
 
 

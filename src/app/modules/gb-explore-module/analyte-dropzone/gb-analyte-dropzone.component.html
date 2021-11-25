@@ -1,0 +1,16 @@
+<!--inputs : name of the model linked to the concept -->
+
+<div class="input-field-margin small-font"
+    [ngStyle]="{'background-color' : eventHovering ? 'var(--gb-clinical-green-light-light)' : 'white'}"
+    (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onConceptDrop($event)">
+    <p-autoComplete #autoComplete [(ngModel)]="concept" [suggestions]="suggestedConcepts"
+        (completeMethod)="search($event)" field="path" (onDropDownClick)="onDropdown($event)"
+        placeholder="Drag and drop a numerical concept" dropdown="true" [inputStyle]="{'width':'auto'}"
+        styleClass="gb-concept-constraint-input" size="60">
+
+        <ng-template let-concept pTemplate="item">
+            <span>{{concept.label}}</span>
+        </ng-template>
+    </p-autoComplete>
+
+</div>
