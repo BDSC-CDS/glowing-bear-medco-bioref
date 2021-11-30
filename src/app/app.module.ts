@@ -47,6 +47,7 @@ import {ToastrModule} from 'ngx-toastr';
 import {DeviceDetectorService} from 'ngx-device-detector';
 import { GbExploreStatisticsModule } from './modules/gb-explore-statistics-module/gb-explore-statistics.module';
 import { ExploreStatisticsService } from './services/explore-statistics.service';
+import { GbUtilsModule } from './modules/gb-utils-module/gb-utils.module';
 
 
 export function loadServices(config: AppConfig,
@@ -87,6 +88,7 @@ export function loadServices(config: AppConfig,
     GbExploreStatisticsModule,
     GbAnalysisModule,
     GbResultsModule,
+    GbUtilsModule,
     GbSurvivalResultsModule,
     GbNavBarModule,
     GbSidePanelModule,

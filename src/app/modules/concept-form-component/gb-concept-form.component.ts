@@ -5,24 +5,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Component, OnInit, Input, Output, EventEmitter, ElementRef, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
-import { Concept } from '../../models/constraint-models/concept';
-import { ConstraintService } from '../../services/constraint.service';
-import { UIHelper } from '../../utilities/ui-helper';
+import { ElementRef, EventEmitter, Input, ViewChild } from '@angular/core';
 import { AutoComplete } from 'primeng/autocomplete';
-import { TreeNodeService } from '../../services/tree-node.service';
-import { MessageHelper } from '../../utilities/message-helper';
+import { Concept } from '../../models/constraint-models/concept';
 import { ConceptConstraint } from '../../models/constraint-models/concept-constraint';
-import { TreeNodeType } from '../../models/tree-models/tree-node-type';
-import { TreeNode } from 'src/app/models/tree-models/tree-node';
+import { ConstraintService } from '../../services/constraint.service';
+import { TreeNodeService } from '../../services/tree-node.service';
+import { UIHelper } from '../../utilities/ui-helper';
 
 // TODO use this component using composition in survival curves.
 // for reference see how to define abstract component:
 // https://medium.com/@ozak/stop-repeating-yourself-in-angular-how-to-create-abstract-components-9726d43c99ab
-export class GbConceptFormComponent   {
+export class GbConceptFormComponent {
   private _concept: Concept
 
-  private _suggestedConcepts: Concept[]
+  private _suggestedConcepts: ConceptConstraint[]
   private _activated: boolean
 
   protected changedEventConcepts: EventEmitter<boolean>
@@ -60,7 +57,7 @@ export class GbConceptFormComponent   {
     let results = this.constraintService.searchAllConstraints(event.query);
     this.suggestedConcepts = results
       .filter(constraint => constraint instanceof ConceptConstraint)
-      .map(constraint => (constraint as ConceptConstraint).concept);
+      .map(constraint => (constraint as ConceptConstraint));
     if (this.element) {
       UIHelper.removePrimeNgLoaderIcon(this.element, 200)
     }
@@ -86,7 +83,7 @@ export class GbConceptFormComponent   {
   }
 
   onDropdown(event) {
-    if (this.element){
+    if (this.element) {
       UIHelper.removePrimeNgLoaderIcon(this.element, 200);
     }
   }
@@ -106,24 +103,24 @@ export class GbConceptFormComponent   {
   }
 
 
-  set suggestedConcepts(concepts: Concept[]) {
+  set suggestedConcepts(concepts: ConceptConstraint[]) {
     this._suggestedConcepts = concepts
   }
 
-  get suggestedConcepts(): Concept[] {
+  get suggestedConcepts(): ConceptConstraint[] {
     return this._suggestedConcepts
   }
 
 
-  public get concept(): Concept {
+  protected get concept(): Concept {
     return this._concept
   }
 
-  set concept(concept: Concept) {
+  protected set concept(concept: Concept) {
     this._concept = concept
   }
 
-  protected set eventHovering(eventHovering: boolean) {
+  set eventHovering(eventHovering: boolean) {
     this._eventHovering = eventHovering
   }
 }

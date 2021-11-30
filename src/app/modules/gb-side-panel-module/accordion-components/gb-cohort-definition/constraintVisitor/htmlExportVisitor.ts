@@ -10,51 +10,10 @@ import { GenomicAnnotationConstraint } from "src/app/models/constraint-models/ge
 import { NegationConstraint } from "src/app/models/constraint-models/negation-constraint";
 import { TimeConstraint } from "src/app/models/constraint-models/time-constraint";
 import { ValueConstraint } from "src/app/models/constraint-models/value-constraint";
-import { TreeNode } from "src/app/models/tree-models/tree-node";
 import { Utils } from "src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component";
+import { PathDisplayer } from "src/app/modules/gb-utils-module/gb-utils.component";
 
 
-const ulLeftPadding = '2em';
-
-@Component({
-    selector: 'path-displayer',
-    styles: [
-        `
-        li {
-            display: inline-block;
-        }
-        .delimiter {
-            padding-right: .5em;
-        }
-        `,
-        'ul {padding-left: ' + ulLeftPadding + '; }'
-    ],
-    template: `
-    <div>
-        <ul>
-            <li *ngFor="let elem of pathElements; let i = index">
-                <span> {{elem}} </span>
-                <span *ngIf="!isLastElement(i)" class="delimiter"> &gt; </span>
-            </li>
-        </ul>
-    </div>
-    `
-})
-export class PathDisplayer {
-    @Input()
-    pathElements: string[] = []
-
-    constructor(private ref: ChangeDetectorRef) { }
-
-    isLastElement(index: number): boolean {
-        return this.pathElements.length === (index + 1)
-    }
-
-    set path(pathElements: string[]) {
-        this.pathElements = pathElements
-        this.ref.detectChanges()
-    }
-}
 
 
 @Component({

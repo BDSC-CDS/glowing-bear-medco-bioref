@@ -7,12 +7,15 @@
  */
 import { Component, ElementRef, Input } from '@angular/core';
 import { Concept } from 'src/app/models/constraint-models/concept';
+import { ConceptConstraint } from 'src/app/models/constraint-models/concept-constraint';
 import { ValueType } from 'src/app/models/constraint-models/value-type';
 import { TreeNode } from 'src/app/models/tree-models/tree-node';
 import { GbConceptFormComponent } from 'src/app/modules/concept-form-component/gb-concept-form.component';
 import { ConstraintService } from 'src/app/services/constraint.service';
+import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { TreeNodeService } from 'src/app/services/tree-node.service';
 import { ErrorHelper } from 'src/app/utilities/error-helper';
+import { Utils } from '../../gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
 
 
 @Component({
@@ -27,53 +30,70 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
 
     constructor(constraintService: ConstraintService,
         element: ElementRef,
-        protected treeNodeService: TreeNodeService) {
+        protected treeNodeService: TreeNodeService,
+        protected statsService: ExploreStatisticsService) {
         super(constraintService, element, treeNodeService)
+
+        this.childrenWrappers = this.statsService.analytes.map(a => this.createTreeNodeChild(a))
     }
 
-    protected onDrop(event: DragEvent): Concept {
+    protected onDrop(event: DragEvent) {
         event.preventDefault()
         event.stopPropagation()
+        this.eventHovering = false
 
         let node = this.treeNodeService.selectedTreeNode
         if (!node) {
             return null
         }
 
-        const dropped = super.onDrop(event)
+        if (!GbAnalytesDropzones.validValueType(node.valueType)) {
+            ErrorHelper.handleNewError("The node you dropped in this form is not of numerical type.")
+            return null
+        }
 
-
-       if (!GbAnalytesDropzones.validValueType(node.valueType)) {
-           ErrorHelper.handleNewError("The node you dropped in this form is not of numerical type.")
-           return null
-       }
-
-        console.log("Dropped concept in dropzone ", dropped)
 
         this.pushNewChild(node)
 
         this.clear()
 
-        return dropped
-
     }
 
     private pushNewChild(node: TreeNode) {
-        const component = this
-        const child = new TreeNodeWrapper(node, this.constraintService, this.treeNodeService)
-
-        // creating a callback for the child which will remove the child out of the children list of the parent component
-        const disown = () => {
-            const index = component.childrenWrappers.indexOf(child)
-            if (index === -1) {
-                return
-            }
-            //removing the child from the list of children of the component.
-            component.childrenWrappers.splice(index, 1)
-        }
+        const child = this.createTreeNodeChild(node);
 
         this.childrenWrappers.push(child)
-        child.setOnRemove(disown)
+        this.notifyUpdate()
+    }
+
+    private createTreeNodeChild(node: TreeNode): TreeNodeWrapper {
+        const child = new TreeNodeWrapper(node);
+
+        // creating a callback for the child which will remove the child out of the children list of the parent component
+        this.setOnRemove(child);
+        return child;
+    }
+
+    private setOnRemove(child: TreeNodeWrapper) {
+        const disown = () => {
+            const index = this.childrenWrappers.indexOf(child);
+            if (index === -1) {
+                return;
+            }
+            //removing the child from the list of children of the component.
+            this.childrenWrappers.splice(index, 1);
+            this.notifyUpdate();
+        };
+        child.setOnRemove(disown);
+    }
+
+    notifyUpdate() {
+        const children = this.childrenWrappers.map(w => w.treeNode)
+        if (children === null || children === undefined) {
+            console.warn("undefined children in analytes dropzone component")
+            return
+        }
+        this.statsService.analytes = children
     }
 
     //cleaning the input field
@@ -85,12 +105,12 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
         this.concept = null
     }
 
-    onSelect(selected: TreeNode) {
-        if (!selected) {
-            return
+    onSelect(selected: ConceptConstraint) {
+        if (!selected || !selected.treeNode) {
+            throw ErrorHelper.handleNewError("Impossible to set this concept as selected")
         }
 
-        this.pushNewChild(selected)
+        this.pushNewChild(selected.treeNode)
 
         this.clear()
     }
@@ -109,75 +129,45 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
         return valueType === ValueType.NUMERICAL
     }
 
-    set suggestedConcepts(concepts: Concept[]) {
+    set suggestedConcepts(concepts: ConceptConstraint[]) {
         super.suggestedConcepts = concepts
     }
 
-    get suggestedConcepts(): Concept[] {
+    get suggestedConcepts(): ConceptConstraint[] {
         const suggested = super.suggestedConcepts
         if (!suggested) {
             return []
         }
-        return suggested.filter(c => GbAnalytesDropzones.validValueType(c.type))
+        return suggested.filter(c => GbAnalytesDropzones.validValueType(c.concept.type))
     }
 }
 
 
 
 //TODO comment logic
-class TreeNodeWrapper extends GbAnalytesDropzones {
+class TreeNodeWrapper {
 
     private _treeNode: TreeNode
-    clonedTreeNode: TreeNode;
+    pathElements: string[] = []
 
-    onRemove: () => void = () => {}
 
-    constructor(treeNode: TreeNode,
-        constraintService: ConstraintService,
-        protected treeNodeService: TreeNodeService,
-    ) {
-        super(constraintService, undefined, treeNodeService)
-        this.treeNode = treeNode
+    onRemove: () => void = () => { }
+
+    constructor(treeNode: TreeNode) {
+        this._treeNode = treeNode
+        this.pathElements = Utils.extractDisplayablePath(treeNode)
     }
 
     get treeNode(): TreeNode {
-        //copying basic fields
         return this._treeNode
-    }
-
-    set treeNode(treeNode: TreeNode) {
-        this._treeNode = treeNode
     }
 
     setOnRemove(onRemove: () => void) {
         this.onRemove = onRemove
     }
 
-
-    //called whenever a tree node is dropped on a dropzone that was previously filled with another tree node
-    onDrop(event: DragEvent) {
-        event.preventDefault()
-        event.stopPropagation()
-        this.eventHovering = false
-
-        let node = this.treeNodeService.selectedTreeNode
-        if (!node) {
-            return null
-        }
-
-        if (!GbAnalytesDropzones.validValueType(node.valueType)) {
-            ErrorHelper.handleNewError("The node you dropped in this form is not of numerical type.")
-            return null
-        }
-
-        this.treeNode = node
-
-
-    }
-
-
-    label() {
-        return this._treeNode.label
+    path(): string {
+        return this._treeNode.path
     }
 
 }

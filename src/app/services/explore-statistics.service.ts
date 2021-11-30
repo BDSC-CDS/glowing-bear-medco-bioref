@@ -100,6 +100,7 @@ export class ChartInformation {
 export class ExploreStatisticsService {
 
 
+
     private isEmptyConstraint: boolean = true
 
     // 1 minute timeout
@@ -113,6 +114,7 @@ export class ExploreStatisticsService {
     // Emits whenever the explore statitistics query has been launched.
     @Output() displayLoadingIcon: Subject<boolean> = new ReplaySubject(1)
 
+    private _analytes: Array<TreeNode> = []
 
     // Emits whenever an export of the statistical results as a pdf document needs to be generated
     exportAsPDF: Subject<any> = new Subject();
@@ -145,6 +147,8 @@ export class ExploreStatisticsService {
     ) {
 
     }
+
+
 
 
     // The panels returned by the constraint service have a tendency to be out of date. Use this method to refresh them.
@@ -233,7 +237,7 @@ export class ExploreStatisticsService {
 
         console.log("Updated inclusion and exclusion constraints", upToDateInclusionConstraint, upToDateExclusionConstraint);
 
-        const uniqueAnalytes = new Set(upToDateInclusionConstraint.getAnalytes());
+        const uniqueAnalytes = new Set(this._analytes);
         console.log('Analytes ', uniqueAnalytes);
         this.analytesSubject.next(uniqueAnalytes)
 
@@ -243,7 +247,7 @@ export class ExploreStatisticsService {
         const analytes = Array.from(uniqueAnalytes);
 
         if (analytes.length == 0) {
-            throw ErrorHelper.handleNewError('No analytes have been specified. An analyte is a numerical medical concept for which the constraint is set with value "any"');
+            throw ErrorHelper.handleNewError('No analytes have been specified (numerical medical concepts). The value returned by the request will be the reference values for the specified analytes.');
         }
 
         // the analytes split into two groups: modifiers and concepts
@@ -275,51 +279,7 @@ export class ExploreStatisticsService {
         console.log('Api request ', apiRequest);
 
         observableRequest.subscribe((answers: ApiExploreStatisticsResponse[]) => {
-            if (answers === undefined || answers.length === 0) {
-                throw ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.');
-            }
-
-            if (this.queryService.queryType === ExploreQueryType.PATIENT_LIST) {
-                this.parseCohortFromAnswer(answers)
-            }
-
-            // query IDs of the cohort built from the constraints and saved in the backend nodes' DB
-            const patientQueryIDs = answers.map(a => a.cohortQueryID)
-            this.patientQueryIDsSubject.next(patientQueryIDs)
-            // All servers are supposed to send the same information so we pick the element with index zero
-            const serverResponse: ApiExploreStatisticsResponse = answers[0];
-
-
-            if (serverResponse.results === undefined || serverResponse.results === null) {
-                this.displayLoadingIcon.next(false);
-                throw ErrorHelper.handleNewError('Empty server response. Please verify you selected an analyte.');
-            }
-
-            const chartsInformationsObservables: Observable<ChartInformation>[] = serverResponse.results.map((result: ApiExploreStatisticResult) => {
-
-                const encCounts: string[] = result.intervals.map((i: ApiInterval) => i.encCount)
-
-                const decryptedCounts = this.cryptoService.decryptIntegersWithEphemeralKey(encCounts)
-
-                return decryptedCounts.pipe(
-                    map(counts => {
-                        const intervals = counts.map((count, intervalIndex) => {
-                            const apiInterval = result.intervals[intervalIndex]
-                            return new Interval(apiInterval.lowerBound, apiInterval.higherBound, count)
-                        })
-
-                        return new ChartInformation(intervals, result.unit, result.analyteName, cohortConstraint.textRepresentation)
-                    }),
-                )
-            });
-
-
-
-            forkJoin(chartsInformationsObservables).subscribe((chartsInformations: ChartInformation[]) => {
-                // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
-                this.chartsDataSubject.next(chartsInformations);
-                this.displayLoadingIcon.next(false);
-            });
+            this.handleAnswer(answers, cohortConstraint);
 
         }, err => {
             ErrorHelper.handleNewError('An error occured during the request execution.')
@@ -329,6 +289,54 @@ export class ExploreStatisticsService {
 
 
 
+
+    private handleAnswer(answers: ApiExploreStatisticsResponse[], cohortConstraint: Constraint) {
+        if (answers === undefined || answers.length === 0) {
+            throw ErrorHelper.handleNewError('Error with the servers. Empty result in explore-statistics.');
+        }
+
+        if (this.queryService.queryType === ExploreQueryType.PATIENT_LIST) {
+            this.parseCohortFromAnswer(answers);
+        }
+
+        // query IDs of the cohort built from the constraints and saved in the backend nodes' DB
+        const patientQueryIDs = answers.map(a => a.cohortQueryID);
+        this.patientQueryIDsSubject.next(patientQueryIDs);
+        // All servers are supposed to send the same information so we pick the element with index zero
+        const serverResponse: ApiExploreStatisticsResponse = answers[0];
+
+
+        if (serverResponse.results === undefined || serverResponse.results === null) {
+            this.displayLoadingIcon.next(false);
+            throw ErrorHelper.handleNewError('Empty server response. Please verify you selected an analyte.');
+        }
+
+        const chartsInformationsObservables: Observable<ChartInformation>[] = serverResponse.results.map((result: ApiExploreStatisticResult) => {
+
+            const encCounts: string[] = result.intervals.map((i: ApiInterval) => i.encCount);
+
+            const decryptedCounts = this.cryptoService.decryptIntegersWithEphemeralKey(encCounts);
+
+            return decryptedCounts.pipe(
+                map(counts => {
+                    const intervals = counts.map((count, intervalIndex) => {
+                        const apiInterval = result.intervals[intervalIndex];
+                        return new Interval(apiInterval.lowerBound, apiInterval.higherBound, count);
+                    });
+
+                    return new ChartInformation(intervals, result.unit, result.analyteName, cohortConstraint.textRepresentation);
+                })
+            );
+        });
+
+
+
+        forkJoin(chartsInformationsObservables).subscribe((chartsInformations: ChartInformation[]) => {
+            // waiting for the intervals to be decrypted by the crypto service to emit the chart information to external listeners.
+            this.chartsDataSubject.next(chartsInformations);
+            this.displayLoadingIcon.next(false);
+        });
+    }
 
     private sendRequest(apiRequest: ApiExploreStatistics): Observable<ApiExploreStatisticsResponse[]> {
         return forkJoin(this.medcoNetworkService.nodes
@@ -347,6 +355,9 @@ export class ExploreStatisticsService {
             .filter(node => !node.isModifier)
             .map(node => node.path);
 
+
+
+
         const modifiers: Array<ModifierApiObjet> = analytes.filter(node => node.isModifier).map(node => {
             return {
                 ParentConceptPath: node.appliedPath,
@@ -354,6 +365,8 @@ export class ExploreStatisticsService {
                 AppliedPath: node.appliedConcept.path
             };
         });
+
+
         return { conceptsPaths, modifiers };
     }
 
@@ -404,6 +417,14 @@ export class ExploreStatisticsService {
 
         this.isEmptyConstraint = isExclusionEmpty && isInclusionEmpty
         return cohortConstraint;
+    }
+
+    public set analytes(analytes: TreeNode[]) {
+        this._analytes = analytes
+    }
+
+    public get analytes(): TreeNode[] {
+        return this._analytes.map(t => t.clone(undefined, false, true))
     }
 
     // send a signal that launches the export of the statistical results as a PDF

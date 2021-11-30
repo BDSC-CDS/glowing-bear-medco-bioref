@@ -50,7 +50,7 @@ export class TreeNode implements PrimeNgTreeNode {
   parent: TreeNode;
   partialSelected: boolean;
 
-  clone(clonedParent?: TreeNode, cloneChildren: boolean = true): TreeNode {
+  clone(clonedParent?: TreeNode, cloneChildren: boolean = true, cloneAppliedConcept: boolean = false): TreeNode {
     let copy: TreeNode = new TreeNode();
 
     copy.path = this.path;
@@ -64,6 +64,10 @@ export class TreeNode implements PrimeNgTreeNode {
       copy.parent = clonedParent
     } else if (this.parent !== undefined && this.parent !== null) {
       copy.parent = this.parent.clone(undefined, false)
+    }
+
+    if (cloneAppliedConcept && this.appliedConcept) {
+      copy.appliedConcept = this.appliedConcept.clone(undefined, false, false)
     }
 
     copy.nodeType = this.nodeType;

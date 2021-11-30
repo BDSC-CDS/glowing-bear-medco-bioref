@@ -140,13 +140,6 @@ export class ConstraintService {
     }
   }
 
-  public getAnalytes(): TreeNode[] {
-    if (!this.hasInclusionConstraint()) {
-      return []
-    }
-    return this.rootInclusionConstraint.getAnalytes()
-  }
-
   public generateConstraintHelper2(inclusionConstraint: Constraint, exclusionConstraint: Constraint,
     hasInclusionConstraint: Boolean, hasExclusionConstraint: Boolean): Constraint {
 

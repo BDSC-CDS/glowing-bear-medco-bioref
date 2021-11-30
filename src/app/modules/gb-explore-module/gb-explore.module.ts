@@ -12,6 +12,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AccordionModule, AutoCompleteModule, CalendarModule, CheckboxModule, MultiSelectModule, OverlayPanelModule, PanelModule } from 'primeng';
 import { TooltipModule } from 'primeng/tooltip';
+import { PathDisplayer } from '../gb-utils-module/gb-utils.component';
+import { GbUtilsModule } from '../gb-utils-module/gb-utils.module';
 import { GbAnalytesDropzones } from './analytes-dropzones/gb-analytes-dropzones.component';
 import { GbCombinationConstraintComponent } from './constraint-components/gb-combination-constraint/gb-combination-constraint.component';
 import { GbConstraintComponent } from './constraint-components/gb-constraint/gb-constraint.component';
@@ -36,6 +38,7 @@ import { GbSelectionModule } from './gb-selection-component/gb-selection.module'
     MultiSelectModule,
     GbSelectionModule,
     TooltipModule,
+    GbUtilsModule,
   ],
   exports: [
     RouterModule,

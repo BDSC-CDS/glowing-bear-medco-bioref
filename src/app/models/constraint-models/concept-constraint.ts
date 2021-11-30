@@ -245,16 +245,6 @@ export class ConceptConstraint extends Constraint {
     return this
   }
 
-  getAnalytes(): Array<TreeNode> {
-    // if the tree node is of numerical type
-    // AND there is no operator acting on the node return it
-
-    if (this.isAnalyte()) {
-      return [this.treeNode]
-    }
-
-    return []
-  }
 
   inputValueValidity(): string {
     if (!this.applyNumericalOperator && !this.applyTextOperator) {

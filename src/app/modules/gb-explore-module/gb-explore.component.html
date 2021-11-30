@@ -12,7 +12,7 @@
           <span class="gb-data-selection-accordion-sub-header-3 float-left">
             <span class="gb-data-selection-emphasis-text">{{globalCount | async}} subjects</span>
           </span>
-          <span id="save-box" *ngIf="!userHasExploreStatsRole()" style="margin-left: 2em;" >
+          <span id="save-box" *ngIf="!userHasExploreStatsRole()" style="margin-left: 2em;">
             <input [(ngModel)]="cohortName" pInputText (keydown)="saveIfEnter($event)" placeholder="Cohort name"
               (drop)="preventDefault($event)" />
             <span>&nbsp;</span>
@@ -57,7 +57,7 @@
     </div>
   </div>
 
-  <div #analytesDropzones class="input-label-wrapper small-font">
+  <div *ngIf="userHasExploreStatsRole()" #analytesDropzones class="input-label-wrapper small-font analytes-explore-container">
     <div>
       <label>
         Analytes:
@@ -67,6 +67,9 @@
   </div>
 
   <div style="margin-top: 1em;">
+    <div class="small-font">
+      Cohort definition:
+    </div>
     <gb-selection [operationType]="OperationType.EXPLORE"></gb-selection>
   </div>
 

@@ -141,16 +141,6 @@ export class CombinationConstraint extends Constraint {
     return cloneObj
   }
 
-  getAnalytes(): Array<TreeNode> {
-    if (!this.isAnd) {
-      return []
-    }
-
-    const arrays = this.children.map(c => c.getAnalytes())
-    const flattened = arrays.reduce((arr1, arr2) => arr1.concat(arr2))
-
-    return flattened
-  }
 
   private updateTextRepresentation() {
     if (this.children.length > 0) {

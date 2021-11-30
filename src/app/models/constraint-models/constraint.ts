@@ -79,13 +79,6 @@ export class Constraint {
     return this._panelTimingSameInstance
   }
 
-  /* For the needs of explore statistics requests we need to 'build' analytes (alias concepts or modifiers)
-  * from the constraints present in the inclusion criterias. The concepts or modifiers which will be used as analytes of those
-  * explore statistics requests will be the one with an 'any' value in the constraint field.
-  */
-  getAnalytes(): Array<TreeNode> {
-    return [];
-  }
 
   // This method recursively traverse the constraints tree. The returned tree contains only constraints which are not analytes.
   // This method can return undefined if the current constraint is an analyte.

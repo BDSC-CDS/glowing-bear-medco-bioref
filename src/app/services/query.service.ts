@@ -179,7 +179,6 @@ export class QueryService {
     // prepare and execute query
     this.query.generateUniqueId();
     this.query.constraint = this.constraintService.generateConstraint();
-    console.log('Constraints analytes explore query:', this.query.constraint.getAnalytes())
     this.query.queryTimingSameInstanceNum = this.queryTimingSameInstance
 
     this.genomicAnnotationsService.addVariantIdsToConstraints(this.query.constraint).pipe(
