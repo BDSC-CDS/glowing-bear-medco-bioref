@@ -125,7 +125,7 @@ export class ConstraintService {
   /**
    * Generate the constraint corresponding to the query.
    */
-  public generateConstraint(): Constraint {
+  public generateConstraint(): CombinationConstraint {
     if (!this.hasConstraint()) {
       throw ErrorHelper.handleNewError('Empty constraints');
 

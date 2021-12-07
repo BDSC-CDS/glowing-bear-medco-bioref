@@ -232,7 +232,8 @@ export class ExploreStatisticsService {
         this.analytesSubject.next(uniqueAnalytes)
 
 
-        const cohortConstraint = this.prepareCohort();
+        const cohortConstraint = this.constraintService.generateConstraint();
+        this.rootConstraint.next(cohortConstraint)
 
         const analytes = Array.from(uniqueAnalytes);
 
@@ -369,13 +370,6 @@ export class ExploreStatisticsService {
 
 
 
-    private prepareCohort(): Constraint {
-        this.refreshConstraint(this.constraintService.rootConstraint).subscribe(updated => {
-            this.rootConstraint.next(updated)
-        })
-
-        return this.constraintService.generateConstraint();
-    }
 
     public set analytes(analytes: TreeNode[]) {
         this._analytes = analytes
