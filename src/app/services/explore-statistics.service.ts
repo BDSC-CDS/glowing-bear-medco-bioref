@@ -16,6 +16,7 @@ import { ConstraintHelper } from '../utilities/constraint-utilities/constraint-h
 import { ErrorHelper } from '../utilities/error-helper';
 import { ApiEndpointService } from './api-endpoint.service';
 import { MedcoNetworkService } from './api/medco-network.service';
+import { CohortService } from './cohort.service';
 import { ConstraintMappingService } from './constraint-mapping.service';
 import { ConstraintReverseMappingService } from './constraint-reverse-mapping.service';
 import { ConstraintService } from './constraint.service';
@@ -123,8 +124,6 @@ export class ExploreStatisticsService {
     rootConstraint: Subject<CombinationConstraint> = new ReplaySubject(1)
     // This observable emits the latest explore statistics query set of analytes
     analytesSubject: Subject<Set<TreeNode>> = new ReplaySubject(1)
-    // This observable emits the query IDs of the latest statistics query. The identifiers are a link to the the row in the DB related to the cohort .
-    patientQueryIDsSubject: Subject<number[]> = new ReplaySubject(1)
 
     private static getNewQueryID(): string {
         let d = new Date()
@@ -137,7 +136,7 @@ export class ExploreStatisticsService {
         private cryptoService: CryptoService,
         private medcoNetworkService: MedcoNetworkService,
         private constraintService: ConstraintService,
-
+        private cohortService: CohortService,
         private queryService: QueryService,
         private constraintMappingService: ConstraintMappingService,
         private reverseConstraintMappingService: ConstraintReverseMappingService,
@@ -295,9 +294,11 @@ export class ExploreStatisticsService {
             this.parseCohortFromAnswer(answers);
         }
 
+
         // query IDs of the cohort built from the constraints and saved in the backend nodes' DB
         const patientQueryIDs = answers.map(a => a.cohortQueryID);
-        this.patientQueryIDsSubject.next(patientQueryIDs);
+        this.cohortService.lastSuccessfulSet = patientQueryIDs
+
         // All servers are supposed to send the same information so we pick the element with index zero
         const serverResponse: ApiExploreStatisticsResponse = answers[0];
 
@@ -382,6 +383,16 @@ export class ExploreStatisticsService {
 
     public get analytes(): TreeNode[] {
         return this._analytes.map(t => t.clone(undefined, false, true))
+    }
+
+    saveCohortStatistics() {
+        this.rootConstraint.subscribe(
+            rootConstraint => {
+
+                const cohort = this.lastCohortDefinition
+                const timing = this.lastQueryTiming
+                this.cohortService.saveCohort(rootConstraint, cohort, timing)
+            })
     }
 
     // send a signal that launches the export of the statistical results as a PDF

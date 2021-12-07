@@ -45,9 +45,6 @@ export class GbExploreComponent implements AfterViewChecked {
     public constraintService: ConstraintService,
     private changeDetectorRef: ChangeDetectorRef,
     private exploreStatisticsService: ExploreStatisticsService) {
-    this.exploreStatisticsService.patientQueryIDsSubject.subscribe(resIDs => {
-      this.lastSuccessfulSet = resIDs
-    })
     this.queryService.lastSuccessfulSet.subscribe(resIDs => {
       this.lastSuccessfulSet = resIDs
     })

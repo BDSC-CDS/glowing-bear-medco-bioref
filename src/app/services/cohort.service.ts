@@ -151,7 +151,6 @@ export class CohortService {
 
   constructor(
     private exploreCohortsService: ExploreCohortsService,
-    private exploreStatisticsService: ExploreStatisticsService,
     private queryService: QueryService,
     private medcoNetworkService: MedcoNetworkService,
     private constraintService: ConstraintService,
@@ -177,21 +176,14 @@ export class CohortService {
   }
 
 
-  saveCohortStatistics() {
-    this.exploreStatisticsService.rootConstraint.subscribe(
-      rootConstraint => {
-        const cohort = this.exploreStatisticsService.lastCohortDefinition
-        const timing = this.exploreStatisticsService.lastQueryTiming
-        this.saveCohort(rootConstraint, cohort, timing)
-      })
-  }
+
 
   saveCohortExplore() {
     this.saveCohort(this.constraintService.rootConstraint, this.queryService.lastDefinition, this.queryService.lastTiming)
   }
 
 
-  private saveCohort(rootConstraint: CombinationConstraint,
+  saveCohort(rootConstraint: CombinationConstraint,
     cohortDefinition: ApiI2b2Panel[], queryTiming: ApiI2b2Timing) {
     if (this.cohortName === '') {
       throw ErrorHelper.handleNewUserInputError('You must provide a name for the cohort you want to save.');

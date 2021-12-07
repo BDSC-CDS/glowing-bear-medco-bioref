@@ -104,7 +104,7 @@ export class GbCohortDefinitionComponent implements OnDestroy {
   }
 
   save() {
-    this.cohortService.saveCohortStatistics()
+    this.exploreStatisticsService.saveCohortStatistics()
   }
 
   // otherwise writes data in input filed
