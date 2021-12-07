@@ -10,7 +10,7 @@ import { GenomicAnnotationConstraint } from "src/app/models/constraint-models/ge
 import { TimeConstraint } from "src/app/models/constraint-models/time-constraint";
 import { ValueConstraint } from "src/app/models/constraint-models/value-constraint";
 import { Utils } from "src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component";
-import { PathDisplayer } from "src/app/modules/gb-utils-module/gb-utils.component";
+import { PathDisplayer, includedExcludedCSS } from "src/app/modules/gb-utils-module/gb-utils.component";
 
 
 
@@ -18,9 +18,8 @@ import { PathDisplayer } from "src/app/modules/gb-utils-module/gb-utils.componen
 @Component({
     styles: [
         `span {
-            color: var(--gb-clinical-green);
             background-color: transparent;
-            border-color: var(--gb-clinical-green);
+            border-color: white;
             text-align: center;
             white-space: nowrap;
             vertical-align: middle;
@@ -63,11 +62,14 @@ export class OperatorComponent {
 
 }
 
+
+
 //todo create a variable out of the border color
 @Component({
     styles: [
         `
         .combinationConstraint {
+            border-radius: 1em;
             padding: .5em;
             transition: .3s;
             border-left: transparent solid;
@@ -80,15 +82,12 @@ export class OperatorComponent {
         .combinationConstraint:hover {
             border-left: rgba(255, 160, 71, 0.6) solid;
         }
-        .excluded {
-            margin-right: 1em;
-            border-bottom: #ff0909 solid .1em;
-        }
-        `
+        `,
+        includedExcludedCSS
     ],
+    //TODO add a tooltip
     template: `
-    <div class="combinationConstraint">
-        <span class="excluded" *ngIf="excluded">Not:</span>
+    <div class="combinationConstraint" [ngClass]="getCSSClass()">
         <ng-template #childrenContainer>
         </ng-template>
     </div>
@@ -101,7 +100,11 @@ export class CombinationConstraintSummaryComponent implements OnDestroy, AfterVi
     children: ComponentRef<any>[] = []
 
     @Input()
-    excluded: boolean = false
+    excluded: boolean
+
+    //if the constraint is at root level height is 0. If the constraint has one parent its height is 1. If the constraint has parents and grandparents its height is 2...
+    @Input()
+    height: number = 0
 
     _state: CombinationState
 
@@ -114,6 +117,12 @@ export class CombinationConstraintSummaryComponent implements OnDestroy, AfterVi
 
     set state(state: CombinationState) {
         this._state = state
+    }
+
+    getCSSClass() {
+        if (this.height === 0) return {}
+
+        return { 'excluded': this.excluded,  }
     }
 
     addOperator() {
@@ -141,18 +150,31 @@ export class CombinationConstraintSummaryComponent implements OnDestroy, AfterVi
 }
 
 @Component({
+    styles: [
+    `'.simpleConceptSummary {
+            padding: .3em;
+            margin: 1em;
+        } `,
+        includedExcludedCSS
+    ],
+
     template: `
-    <div>{{textRepresentation}}</div>
+    <div class="simpleConceptSummary" [ngClass]="getCSSClass()">{{textRepresentation}}</div>
 `})
 @Input()
 export class SimpleConceptSummaryComponent {
     textRepresentation: string
+    excluded: boolean
+
+    getCSSClass() {
+        return { 'excluded': this.excluded,  }
+    }
 }
 
 // a Visitor (c.f. design patterns) which recursively visits constraints in order to create an HTML DOM representing those constraints for the side panel
 export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
 
-    constructor(private componentFactoryResolver: ComponentFactoryResolver, private parentContainerRef: ViewContainerRef) {
+    constructor(private height: number, private componentFactoryResolver: ComponentFactoryResolver, private parentContainerRef: ViewContainerRef) {
 
     }
 
@@ -163,7 +185,9 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
     // build a component which will wrap the simple text representation of the constraint.
     private buildSimpleTextComponent(c: Constraint): ComponentRef<any> {
         const componentRef = this.buildNewComponent(SimpleConceptSummaryComponent)
-        componentRef.instance.textRepresentation = (c.excluded ? 'Not ': '') + c.textRepresentation
+        const instance = componentRef.instance
+        instance.excluded = c.excluded
+        instance.textRepresentation = c.textRepresentation
         return componentRef
     }
 
@@ -176,6 +200,7 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
         const componentInstance = componentRef.instance
         componentInstance.state = cc.combinationState
 
+        componentInstance.height = this.height
         componentInstance.children = []
         componentInstance.excluded = cc.excluded
 
@@ -183,7 +208,7 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
 
             // Building the children components. The containerRef element is a reference to the DOM element which contain those children components.
             cc.children.forEach((child, index) => {
-                const childVisitor = new HTMLExportVisitor(this.componentFactoryResolver, containerRef)
+                const childVisitor = new HTMLExportVisitor(this.height + 1, this.componentFactoryResolver, containerRef)
                 console.log("Before child accept method", child)
                 const childRef = child.accept(childVisitor)
                 componentInstance.children.push(childRef)

@@ -1,28 +1,33 @@
 import { ChangeDetectorRef, Component, Input } from "@angular/core"
 
+export const includedExcludedCSS = `
+.excluded {
+    background-color: #a83c3c;
+    color: white;
+    border-radius: 1em;
+    width: fit-content;
+}
+`
+
 @Component({
     selector: 'path-displayer',
     styles: [
-    `
+        `
         li {
             display: inline-block;
         }
         .delimiter {
             padding-right: .5em;
         }
-        .excluded {
-            margin-right: 1em;
-            border-bottom: #ff0909 solid .1em;
-        }
         ul {
             padding-left: 2em;
         }
-    `
+    `,
+        includedExcludedCSS
     ],
     template: `
-    <div>
+    <div [ngClass]="getCSSClass()">
         <ul>
-            <li class="excluded" *ngIf="excluded">Not:<li>
             <li *ngFor="let elem of pathElements; let i = index">
                 <span> {{elem}} </span>
                 <span *ngIf="!isLastElement(i)" class="delimiter"> &gt; </span>
@@ -33,7 +38,7 @@ import { ChangeDetectorRef, Component, Input } from "@angular/core"
 })
 export class PathDisplayer {
     @Input()
-    excluded: boolean = false
+    excluded: boolean
 
     @Input()
     pathElements: string[] = []
@@ -42,6 +47,13 @@ export class PathDisplayer {
 
     isLastElement(index: number): boolean {
         return this.pathElements.length === (index + 1)
+    }
+
+    getCSSClass() {
+        if (this.excluded === undefined) {
+            return {}
+        }
+        return { 'excluded': this.excluded, }
     }
 
     set path(pathElements: string[]) {

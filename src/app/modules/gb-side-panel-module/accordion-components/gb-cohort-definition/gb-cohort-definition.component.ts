@@ -123,7 +123,7 @@ export class GbCohortDefinitionComponent implements OnDestroy {
       this.noRootConstraint = true
     } else {
       this.noRootConstraint = false
-      const visitor = new HTMLExportVisitor(this.componentFactoryResolver, this.rootConstraintTemplate)
+      const visitor = new HTMLExportVisitor(0, this.componentFactoryResolver, this.rootConstraintTemplate)
       // const wrapped = this.wrapConstraint(this.inclusionConstraint)
       this.inclusionComponentRef = this.rootConstraint.accept(visitor)
     }
