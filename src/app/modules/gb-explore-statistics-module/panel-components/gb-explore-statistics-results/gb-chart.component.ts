@@ -3,7 +3,7 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@ang
 import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, ScriptableLineSegmentContext } from 'chart.js';
 import { PDF } from 'src/app/utilities/files/pdf';
 import { ChartInformation, ConfidenceInterval } from '../../../../services/explore-statistics.service';
-import { SVGConvertible } from './gb-explore-statistics-results.component';
+import { ReferenceInterval, SVGConvertible } from './gb-explore-statistics-results.component';
 
 
 
@@ -48,20 +48,25 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy, SVGCon
         this.chartJSType = chartJSType
     }
 
-    toPDF() {
+    printToPDF(pdf: PDF, index: number, isLastInRow: boolean) {
         console.log("Exporting chart to PDF")
-        const pdf = new PDF()
         const exportedChart = this.canvasRef.nativeElement.toDataURL('image/svg', 'high')
         const height = this.canvasRef.nativeElement.height
         const width = this.canvasRef.nativeElement.width
 
         const ratio = height / width
 
-        const pdfWidth = pdf.getWidth()
-        const imgHeight = ratio * pdfWidth
+        const margin = 15 // margin between elements of the same row
 
-        pdf.addImageFromDataURL(exportedChart, 0, 0, pdfWidth, imgHeight)
-        pdf.export("chartTest.pdf")
+        const finalWidth = pdf.getWidth() / ReferenceInterval.PDF_COMPONENTS_PER_ROW - margin
+        const imgHeight = ratio * finalWidth
+
+        const columnIndex = index % ReferenceInterval.PDF_COMPONENTS_PER_ROW
+        //the following variable holds the width occupied by previous elements on the same row
+        const occupiedByPreviousRowElements = columnIndex * (finalWidth + margin)
+
+        //todo add parameter that orders is element is last in row.
+        pdf.addImageFromDataURL(exportedChart, occupiedByPreviousRowElements, 0, finalWidth, imgHeight, isLastInRow)
 
     }
 

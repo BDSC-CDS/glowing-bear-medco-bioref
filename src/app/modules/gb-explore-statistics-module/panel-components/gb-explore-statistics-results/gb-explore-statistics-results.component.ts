@@ -11,6 +11,9 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 import { TreeNode } from 'src/app/models/tree-models/tree-node';
 import { ChartInformation, ConfidenceInterval, ExploreStatisticsService } from '../../../../services/explore-statistics.service';
 import { ChartComponent, HistogramChartComponent, LineChartComponent } from './gb-chart.component';
+import { PDF } from 'src/app/utilities/files/pdf';
+import { ErrorHelper } from 'src/app/utilities/error-helper';
+import { Subscription } from 'rxjs';
 
 const childFlexCss = './child-flex.css'
 const resultsCss = './gb-explore-statistics-results.component.css'
@@ -18,7 +21,12 @@ const refIntervalCss = './gb-reference-interval.component.css'
 
 
 export interface SVGConvertible {
-  toPDF(): any
+  /*
+  * print the current component to the pdf passed as parameter. Index is the index of the component in the parent component.
+  * isLastInRow defines if the svg printed to the pdf is the last element of the current row in the pdf. If the element is the last in
+  * the row some vertical margin will be appended after the element.
+  **/
+  printToPDF(pdf: PDF, index: number, isLastInRow: boolean): any
 }
 
 @Component({
@@ -35,10 +43,24 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
   private _displayLoadingIcon: boolean = false
 
+  private exportPDFSubscription: Subscription
+
+  //instantiated reference interval components visible within the view of the GbExploreStatisticsResultsComponent
+  private refIntervalsComponents: ReferenceInterval[]
 
   constructor(private exploreStatisticsService: ExploreStatisticsService,
     private componentFactoryResolver: ComponentFactoryResolver,
     private cdref: ChangeDetectorRef) {
+
+
+    this.exportPDFSubscription = this.exploreStatisticsService.exportPDF.subscribe(_ => {
+      const pdf = new PDF()
+      if (this.refIntervalsComponents === undefined || this.refIntervalsComponents.length <= 0) {
+        throw ErrorHelper.handleNewError("Cannot export pdf yet. Execute a query firsthand.")
+      }
+      this.refIntervalsComponents.forEach((c, i) => c.toPDF(pdf, i))
+      pdf.export("testDoc.pdf")
+    })
 
   }
 
@@ -50,7 +72,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     // Clean the content of the canvas container: remove the previous charts from the canvas container
     this.canvasContainer.clear()
 
-    chartsInfo.forEach(chartInfo => {
+    this.refIntervalsComponents = chartsInfo.map(chartInfo => {
 
       // //create a histogram
       // this.buildChart(chartInfo, HistogramChartComponent)
@@ -59,24 +81,21 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
       // this.buildChart(chartInfo, LineChartComponent)
 
       // this.buildReferenceInterval(chartInfo, ReferenceIntervalHistogram)
-      this.buildReferenceInterval(chartInfo, ReferenceIntervalLine)
+      return this.buildReferenceInterval(chartInfo, ReferenceIntervalLine)
 
     });
 
   }
 
 
-  private buildReferenceInterval<R extends ReferenceInterval>(chartInfo: ChartInformation, refIntervalType: Type<R>) {
+  private buildReferenceInterval<R extends ReferenceInterval>(chartInfo: ChartInformation, refIntervalType: Type<R>): R {
     const componentRef = Utils.buildComponent(this.componentFactoryResolver, this.canvasContainer, refIntervalType)
     this.componentRefs.push(componentRef)
 
     const component = componentRef.instance
     component.chartInfo = chartInfo
 
-    this.exploreStatisticsService.exportAsPDF.subscribe(_ => {
-      component.toPDF()
-    })
-
+    return component
   }
 
   get displayLoadingIcon() {
@@ -100,6 +119,9 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
   }
 
   ngOnDestroy() {
+    if (this.exportPDFSubscription !== undefined && this.exportPDFSubscription !== null) {
+      this.exportPDFSubscription.unsubscribe()
+    }
     this.componentRefs.forEach(element => {
       element.destroy()
     });
@@ -180,6 +202,10 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   @Input() hide: boolean = false
 
+  private chartBuilt: boolean = false
+
+  public static readonly PDF_COMPONENTS_PER_ROW = 2.0
+
   constructor(private componentFactoryResolver: ComponentFactoryResolver) {
 
   }
@@ -200,13 +226,26 @@ export abstract class ReferenceInterval implements OnDestroy {
   }
 
 
+  //print the current component to the pdf passed as parameter. Index is the index of the component in the parent component
+  toPDF(pdf: PDF, index: number) {
+    if (!this.chartBuilt) {
+      return
+    }
+    if (this.componentRefs === undefined || this.componentRefs.length <= 0) {
+      throw ErrorHelper.handleNewError("Cannot export pdf yet. Execute a query firsthand.")
+    }
 
-  toPDF() {
-    this.componentRefs.forEach(c => c.instance.toPDF())
+
+    const columnIndex = (index: number) => index % ReferenceInterval.PDF_COMPONENTS_PER_ROW
+    const isLastInRow = (index: number) => columnIndex(index) === (this.componentRefs.length - 1)
+
+    this.componentRefs.forEach((c, i) => c.instance.printToPDF(pdf, index, isLastInRow(i)))
+
   }
 
   ngAfterViewInit() {
     this.buildChart(this._chartInfo, this.chartType)
+    this.chartBuilt = true
   }
 
 

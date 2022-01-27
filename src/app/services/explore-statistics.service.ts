@@ -14,6 +14,7 @@ import { ExploreQueryType } from '../models/query-models/explore-query-type';
 import { TreeNode } from '../models/tree-models/tree-node';
 import { ConstraintHelper } from '../utilities/constraint-utilities/constraint-helper';
 import { ErrorHelper } from '../utilities/error-helper';
+import { PDF } from '../utilities/files/pdf';
 import { ApiEndpointService } from './api-endpoint.service';
 import { MedcoNetworkService } from './api/medco-network.service';
 import { CohortService } from './cohort.service';
@@ -117,8 +118,8 @@ export class ExploreStatisticsService {
 
     private _analytes: Array<TreeNode> = []
 
-    // Emits whenever an export of the statistical results as a pdf document needs to be generated
-    exportAsPDF: Subject<any> = new Subject();
+    // Emits whenever an export of the statistical results as a pdf document needs to be generated.
+    exportPDF: Subject<any> = new Subject();
 
     // This observable emits the latest query's cohort inclusion criteria for the explore statistics query
     rootConstraint: Subject<CombinationConstraint> = new ReplaySubject(1)
@@ -391,12 +392,11 @@ export class ExploreStatisticsService {
 
     // send a signal that launches the export of the statistical results as a PDF
     sendExportAsPDFSignal() {
-        //TODO if no result is displayed in the explore statistics tab throw an error
         if (!this.navbarService.isExploreStatistics) {
             throw ErrorHelper.handleNewError("Cannot export the PDF outside of the statistics tab.");
         }
 
-        this.exportAsPDF.next(1)
+        this.exportPDF.next(1)
     }
 
     get lastCohortDefinition(): ApiI2b2Panel[] {

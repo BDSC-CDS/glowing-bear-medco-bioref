@@ -29,8 +29,11 @@ export class PDF {
     return this._jsPDF.internal.pageSize.getWidth()
   }
 
-
-  addImageFromDataURL(imData: any, x0?: number, y0?: number, x1?: number, y1?: number) {
+  /*
+  * isLastInRow is true iff the element appended is the last one from the row. It is true by default because by default we
+  * consider there is only element per row.
+  */
+  addImageFromDataURL(imData: any, x0?: number, y0?: number, x1?: number, y1?: number, isLastInRow: boolean = true) {
     try {
       this._jsPDF.addImage(imData, 'png', x0, y0 + this._lastElementY, x1, y1 + this._lastElementY)
     } catch (err) {
@@ -38,6 +41,10 @@ export class PDF {
     }
 
     console.log('Exported to PDF.')
+
+    if (!isLastInRow) {
+      return
+    }
     this._lastElementY += y1 + this.verticalMarginImage
   }
 
