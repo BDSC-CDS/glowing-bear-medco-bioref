@@ -55,7 +55,17 @@ export class Interval {
     }
 }
 
+class ReferenceRange {
 
+    readonly CI1: ConfidenceInterval
+    readonly CI2: ConfidenceInterval
+
+    constructor(intervals: Interval[]) {
+        //TODO put Upal's code: replace the arbitrary values 1,2,3
+        this.CI1 = new ConfidenceInterval(1,2,3)
+        this.CI2 = new ConfidenceInterval(1,2,3)
+    }
+}
 
 // This class contains all information necessary to build a histogram chart with chart.js
 export class ChartInformation {
@@ -65,23 +75,19 @@ export class ChartInformation {
     readonly CI2: ConfidenceInterval
     readonly readable: Observable<any>
 
+    readonly referenceRange: ReferenceRange
+
+
     constructor(intervals: Interval[], unit: string,
         public readonly treeNodeName: string, public readonly cohortName: string) {
 
         this.intervals = intervals
         this.unit = unit
 
-        this.CI1 = ChartInformation.computeCI1(intervals)
-        this.CI2 = ChartInformation.computeCI2(intervals)
-    }
+        this.referenceRange = new ReferenceRange(intervals)
 
-    private static computeCI1(intervals: Interval[]): ConfidenceInterval {
-        return new ConfidenceInterval(1, 2, 3)
-    }
-
-
-    private static computeCI2(intervals: Interval[]): ConfidenceInterval {
-        return new ConfidenceInterval(7, 8, 9)
+        this.CI1 = this.referenceRange.CI1
+        this.CI2 = this.referenceRange.CI2
     }
 
     numberOfObservations(): number {
