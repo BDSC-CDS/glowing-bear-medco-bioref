@@ -196,7 +196,8 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   private _chartInfo: ChartInformation
 
-  private componentRefs: Array<ComponentRef<ChartComponent>> = []
+  // An angular reference to the component contained in this component. The chartComponentRef contains graphical information about the chart.
+  private chartComponentRef: ComponentRef<ChartComponent>
 
   protected chartType: Type<ChartComponent>;
 
@@ -212,7 +213,7 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   private buildChart<C extends ChartComponent>(chartInfo: ChartInformation, componentType: Type<C>) {
     const componentRef = Utils.buildChart(this.componentFactoryResolver, this.chartContainer, chartInfo, componentType)
-    this.componentRefs.push(componentRef)
+    this.chartComponentRef = componentRef
     const CI1 = chartInfo.CI1
     const CI2 = chartInfo.CI2
 
@@ -231,15 +232,15 @@ export abstract class ReferenceInterval implements OnDestroy {
     if (!this.chartBuilt) {
       return
     }
-    if (this.componentRefs === undefined || this.componentRefs.length <= 0) {
+    if (this.chartComponentRef === undefined) {
       throw ErrorHelper.handleNewError("Cannot export pdf yet. Execute a query firsthand.")
     }
 
 
     const columnIndex = (index: number) => index % ReferenceInterval.PDF_COMPONENTS_PER_ROW
-    const isLastInRow = (index: number) => columnIndex(index) === (this.componentRefs.length - 1)
+    const isLastInRow = (index: number) => columnIndex(index) === (ReferenceInterval.PDF_COMPONENTS_PER_ROW - 1)
 
-    this.componentRefs.forEach((c, i) => c.instance.printToPDF(pdf, index, isLastInRow(i)))
+    this.chartComponentRef.instance.printToPDF(pdf, index, isLastInRow(index))
 
   }
 
@@ -254,7 +255,7 @@ export abstract class ReferenceInterval implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.componentRefs.forEach(component => component.destroy())
+    this.chartComponentRef.destroy()
   }
 
   numberOfObservations() {
