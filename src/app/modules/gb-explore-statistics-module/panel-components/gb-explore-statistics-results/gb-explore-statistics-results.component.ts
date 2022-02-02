@@ -54,7 +54,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
 
     this.exportPDFSubscription = this.exploreStatisticsService.exportPDF.subscribe(_ => {
-      const pdf = new PDF()
+      const pdf = new PDF(2)
       if (this.refIntervalsComponents === undefined || this.refIntervalsComponents.length <= 0) {
         throw ErrorHelper.handleNewError("Cannot export pdf yet. Execute a query firsthand.")
       }
@@ -205,7 +205,6 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   private chartBuilt: boolean = false
 
-  public static readonly PDF_COMPONENTS_PER_ROW = 2.0
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver) {
 
@@ -237,10 +236,9 @@ export abstract class ReferenceInterval implements OnDestroy {
     }
 
 
-    const columnIndex = (index: number) => index % ReferenceInterval.PDF_COMPONENTS_PER_ROW
-    const isLastInRow = (index: number) => columnIndex(index) === (ReferenceInterval.PDF_COMPONENTS_PER_ROW - 1)
+    const columnIndex = index % pdf.nbOfColumns
 
-    this.chartComponentRef.instance.printToPDF(pdf, index, isLastInRow(index))
+    this.chartComponentRef.instance.printToPDF(pdf, columnIndex)
 
   }
 

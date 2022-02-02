@@ -48,25 +48,20 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy, SVGCon
         this.chartJSType = chartJSType
     }
 
-    printToPDF(pdf: PDF, index: number, isLastInRow: boolean) {
+    printToPDF(pdf: PDF, columnIndex: number) {
         console.log("Exporting chart to PDF")
         const exportedChart = this.canvasRef.nativeElement.toDataURL('image/svg', 'high')
         const height = this.canvasRef.nativeElement.height
         const width = this.canvasRef.nativeElement.width
 
-        const ratio = height / width
+        const imgRatio = height / width
 
-        const margin = 15 // margin between elements of the same row
 
-        const finalWidth = pdf.getWidth() / ReferenceInterval.PDF_COMPONENTS_PER_ROW - margin
-        const imgHeight = ratio * finalWidth
-
-        const columnIndex = index % ReferenceInterval.PDF_COMPONENTS_PER_ROW
-        //the following variable holds the width occupied by previous elements on the same row
-        const occupiedByPreviousRowElements = columnIndex * (finalWidth + margin)
+        const finalWidth = pdf.getColumnWidth()
+        const imgHeight = imgRatio * finalWidth
 
         //todo add parameter that orders is element is last in row.
-        pdf.addImageFromDataURL(exportedChart, occupiedByPreviousRowElements, 0, finalWidth, imgHeight, isLastInRow)
+        pdf.addImageFromDataURL(exportedChart, 0, 0, finalWidth, imgHeight, columnIndex)
 
     }
 

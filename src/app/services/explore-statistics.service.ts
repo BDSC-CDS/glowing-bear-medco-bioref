@@ -63,7 +63,7 @@ class ReferenceRange {
     constructor(intervals: Interval[]) {
         //TODO put Upal's code: replace the arbitrary values 1,2,3
         this.CI1 = new ConfidenceInterval(1,2,3)
-        this.CI2 = new ConfidenceInterval(1,2,3)
+        this.CI2 = new ConfidenceInterval(4,5,6)
     }
 }
 
