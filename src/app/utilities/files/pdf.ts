@@ -17,12 +17,12 @@ export class PDF {
 
   constructor(
     public readonly nbOfColumns: number = 1, //specifies the number of columns within one page of the pdf (as in columns of a table)
+    public readonly headersSize: number = 14,
     private columnsMargin = 15, // margin between elements of the same row
     private verticalMarginTable: number = 7,
     private verticalMarginImage: number = 7,
     private verticalMarginText: number = -6,
     private horizontalMargin: number = 14,
-    private headersSize: number = 14,
     private contentSize: number = 8,
     private topMargin: number = 10) {
 
@@ -38,6 +38,8 @@ export class PDF {
     assert(this.spaceOccupiedByPreviousRows(nbOfColumns, true) <= this.getWidth())
   }
 
+
+  //the width occupied by a column in the pdf page
   getColumnWidth(): number {
     return (this.getWidth() - this.horizontalMargin) / this.nbOfColumns - this.columnsMargin
   }
@@ -46,9 +48,15 @@ export class PDF {
     return this._jsPDF.internal.pageSize.getWidth()
   }
 
+  //add some margin below the latest appended element of the column
+  addVerticalMargin(margin: number, columnIndex: number = 0) {
+    assert(margin > 0)
+    this.columnsLastElementY[columnIndex] += margin
+  }
+
 
   //space occupied horizontally by previous rows. @param columnIndex: index of the current column
-  private spaceOccupiedByPreviousRows(columnIndex: number, removeAssertion: boolean = false) {
+  spaceOccupiedByPreviousRows(columnIndex: number, removeAssertion: boolean = false) {
     if (!removeAssertion) {
       assert(columnIndex < this.nbOfColumns)
     }
@@ -56,6 +64,8 @@ export class PDF {
   }
 
   /*
+  * This function prints an image @param imData to the pdf at column @columnIndex. The parameters @param x0 and @param x0 specify the position of the image
+  * relative to the column. The image is printed after previous elements present in the column specified with @param columnIndex.
   * @param columnIndex defines the columns at which the element will be appended within the current page of the pdf
   */
   addImageFromDataURL(imData: any, x0?: number, y0?: number, width?: number, height?: number, columnIndex: number = 0) {
@@ -122,7 +132,9 @@ export class PDF {
         bodyStyles: {
           fillColor: bodyColor,
         },
+        margin: {left: this.horizontalMargin + this.spaceOccupiedByPreviousRows(columnIndex)},
         startY: this.columnsLastElementY[columnIndex],
+        tableWidth: this.getColumnWidth(),
       })
     } catch (err) {
       throw ErrorHelper.handleError('while adding table to PDF document', err)
@@ -148,10 +160,11 @@ export class PDF {
     this.columnsLastElementY[columnIndex] = (this._jsPDF as any).lastAutoTable.finalY + this.verticalMarginTable
   }
 
-  addOneLineText(txt: string, columnIndex: number = 0) {
-    this._jsPDF.setFontSize(this.headersSize)
-    this._jsPDF.text(txt, this.horizontalMargin, this.columnsLastElementY[columnIndex])
-    this.columnsLastElementY[columnIndex] += this._jsPDF.getFontSize() + this.verticalMarginText
+  addOneLineText(txt: string, columnIndex: number = 0, fontsize: number = this.headersSize) {
+    this._jsPDF.setFontSize(fontsize)
+    const x = this.horizontalMargin + this.spaceOccupiedByPreviousRows(columnIndex)
+    this._jsPDF.text(txt, x, this.columnsLastElementY[columnIndex])
+    this.columnsLastElementY[columnIndex] += fontsize + this.verticalMarginText
   }
 
   addContentText(txt: string[]) {

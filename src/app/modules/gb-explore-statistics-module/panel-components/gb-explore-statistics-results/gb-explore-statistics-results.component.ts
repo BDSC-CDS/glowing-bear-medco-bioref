@@ -54,7 +54,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
 
     this.exportPDFSubscription = this.exploreStatisticsService.exportPDF.subscribe(_ => {
-      const pdf = new PDF(2)
+      const pdf = new PDF(2, 8)
       if (this.refIntervalsComponents === undefined || this.refIntervalsComponents.length <= 0) {
         throw ErrorHelper.handleNewError("Cannot export pdf yet. Execute a query firsthand.")
       }
@@ -238,8 +238,14 @@ export abstract class ReferenceInterval implements OnDestroy {
 
     const columnIndex = index % pdf.nbOfColumns
 
+    pdf.addOneLineText(`Reference values`, columnIndex, pdf.headersSize + 5)
+    pdf.addVerticalMargin(2, columnIndex)
+    pdf.addOneLineText(`Based on the given parameters, the query has returned ${this.numberOfObservations()} entries`, columnIndex)
     this.chartComponentRef.instance.printToPDF(pdf, columnIndex)
-
+    pdf.addOneLineText("The reference interval (95%) is:", columnIndex)
+    const referenceInterval = `${this.middleCI1} (${this.lowBoundCI1}-${this.highBoundCI1}) - ${this.middleCI2} (${this.lowBoundCI2}-${this.highBoundCI2})`
+    pdf.addTableFromObjects(null, [[referenceInterval]], null, columnIndex)
+    pdf.addVerticalMargin(8, columnIndex)
   }
 
   ngAfterViewInit() {
