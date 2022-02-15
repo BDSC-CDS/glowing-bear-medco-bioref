@@ -71,10 +71,16 @@ export class PDF {
   addImageFromDataURL(imData: any, x0?: number, y0?: number, width?: number, height?: number, columnIndex: number = 0) {
     assert(columnIndex < this.nbOfColumns)
 
-    const lastElementY = this.columnsLastElementY[columnIndex]
     const occupiedByPreviousRows = this.spaceOccupiedByPreviousRows(columnIndex)
 
-    const x = occupiedByPreviousRows + x0
+    const x = occupiedByPreviousRows + x0 + this.horizontalMargin
+
+    // the end of the frame occupied by the position we are going to place
+    const yEnd = () => this.columnsLastElementY[columnIndex] + height + this.verticalMarginImage
+
+    this.checkFitInCurrentPage(yEnd());
+
+    const lastElementY = this.columnsLastElementY[columnIndex]
     const y = y0 + lastElementY
 
     try {
@@ -85,9 +91,23 @@ export class PDF {
 
     console.log('Exported to PDF.')
 
+    this.columnsLastElementY[columnIndex] = yEnd()
+  }
 
-    //TODO if the current column is bigger than the current page size, go the next page to print the content
-    this.columnsLastElementY[columnIndex] += height + this.verticalMarginImage
+
+  /* This method verifief if a new element fit in the current page.
+  * If the new element position is greater than the page size the code resets the columns height to zero and add a new page to the output pdf.
+  * @param yEnd: the bottom vertical position of the new element.
+  */
+  private checkFitInCurrentPage(yEnd: number) {
+    if (yEnd > this._jsPDF.internal.pageSize.getHeight()) {
+      // create a new page
+      this._jsPDF.addPage();
+      // reset the columns height to 0
+      for (let i = 0; i < this.columnsLastElementY.length; i++) {
+        this.columnsLastElementY[i] = 0;
+      }
+    }
   }
 
   addImage(sourceSVGRef: any, targetCanvasRef: any, x0: number, y0: number, x1: number, y1: number) {
@@ -163,8 +183,13 @@ export class PDF {
   addOneLineText(txt: string, columnIndex: number = 0, fontsize: number = this.headersSize) {
     this._jsPDF.setFontSize(fontsize)
     const x = this.horizontalMargin + this.spaceOccupiedByPreviousRows(columnIndex)
+
+    const yEnd = () => this.columnsLastElementY[columnIndex] + fontsize + this.verticalMarginText
+    this.checkFitInCurrentPage(yEnd());
+
     this._jsPDF.text(txt, x, this.columnsLastElementY[columnIndex])
-    this.columnsLastElementY[columnIndex] += fontsize + this.verticalMarginText
+
+    this.columnsLastElementY[columnIndex] = yEnd()
   }
 
   addContentText(txt: string[]) {
