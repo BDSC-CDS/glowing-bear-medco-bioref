@@ -11,7 +11,7 @@
 import { AfterViewChecked, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Cohort } from 'src/app/models/constraint-models/cohort';
+import { Cohort } from 'src/app/models/cohort-models/cohort';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ExploreStatisticsService } from 'src/app/services/explore-statistics.service';
 import { OperationType } from '../../models/operation-models/operation-types';

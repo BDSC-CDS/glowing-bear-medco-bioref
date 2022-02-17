@@ -43,7 +43,7 @@
     </div>
 
     <div>
-      <p-accordionTab header="Saved Cohorts" *ngIf="savedCohortsPatientListService.authorizedForPatientList"
+      <p-accordionTab header="Saved Cohorts"
         [selected]="true">
         <gb-cohorts [displayRestoreButton]="!inExploreStatsTab()"></gb-cohorts>
       </p-accordionTab>
