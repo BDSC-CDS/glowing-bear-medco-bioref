@@ -226,8 +226,6 @@ export class CohortService {
     if (this._lastPatientList) {
       this.savedCohortsPatientListService.insertPatientList(this.cohortName, this._lastPatientList[0], this._lastPatientList[1])
       this.savedCohortsPatientListService.statusStorage.set(this.cohortName, OperationStatus.done)
-    } else {
-      MessageHelper.alert('error', 'There is no patient list cached from previous Explore Query. You may have to download the list again.')
     }
     this.cohortName = ''
   }
