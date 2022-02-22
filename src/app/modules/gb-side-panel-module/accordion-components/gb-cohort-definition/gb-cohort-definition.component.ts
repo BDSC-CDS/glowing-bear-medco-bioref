@@ -36,7 +36,6 @@ export class GbCohortDefinitionComponent implements OnDestroy {
 
   private rootConstraint: Constraint
   private inclusionComponentRef: ComponentRef<any>;
-  private exclusionTemplateRef: ComponentRef<any>;
 
 
 
@@ -85,9 +84,6 @@ export class GbCohortDefinitionComponent implements OnDestroy {
       this.inclusionComponentRef.destroy()
     }
 
-    if (this.exclusionTemplateRef !== undefined) {
-      this.exclusionTemplateRef.destroy()
-    }
   }
 
 
@@ -121,12 +117,13 @@ export class GbCohortDefinitionComponent implements OnDestroy {
   ngAfterViewInit() {
     if (this.constraintIsEmpty(this.rootConstraint)) {
       this.noRootConstraint = true
-    } else {
-      this.noRootConstraint = false
-      const visitor = new HTMLExportVisitor(0, this.componentFactoryResolver, this.rootConstraintTemplate)
-      // const wrapped = this.wrapConstraint(this.inclusionConstraint)
-      this.inclusionComponentRef = this.rootConstraint.accept(visitor)
+      return
     }
+
+    this.noRootConstraint = false
+    const visitor = new HTMLExportVisitor(0, this.componentFactoryResolver, this.rootConstraintTemplate)
+    // const wrapped = this.wrapConstraint(this.inclusionConstraint)
+    this.inclusionComponentRef = this.rootConstraint.accept(visitor)
 
   }
 }

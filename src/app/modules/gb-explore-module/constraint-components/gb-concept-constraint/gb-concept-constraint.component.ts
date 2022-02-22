@@ -7,23 +7,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {Component, OnInit, ViewChild} from '@angular/core';
-import {GbConstraintComponent} from '../gb-constraint/gb-constraint.component';
-import {AutoComplete} from 'primeng';
-import {Concept} from '../../../../models/constraint-models/concept';
-import {ConceptConstraint} from '../../../../models/constraint-models/concept-constraint';
-import {ValueConstraint} from '../../../../models/constraint-models/value-constraint';
-import {UIHelper} from '../../../../utilities/ui-helper';
-import {DateOperatorState} from '../../../../models/constraint-models/date-operator-state';
-import {CategoricalAggregate} from '../../../../models/aggregate-models/categorical-aggregate';
-import {ValueType} from '../../../../models/constraint-models/value-type';
-import {Aggregate} from '../../../../models/aggregate-models/aggregate';
-import {SelectItem} from 'primeng';
-import {MessageHelper} from '../../../../utilities/message-helper';
-import {NumericalAggregate} from '../../../../models/aggregate-models/numerical-aggregate';
-import {TreeNode} from '../../../../models/tree-models/tree-node';
-import {TextOperator} from '../../../../models/constraint-models/text-operator';
-import {NumericalOperator} from '../../../../models/constraint-models/numerical-operator';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { AutoComplete, SelectItem } from 'primeng';
+import { Aggregate } from '../../../../models/aggregate-models/aggregate';
+import { CategoricalAggregate } from '../../../../models/aggregate-models/categorical-aggregate';
+import { NumericalAggregate } from '../../../../models/aggregate-models/numerical-aggregate';
+import { Concept } from '../../../../models/constraint-models/concept';
+import { ConceptConstraint } from '../../../../models/constraint-models/concept-constraint';
+import { DateOperatorState } from '../../../../models/constraint-models/date-operator-state';
+import { NumericalOperator } from '../../../../models/constraint-models/numerical-operator';
+import { TextOperator } from '../../../../models/constraint-models/text-operator';
+import { ValueConstraint } from '../../../../models/constraint-models/value-constraint';
+import { ValueType } from '../../../../models/constraint-models/value-type';
+import { TreeNode } from '../../../../models/tree-models/tree-node';
+import { MessageHelper } from '../../../../utilities/message-helper';
+import { UIHelper } from '../../../../utilities/ui-helper';
+import { GbConstraintComponent } from '../gb-constraint/gb-constraint.component';
 
 @Component({
   selector: 'gb-concept-constraint',
@@ -603,6 +602,8 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
       const summary = `Dropped a ${this.droppedConstraint.className}, incompatible with ConceptConstraint.`;
       MessageHelper.alert('error', summary);
     }
+
+
     this.treeNodeService.selectedTreeNode = null;
     this.droppedConstraint = null;
   }
