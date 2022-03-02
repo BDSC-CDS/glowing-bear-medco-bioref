@@ -295,7 +295,11 @@ export class ExploreStatisticsService {
             this.handleAnswer(answers, cohortConstraint);
 
         }, err => {
-            ErrorHelper.handleNewError('An error occured during the request execution.')
+            if (err.error === undefined) {
+                ErrorHelper.handleNewError('An unknown error occured during the request execution.')
+            } else {
+                ErrorHelper.handleNewError(err.error.message)
+            }
             this.displayLoadingIcon.next(false);
         });
     }
