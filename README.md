@@ -1,5 +1,5 @@
-# Glowing Bear MedCo
-*glowing-bear-medco* is the web user interface of MedCo.
+# Glowing Bear MedCo - CHUV BIOREF fork
+*glowing-bear-medco* is the web user interface of MedCo. This is a fork dedicated to the Swiss Bioref project funded by SPHN.
 You can find more information about the MedCo project [here](https://medco.epfl.ch/).
 For further details, support, and contacts, you can check the [MedCo Technical Documentation](https://ldsec.gitbook.io/medco-documentation/).
 
