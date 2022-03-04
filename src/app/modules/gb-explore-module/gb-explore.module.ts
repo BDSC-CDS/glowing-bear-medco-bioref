@@ -10,10 +10,13 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { AccordionModule, AutoCompleteModule, CalendarModule, CheckboxModule, InputSwitchModule, MultiSelectModule, OverlayPanelModule, PanelModule } from 'primeng';
+import {
+  AccordionModule, AutoCompleteModule, CalendarModule, CheckboxModule, InputSwitchModule,
+  MultiSelectModule, OverlayPanelModule, PanelModule
+} from 'primeng';
 import { TooltipModule } from 'primeng/tooltip';
 import { GbUtilsModule } from '../gb-utils-module/gb-utils.module';
-import { GbAnalytesDropzones } from './analytes-dropzones/gb-analytes-dropzones.component';
+import { GbAnalytesDropzonesComponent } from './analytes-dropzones/gb-analytes-dropzones.component';
 import { GbCombinationConstraintComponent } from './constraint-components/gb-combination-constraint/gb-combination-constraint.component';
 import { GbConstraintComponent } from './constraint-components/gb-constraint/gb-constraint.component';
 import { GbExploreComponent } from './gb-explore.component';
@@ -45,7 +48,7 @@ import { GbSelectionModule } from './gb-selection-component/gb-selection.module'
   ],
   declarations: [
     GbExploreComponent,
-    GbAnalytesDropzones
+    GbAnalytesDropzonesComponent
   ],
   entryComponents: [
     GbConstraintComponent,

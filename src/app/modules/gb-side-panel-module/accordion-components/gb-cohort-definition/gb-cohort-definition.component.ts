@@ -30,7 +30,7 @@ export class GbCohortDefinitionComponent implements OnDestroy {
   @ViewChild('exclusionTemplate', { read: ViewContainerRef })
   exclusionTemplate: ViewContainerRef
   @Input()
-  noRootConstraint: boolean = true;
+  noRootConstraint = true;
   @Input()
   analytesPaths: AnalytePath[] = []
 
@@ -70,7 +70,7 @@ export class GbCohortDefinitionComponent implements OnDestroy {
       return false
     }
 
-    //we are dealing with a combination constraint
+    // we are dealing with a combination constraint
     const comb = c as CombinationConstraint
     if (comb.children === undefined || comb.children.length === 0) {
       return true

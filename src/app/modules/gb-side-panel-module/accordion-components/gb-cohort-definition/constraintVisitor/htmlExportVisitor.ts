@@ -1,16 +1,19 @@
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from "@angular/core";
-import { Observable, Subject } from "rxjs";
-import { CohortConstraint } from "src/app/models/constraint-models/cohort-constraint";
-import { CombinationConstraint } from "src/app/models/constraint-models/combination-constraint";
-import { CombinationState } from "src/app/models/constraint-models/combination-state";
-import { ConceptConstraint } from "src/app/models/constraint-models/concept-constraint";
-import { Constraint } from "src/app/models/constraint-models/constraint";
-import { ConstraintVisitor } from "src/app/models/constraint-models/constraintVisitor";
-import { GenomicAnnotationConstraint } from "src/app/models/constraint-models/genomic-annotation-constraint";
-import { TimeConstraint } from "src/app/models/constraint-models/time-constraint";
-import { ValueConstraint } from "src/app/models/constraint-models/value-constraint";
-import { Utils } from "src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component";
-import { PathDisplayer, includedExcludedCSS } from "src/app/modules/gb-utils-module/gb-utils.component";
+import {
+    AfterViewInit, Component, ComponentFactoryResolver,
+    ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef
+} from '@angular/core';
+import { Observable, Subject } from 'rxjs';
+import { CohortConstraint } from 'src/app/models/constraint-models/cohort-constraint';
+import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
+import { CombinationState } from 'src/app/models/constraint-models/combination-state';
+import { ConceptConstraint } from 'src/app/models/constraint-models/concept-constraint';
+import { Constraint } from 'src/app/models/constraint-models/constraint';
+import { ConstraintVisitor } from 'src/app/models/constraint-models/constraintVisitor';
+import { GenomicAnnotationConstraint } from 'src/app/models/constraint-models/genomic-annotation-constraint';
+import { TimeConstraint } from 'src/app/models/constraint-models/time-constraint';
+import { ValueConstraint } from 'src/app/models/constraint-models/value-constraint';
+import { Utils } from 'src/app/modules/gb-explore-statistics-module/panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
+import { PathDisplayerComponent, includedExcludedCSS } from 'src/app/modules/gb-utils-module/gb-utils.component';
 
 
 
@@ -55,7 +58,7 @@ export class OperatorComponent {
                 break;
             default:
                 this.operator = 'unknown operator'
-                console.error("We should not be there missing case!")
+                console.error('We should not be there missing case!')
                 break
         }
     }
@@ -64,7 +67,7 @@ export class OperatorComponent {
 
 
 
-//todo create a variable out of the border color
+// todo create a variable out of the border color
 @Component({
     styles: [
         `
@@ -85,7 +88,7 @@ export class OperatorComponent {
         `,
         includedExcludedCSS
     ],
-    //TODO add a tooltip
+    // TODO add a tooltip
     template: `
     <div class="combinationConstraint" [ngClass]="getCSSClass()">
         <ng-template #childrenContainer>
@@ -102,13 +105,15 @@ export class CombinationConstraintSummaryComponent implements OnDestroy, AfterVi
     @Input()
     excluded: boolean
 
-    //if the constraint is at root level height is 0. If the constraint has one parent its height is 1. If the constraint has parents and grandparents its height is 2...
+    /* If the constraint is at root level height is 0.
+    * If the constraint has one parent its height is 1. If the constraint has parents and grandparents its height is 2...
+    */
     @Input()
-    height: number = 0
+    height = 0
 
     _state: CombinationState
 
-    @ViewChild('childrenContainer', { read: ViewContainerRef }) //TODO test if can set this field as private
+    @ViewChild('childrenContainer', { read: ViewContainerRef }) // TODO test if can set this field as private
     childrenContainer: ViewContainerRef;
 
     private containerRefSubject: Subject<ViewContainerRef> = new Subject()
@@ -120,9 +125,11 @@ export class CombinationConstraintSummaryComponent implements OnDestroy, AfterVi
     }
 
     getCSSClass() {
-        if (this.height === 0) return {}
+        if (this.height === 0) {
+            return {}
+        }
 
-        return { 'excluded': this.excluded,  }
+        return { 'excluded': this.excluded, }
     }
 
     addOperator() {
@@ -151,7 +158,7 @@ export class CombinationConstraintSummaryComponent implements OnDestroy, AfterVi
 
 @Component({
     styles: [
-    `'.simpleConceptSummary {
+        `'.simpleConceptSummary {
             padding: .3em;
             margin: 1em;
         } `,
@@ -167,14 +174,17 @@ export class SimpleConceptSummaryComponent {
     excluded: boolean
 
     getCSSClass() {
-        return { 'excluded': this.excluded,  }
+        return { 'excluded': this.excluded, }
     }
 }
 
-// a Visitor (c.f. design patterns) which recursively visits constraints in order to create an HTML DOM representing those constraints for the side panel
+/* a Visitor (c.f. design patterns) which recursively visits constraints in order
+*to create an HTML DOM representing those constraints for the side panel
+*/
 export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
 
-    constructor(private height: number, private componentFactoryResolver: ComponentFactoryResolver, private parentContainerRef: ViewContainerRef) {
+    constructor(private height: number, private componentFactoryResolver: ComponentFactoryResolver,
+        private parentContainerRef: ViewContainerRef) {
 
     }
 
@@ -206,10 +216,12 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
 
         componentInstance.containerRef.subscribe(containerRef => {
 
-            // Building the children components. The containerRef element is a reference to the DOM element which contain those children components.
+            /* Building the children components.
+            *The containerRef element is a reference to the DOM element which contain those children components.
+            */
             cc.children.forEach((child, index) => {
                 const childVisitor = new HTMLExportVisitor(this.height + 1, this.componentFactoryResolver, containerRef)
-                console.log("Before child accept method", child)
+                console.log('Before child accept method', child)
                 const childRef = child.accept(childVisitor)
                 componentInstance.children.push(childRef)
 
@@ -229,7 +241,7 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
 
 
     visitConceptConstraint(c: ConceptConstraint): ComponentRef<any> {
-        const componentRef = this.buildNewComponent(PathDisplayer)
+        const componentRef = this.buildNewComponent(PathDisplayerComponent)
         const componentInstance = componentRef.instance
         componentInstance.excluded = c.excluded
         componentInstance.path = Utils.extractDisplayablePath(c.treeNode)
@@ -238,11 +250,11 @@ export class HTMLExportVisitor implements ConstraintVisitor<ComponentRef<any>> {
 
     visitCohortConstraint(c: CohortConstraint): ComponentRef<any> {
         return this.buildSimpleTextComponent(c)
-        //TODO create a bogus cohort to test this component
+        // TODO create a bogus cohort to test this component
     }
     visitGenomicAnnotationConstraint(c: GenomicAnnotationConstraint): ComponentRef<any> {
         return this.buildSimpleTextComponent(c)
-        //TODO create a bogus genomic annotation to test this component
+        // TODO create a bogus genomic annotation to test this component
     }
     visitTimeConstraint(c: TimeConstraint): ComponentRef<any> {
         return this.buildSimpleTextComponent(c)

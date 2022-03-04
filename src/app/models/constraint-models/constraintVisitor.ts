@@ -8,13 +8,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { CohortConstraint } from "src/app/models/constraint-models/cohort-constraint";
-import { CombinationConstraint } from "src/app/models/constraint-models/combination-constraint";
-import { ConceptConstraint } from "src/app/models/constraint-models/concept-constraint";
-import { GenomicAnnotationConstraint } from "src/app/models/constraint-models/genomic-annotation-constraint";
-import { TimeConstraint } from "src/app/models/constraint-models/time-constraint";
-import { ValueConstraint } from "src/app/models/constraint-models/value-constraint";
-import { Constraint } from "./constraint";
+import { CohortConstraint } from 'src/app/models/constraint-models/cohort-constraint';
+import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
+import { ConceptConstraint } from 'src/app/models/constraint-models/concept-constraint';
+import { GenomicAnnotationConstraint } from 'src/app/models/constraint-models/genomic-annotation-constraint';
+import { TimeConstraint } from 'src/app/models/constraint-models/time-constraint';
+import { ValueConstraint } from 'src/app/models/constraint-models/value-constraint';
+import { Constraint } from './constraint';
 
  /* Using the visitor pattern to export the constraint as HTML:
  * https://refactoring.guru/design-patterns/visitor

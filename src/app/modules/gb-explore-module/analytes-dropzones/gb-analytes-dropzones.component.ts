@@ -24,9 +24,14 @@ import { Utils } from '../../gb-explore-statistics-module/panel-components/gb-ex
     selector: 'gb-analytes-dropzones'
 })
 
-export class GbAnalytesDropzones extends GbConceptFormComponent {
+export class GbAnalytesDropzonesComponent extends GbConceptFormComponent {
     @Input()
     childrenWrappers: TreeNodeWrapper[] = []
+
+
+    public static validValueType(valueType: ValueType): boolean {
+        return valueType === ValueType.NUMERICAL
+    }
 
     constructor(constraintService: ConstraintService,
         element: ElementRef,
@@ -36,6 +41,8 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
 
         this.childrenWrappers = this.statsService.analytes.map(a => this.createTreeNodeChild(a))
     }
+
+
 
     protected onDrop(event: DragEvent) {
         event.preventDefault()
@@ -47,8 +54,8 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
             return null
         }
 
-        if (!GbAnalytesDropzones.validValueType(node.valueType)) {
-            ErrorHelper.handleNewError("The node you dropped in this form is not of numerical type.")
+        if (!GbAnalytesDropzonesComponent.validValueType(node.valueType)) {
+            ErrorHelper.handleNewError('The node you dropped in this form is not of numerical type.')
             return null
         }
 
@@ -80,7 +87,7 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
             if (index === -1) {
                 return;
             }
-            //removing the child from the list of children of the component.
+            // removing the child from the list of children of the component.
             this.childrenWrappers.splice(index, 1);
             this.notifyUpdate();
         };
@@ -90,13 +97,13 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
     notifyUpdate() {
         const children = this.childrenWrappers.map(w => w.treeNode)
         if (children === null || children === undefined) {
-            console.warn("undefined children in analytes dropzone component")
+            console.warn('undefined children in analytes dropzone component')
             return
         }
         this.statsService.analytes = children
     }
 
-    //cleaning the input field
+    // cleaning the input field
     clear() {
         if (!this.concept) {
             return
@@ -107,7 +114,7 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
 
     onSelect(selected: ConceptConstraint) {
         if (!selected || !selected.treeNode) {
-            throw ErrorHelper.handleNewError("Impossible to set this concept as selected")
+            throw ErrorHelper.handleNewError('Impossible to set this concept as selected')
         }
 
         this.pushNewChild(selected.treeNode)
@@ -117,7 +124,7 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
 
     set concept(concept: Concept) {
         super.concept = concept
-        console.log("new concept value ", this.concept)
+        console.log('new concept value ', this.concept)
     }
 
 
@@ -125,9 +132,6 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
         console.log(event)
     }
 
-    public static validValueType(valueType: ValueType): boolean {
-        return valueType === ValueType.NUMERICAL
-    }
 
     set suggestedConcepts(concepts: ConceptConstraint[]) {
         super.suggestedConcepts = concepts
@@ -138,13 +142,11 @@ export class GbAnalytesDropzones extends GbConceptFormComponent {
         if (!suggested) {
             return []
         }
-        return suggested.filter(c => GbAnalytesDropzones.validValueType(c.concept.type))
+        return suggested.filter(c => GbAnalytesDropzonesComponent.validValueType(c.concept.type))
     }
 }
 
 
-
-//TODO comment logic
 class TreeNodeWrapper {
 
     private _treeNode: TreeNode

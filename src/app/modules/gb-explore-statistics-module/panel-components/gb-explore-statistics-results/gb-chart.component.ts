@@ -3,7 +3,7 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@ang
 import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, ScriptableLineSegmentContext } from 'chart.js';
 import { PDF } from 'src/app/utilities/files/pdf';
 import { ChartInformation, ConfidenceInterval } from '../../../../services/explore-statistics.service';
-import { ReferenceInterval, SVGConvertible } from './gb-explore-statistics-results.component';
+import { ReferenceIntervalComponent, SVGConvertible } from './gb-explore-statistics-results.component';
 
 
 
@@ -49,7 +49,7 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy, SVGCon
     }
 
     printToPDF(pdf: PDF, columnIndex: number) {
-        console.log("Exporting chart to PDF")
+        console.log('Exporting chart to PDF')
         const exportedChart = this.canvasRef.nativeElement.toDataURL('image/svg', 'high')
         const height = this.canvasRef.nativeElement.height
         const width = this.canvasRef.nativeElement.width
@@ -60,7 +60,7 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy, SVGCon
         const finalWidth = pdf.getColumnWidth()
         const imgHeight = imgRatio * finalWidth
 
-        //todo add parameter that orders is element is last in row.
+        // todo add parameter that orders is element is last in row.
         pdf.addImageFromDataURL(exportedChart, 0, 0, finalWidth, imgHeight, columnIndex)
 
     }
@@ -69,7 +69,7 @@ export abstract class ChartComponent implements AfterViewInit, OnDestroy, SVGCon
 
     ngAfterViewInit(): void {
 
-        //TODO debug: ExpressionChangedAfterItHasBeenCheckedError (maybe use angular chart js?)
+        // TODO debug: ExpressionChangedAfterItHasBeenCheckedError (maybe use angular chart js?)
         // the reference to the `canvas` on which the chart will be drawn. See the @Component to see the canvas.
         const context = this.canvasRef.nativeElement.getContext('2d');
 
@@ -129,7 +129,7 @@ export class HistogramChartComponent extends ChartComponent {
             labels,
             datasets: [{
                 data: this.chartInfo.intervals.map(i => i.count),
-                backgroundColor: ChartComponent.getBackgroundColor(0) //this.chartInfo.intervals.map(_ => ChartComponent.getBackgroundColor(0))
+                backgroundColor: ChartComponent.getBackgroundColor(0)
             }]
         }
 
@@ -242,19 +242,19 @@ export class LineChartComponent extends ChartComponent {
 
         function color(x: number): string {
             if (inExtremes(x)) {
-                return 'rgb(234, 235, 236)' //light gray
+                return 'rgb(234, 235, 236)' // light gray
             }
 
             if (inConfidenceInterval(x)) {
                 return 'rgb(166, 225, 250)' // light blue
             }
 
-            return 'rgb(24, 141, 210)' //dark blue
+            return 'rgb(24, 141, 210)' // dark blue
         }
 
 
         const segmentColour = (ctx: ScriptableLineSegmentContext) => {
-            //the index of the current data point
+            // the index of the current data point
             const currentIndex = ctx.p0.parsed.x
             // is the index of the current point within the first confidence interval or the second confidence interval
             return color(currentIndex)
@@ -269,7 +269,7 @@ export class LineChartComponent extends ChartComponent {
                     borderColor: ChartComponent.getBackgroundColor(0),
                     fill: {
                         target: 1,
-                        above: 'rgb(255, 0, 0)' //colour of the fill above the origin
+                        above: 'rgb(255, 0, 0)' // colour of the fill above the origin
                     },
                     cubicInterpolationMode: 'monotone',
                     segment: {
@@ -280,7 +280,7 @@ export class LineChartComponent extends ChartComponent {
                     label: 'histogram',
                     data: yValues,
                     type: 'bar',
-                    backgroundColor: (ctx) => { //this function defines the colour of the histogram bars
+                    backgroundColor: (ctx) => { // this function defines the colour of the histogram bars
                         return color(ctx.parsed.x)
                     },
                 }
@@ -334,16 +334,17 @@ export class LineChartComponent extends ChartComponent {
 
 
     /*
-    * Given ChartInformation object this function will a line graph on the canvas. The points of the curves are interconnected using interpolation methods
+    * Given ChartInformation object this function will a line graph on the canvas.
+    * The points of the curves are interconnected using interpolation methods
     * see for reference https://github.com/chartjs/Chart.js/blob/master/docs/samples/line/interpolation.md
     */
     draw(context: CanvasRenderingContext2D): Chart {
         const chartInfoAvailable = this.chartInfo && this.chartInfo.intervals && this.chartInfo.intervals.length > 0
         if (!chartInfoAvailable) {
-            const data = {
+            const chartData = {
                 datasets: []
             }
-            return new Chart(context, { type: this.chartJSType, data, })
+            return new Chart(context, { type: this.chartJSType, data: chartData, })
 
         }
 
@@ -368,7 +369,7 @@ export class LineChartComponent extends ChartComponent {
 
 
 
-        return new Chart(context, config,)
+        return new Chart(context, config, )
 
     }
 

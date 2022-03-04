@@ -18,7 +18,7 @@ import { GbSelectionModule } from '../gb-explore-module/gb-selection-component/g
 import { GbExploreStatisticsComponent } from './gb-explore-statistics.component';
 import { routing } from './gb-explore-statistics.routing';
 import { HistogramChartComponent, LineChartComponent } from './panel-components/gb-explore-statistics-results/gb-chart.component';
-import { GbExploreStatisticsResultsComponent, ReferenceIntervalHistogram, ReferenceIntervalLine } from './panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
+import { GbExploreStatisticsResultsComponent, ReferenceIntervalHistogramComponent, ReferenceIntervalLineComponent } from './panel-components/gb-explore-statistics-results/gb-explore-statistics-results.component';
 
 
 @NgModule({
@@ -42,8 +42,8 @@ import { GbExploreStatisticsResultsComponent, ReferenceIntervalHistogram, Refere
     GbExploreStatisticsResultsComponent,
     HistogramChartComponent,
     LineChartComponent,
-    ReferenceIntervalHistogram,
-    ReferenceIntervalLine
+    ReferenceIntervalHistogramComponent,
+    ReferenceIntervalLineComponent
   ],
   entryComponents: []
 })

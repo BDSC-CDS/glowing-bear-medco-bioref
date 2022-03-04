@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AccordionModule, AutoCompleteModule, CalendarModule, CheckboxModule, DropdownModule, InputNumberModule, MultiSelectModule, PanelModule, TooltipModule } from 'primeng';
+import {
+  AccordionModule, AutoCompleteModule, CalendarModule, CheckboxModule, DropdownModule,
+  InputNumberModule, MultiSelectModule, PanelModule, TooltipModule
+} from 'primeng';
 import { GbUtilsModule } from '../../gb-utils-module/gb-utils.module';
 import { GbCohortConstraintComponent } from '../constraint-components/gb-cohort-constraint/gb-cohort-constraint.component';
 import { GbCombinationConstraintComponent } from '../constraint-components/gb-combination-constraint/gb-combination-constraint.component';

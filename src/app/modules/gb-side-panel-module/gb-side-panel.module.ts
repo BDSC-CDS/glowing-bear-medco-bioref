@@ -11,7 +11,11 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
-import { AccordionModule, AutoCompleteModule, ButtonModule, ConfirmationService, ConfirmDialogModule, DragDropModule, InputTextModule, OverlayPanelModule, PanelModule, RadioButtonModule, TabMenuModule, ToggleButtonModule, TooltipModule, TreeDragDropService, TreeModule } from 'primeng';
+import {
+  AccordionModule, AutoCompleteModule, ButtonModule, ConfirmationService,
+  ConfirmDialogModule, DragDropModule, InputTextModule, OverlayPanelModule, PanelModule, RadioButtonModule, TabMenuModule,
+  ToggleButtonModule, TooltipModule, TreeDragDropService, TreeModule
+} from 'primeng';
 import { ExploreCohortsService } from '../../services/api/medco-node/explore-cohorts.service';
 import { SavedCohortsPatientListService } from '../../services/saved-cohorts-patient-list.service';
 import { SurvivalService } from '../../services/survival-analysis.service';

@@ -5,7 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver, ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef } from '@angular/core';
+import {
+  AfterViewInit, ChangeDetectorRef, Component, ComponentFactoryResolver,
+  ComponentRef, Input, OnDestroy, Type, ViewChild, ViewContainerRef
+} from '@angular/core';
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { TreeNode } from 'src/app/models/tree-models/tree-node';
@@ -41,12 +44,12 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
   private componentRefs: Array<ComponentRef<any>> = []
 
-  private _displayLoadingIcon: boolean = false
+  private _displayLoadingIcon = false
 
   private exportPDFSubscription: Subscription
 
-  //instantiated reference interval components visible within the view of the GbExploreStatisticsResultsComponent
-  private refIntervalsComponents: ReferenceInterval[]
+  // instantiated reference interval components visible within the view of the GbExploreStatisticsResultsComponent
+  private refIntervalsComponents: ReferenceIntervalComponent[]
 
   constructor(private exploreStatisticsService: ExploreStatisticsService,
     private componentFactoryResolver: ComponentFactoryResolver,
@@ -56,10 +59,10 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     this.exportPDFSubscription = this.exploreStatisticsService.exportPDF.subscribe(_ => {
       const pdf = new PDF(2, 8)
       if (this.refIntervalsComponents === undefined || this.refIntervalsComponents.length <= 0) {
-        throw ErrorHelper.handleNewError("Cannot export pdf yet. Execute a query firsthand.")
+        throw ErrorHelper.handleNewError('Cannot export pdf yet. Execute a query firsthand.')
       }
       this.refIntervalsComponents.forEach((c, i) => c.toPDF(pdf, i))
-      pdf.export("testDoc.pdf")
+      pdf.export('testDoc.pdf')
     })
 
   }
@@ -81,14 +84,14 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
       // this.buildChart(chartInfo, LineChartComponent)
 
       // this.buildReferenceInterval(chartInfo, ReferenceIntervalHistogram)
-      return this.buildReferenceInterval(chartInfo, ReferenceIntervalLine)
+      return this.buildReferenceInterval(chartInfo, ReferenceIntervalLineComponent)
 
     });
 
   }
 
 
-  private buildReferenceInterval<R extends ReferenceInterval>(chartInfo: ChartInformation, refIntervalType: Type<R>): R {
+  private buildReferenceInterval<R extends ReferenceIntervalComponent>(chartInfo: ChartInformation, refIntervalType: Type<R>): R {
     const componentRef = Utils.buildComponent(this.componentFactoryResolver, this.canvasContainer, refIntervalType)
     this.componentRefs.push(componentRef)
 
@@ -130,14 +133,15 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 }
 
 export class Utils {
-  public static buildComponent<C>(componentFactoryResolver: ComponentFactoryResolver, newComponentContainer: ViewContainerRef, componentType: Type<C>): ComponentRef<C> {
+  public static buildComponent<C>(componentFactoryResolver: ComponentFactoryResolver,
+    newComponentContainer: ViewContainerRef, componentType: Type<C>): ComponentRef<C> {
     const componentFactory = componentFactoryResolver.resolveComponentFactory(componentType);
     return newComponentContainer.createComponent(componentFactory);
   }
 
 
-  public static buildChart<C extends ChartComponent>(componentFactoryResolver: ComponentFactoryResolver, newComponentContainer: ViewContainerRef,
-    chartInfo: ChartInformation, componentType: Type<C>): ComponentRef<C> {
+  public static buildChart<C extends ChartComponent>(componentFactoryResolver: ComponentFactoryResolver,
+    newComponentContainer: ViewContainerRef, chartInfo: ChartInformation, componentType: Type<C>): ComponentRef<C> {
     const componentRef = Utils.buildComponent(componentFactoryResolver, newComponentContainer, componentType)
 
     const component = componentRef.instance
@@ -146,7 +150,7 @@ export class Utils {
     return componentRef
   }
 
-  //retrieving the display name of the ancestors tree nodes and assemble those display name in a list
+  // retrieving the display name of the ancestors tree nodes and assemble those display name in a list
   static extractDisplayablePath(treeNode: TreeNode) {
     let currentNode: TreeNode = treeNode
     let displayNames: string[] = []
@@ -169,10 +173,10 @@ const referenceIntervalTemplate = './gb-reference-interval.component.html';
   templateUrl: referenceIntervalTemplate,
   styleUrls: [refIntervalCss, resultsCss, childFlexCss],
   host: {
-    "[class.hidden]": "hide" //https://stackoverflow.com/questions/61965535/apply-css-class-conditionally-to-angular-component-host
+    '[class.hidden]': 'hide' // https://stackoverflow.com/questions/61965535/apply-css-class-conditionally-to-angular-component-host
   }
 })
-export abstract class ReferenceInterval implements OnDestroy {
+export abstract class ReferenceIntervalComponent implements OnDestroy {
 
   @ViewChild('chartContainer', { read: ViewContainerRef }) chartContainer: ViewContainerRef;
 
@@ -196,14 +200,16 @@ export abstract class ReferenceInterval implements OnDestroy {
 
   private _chartInfo: ChartInformation
 
-  // An angular reference to the component contained in this component. The chartComponentRef contains graphical information about the chart.
+  /* An angular reference to the component contained in this component.
+  * The chartComponentRef contains graphical information about the chart.
+  */
   private chartComponentRef: ComponentRef<ChartComponent>
 
   protected chartType: Type<ChartComponent>;
 
-  @Input() hide: boolean = false
+  @Input() hide = false
 
-  private chartBuilt: boolean = false
+  private chartBuilt = false
 
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver) {
@@ -226,13 +232,13 @@ export abstract class ReferenceInterval implements OnDestroy {
   }
 
 
-  //print the current component to the pdf passed as parameter. Index is the index of the component in the parent component
+  // print the current component to the pdf passed as parameter. Index is the index of the component in the parent component
   toPDF(pdf: PDF, index: number) {
     if (!this.chartBuilt) {
       return
     }
     if (this.chartComponentRef === undefined) {
-      throw ErrorHelper.handleNewError("Cannot export pdf yet. Execute a query firsthand.")
+      throw ErrorHelper.handleNewError('Cannot export pdf yet. Execute a query firsthand.')
     }
 
 
@@ -242,7 +248,7 @@ export abstract class ReferenceInterval implements OnDestroy {
     pdf.addVerticalMargin(2, columnIndex)
     pdf.addOneLineText(`Based on the given parameters, the query has returned ${this.numberOfObservations()} entries`, columnIndex)
     this.chartComponentRef.instance.printToPDF(pdf, columnIndex)
-    pdf.addOneLineText("The 95% reference interval (90% confidence) is: ", columnIndex)
+    pdf.addOneLineText('The 95% reference interval (90% confidence) is: ', columnIndex)
     const referenceInterval = `${this.middleCI1} (${this.lowBoundCI1}-${this.highBoundCI1}) - ${this.middleCI2} (${this.lowBoundCI2}-${this.highBoundCI2})`
     pdf.addTableFromObjects(null, [[referenceInterval]], null, columnIndex)
     pdf.addVerticalMargin(8, columnIndex)
@@ -276,7 +282,7 @@ export abstract class ReferenceInterval implements OnDestroy {
   templateUrl: referenceIntervalTemplate,
   styleUrls: [refIntervalCss, resultsCss, childFlexCss],
 })
-export class ReferenceIntervalLine extends ReferenceInterval {
+export class ReferenceIntervalLineComponent extends ReferenceIntervalComponent {
   constructor(componentFactoryResolver: ComponentFactoryResolver) {
     super(componentFactoryResolver)
     this.chartType = LineChartComponent
@@ -287,7 +293,7 @@ export class ReferenceIntervalLine extends ReferenceInterval {
   templateUrl: referenceIntervalTemplate,
   styleUrls: [refIntervalCss, resultsCss, childFlexCss],
 })
-export class ReferenceIntervalHistogram extends ReferenceInterval {
+export class ReferenceIntervalHistogramComponent extends ReferenceIntervalComponent {
   constructor(componentFactoryResolver: ComponentFactoryResolver) {
     super(componentFactoryResolver)
     this.chartType = HistogramChartComponent

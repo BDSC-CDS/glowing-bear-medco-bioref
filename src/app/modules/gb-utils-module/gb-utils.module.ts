@@ -10,7 +10,7 @@
 import { NgModule } from '@angular/core';
 import { TooltipModule } from 'primeng';
 import { GbGenericTooltipComponent } from './gb-generic-tooltip.component';
-import { PathDisplayer } from './gb-utils.component';
+import { PathDisplayerComponent } from './gb-utils.component';
 
 
 
@@ -22,11 +22,11 @@ import { PathDisplayer } from './gb-utils.component';
    ],
    exports: [
     GbGenericTooltipComponent,
-    PathDisplayer,
+    PathDisplayerComponent,
    ],
    declarations: [
     GbGenericTooltipComponent,
-    PathDisplayer,
+    PathDisplayerComponent,
    ],
  })
  export class GbUtilsModule {

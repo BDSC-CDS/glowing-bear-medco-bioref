@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Input } from "@angular/core"
+import { ChangeDetectorRef, Component, Input } from '@angular/core'
 
 export const includedExcludedCSS = `
 .excluded {
@@ -10,7 +10,7 @@ export const includedExcludedCSS = `
 `
 
 @Component({
-    selector: 'path-displayer',
+    selector: 'gb-path-displayer',
     styles: [
         `
         li {
@@ -36,7 +36,7 @@ export const includedExcludedCSS = `
     </div>
     `
 })
-export class PathDisplayer {
+export class PathDisplayerComponent {
     @Input()
     excluded: boolean
 

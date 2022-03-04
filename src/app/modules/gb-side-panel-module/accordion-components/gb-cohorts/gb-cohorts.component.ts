@@ -35,7 +35,7 @@ export class GbCohortsComponent implements AfterViewInit, OnInit {
   file: File; // holds the uploaded cohort file
   OperationStatus = OperationStatus;
 
-  @Input() displayRestoreButton: boolean = false
+  @Input() displayRestoreButton = false
 
   @ViewChild('op') deletionRequest: OverlayPanel;
 

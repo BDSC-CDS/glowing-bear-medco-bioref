@@ -61,7 +61,7 @@ class ReferenceRange {
     readonly CI2: ConfidenceInterval
 
     constructor(intervals: Interval[]) {
-        //TODO put Upal's code: replace the arbitrary values 1,2,3
+        // TODO put Upal's code: replace the arbitrary values 1,2,3
         this.CI1 = new ConfidenceInterval(1, 2, 3)
         this.CI2 = new ConfidenceInterval(4, 5, 6)
     }
@@ -108,11 +108,9 @@ export class ChartInformation {
 export class ExploreStatisticsService {
 
 
-
-    private isEmptyConstraint: boolean = true
+    private static TIMEOUT_MS = 1000 * 60 * 1;
 
     // 1 minute timeout
-    private static TIMEOUT_MS = 1000 * 60 * 1;
 
     private _lastQueryTiming: ApiI2b2Timing;
     private _lastCohortDefintion: ApiI2b2Panel[] = []
@@ -159,7 +157,7 @@ export class ExploreStatisticsService {
     private refreshConstraint(constraint: CombinationConstraint): Observable<CombinationConstraint> {
         const i2b2Panels: ApiI2b2Panel[] = this.constraintMappingService.mapConstraint(constraint)
 
-        if (i2b2Panels.length == 0) {
+        if (i2b2Panels.length === 0) {
             /* Return an empty constraint if the passed parameter is empty.
             * This can happen if the exclusion criteria is empty for example.  */
             return of(new CombinationConstraint())
@@ -186,11 +184,11 @@ export class ExploreStatisticsService {
      */
     executeQueryFromExplore(bucketSize: number, minObservation: number) {
         if (bucketSize === undefined || bucketSize <= 0) {
-            bucketSize = 1 //TODO remove this when we'll have created the processus sharing the bucket size between servers
+            bucketSize = 1 // TODO remove this when we'll have created the processus sharing the bucket size between servers
         }
 
         if (minObservation === undefined) {
-            minObservation = 0 //TODO remove  when we'll have created the processus sharing the min observation between servers
+            minObservation = 0 // TODO remove  when we'll have created the processus sharing the min observation between servers
         }
 
 
@@ -199,11 +197,13 @@ export class ExploreStatisticsService {
 
     }
 
-    //the explore statistics servers answers contains the patient list for the cohort and the count per site in case the user is authorized to see such information
+    /*the explore statistics servers answers contains the patient list for the cohort
+    * and the count per site in case the user is authorized to see such information
+    */
     private parseCohortFromAnswer(answers: ApiExploreStatisticsResponse[]) {
 
         if (this.queryService.queryType !== ExploreQueryType.PATIENT_LIST) {
-            throw ErrorHelper.handleNewError("Unable parse the cohort content of the statistics query. User is not authorized to see the patient list.")
+            throw ErrorHelper.handleNewError('Unable parse the cohort content of the statistics query. User is not authorized to see the patient list.')
         }
         const nodes: ApiNodeMetadata[] = this.medcoNetworkService.nodes
         const exploreResults: ApiExploreQueryResult[] = answers.map(statAnswer => {
@@ -217,7 +217,7 @@ export class ExploreStatisticsService {
         })
 
         if (nodes.length !== exploreResults.length) {
-            throw ErrorHelper.handleNewError("Different number of server nodes and server responses received")
+            throw ErrorHelper.handleNewError('Different number of server nodes and server responses received')
         }
 
         const zipped: [ApiNodeMetadata, ApiExploreQueryResult][] = []
@@ -254,12 +254,13 @@ export class ExploreStatisticsService {
 
         const analytes = Array.from(uniqueAnalytes);
 
-        if (analytes.length == 0) {
+        if (analytes.length === 0) {
             throw ErrorHelper.handleNewError('No analytes have been specified (numerical medical concepts). The value returned by the request will be the reference interval for the specified analytes.');
         }
 
         // the analytes split into two groups: modifiers and concepts
-        const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } = this.extractConceptsAndModifiers(analytes);
+        const { conceptsPaths, modifiers }: { conceptsPaths: string[]; modifiers: ModifierApiObjet[]; } =
+            this.extractConceptsAndModifiers(analytes);
 
 
         this._lastCohortDefintion = this.constraintMappingService.mapConstraint(cohortConstraint)
@@ -330,7 +331,8 @@ export class ExploreStatisticsService {
             throw ErrorHelper.handleNewError('Empty server response. Please verify you selected an analyte.');
         }
 
-        const chartsInformationsObservables: Observable<ChartInformation>[] = serverResponse.results.map((result: ApiExploreStatisticResult) => {
+        const chartsInformationsObservables: Observable<ChartInformation>[] =
+            serverResponse.results.map((result: ApiExploreStatisticResult) => {
 
             const encCounts: string[] = result.intervals.map((i: ApiInterval) => i.encCount);
 
@@ -413,7 +415,7 @@ export class ExploreStatisticsService {
     // send a signal that launches the export of the statistical results as a PDF
     sendExportAsPDFSignal() {
         if (!this.navbarService.isExploreStatistics) {
-            throw ErrorHelper.handleNewError("Cannot export the PDF outside of the statistics tab.");
+            throw ErrorHelper.handleNewError('Cannot export the PDF outside of the statistics tab.');
         }
 
         this.exportPDF.next(1)

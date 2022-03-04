@@ -13,13 +13,13 @@ import { Constraint } from './constraint';
 import { ConstraintVisitor } from './constraintVisitor';
 
 export class CombinationConstraint extends Constraint {
+  public static readonly groupTextRepresentation = 'Group';
 
   private _children: Constraint[];
   private _combinationState: CombinationState;
   private _isRoot: boolean;
 
 
-  public static readonly groupTextRepresentation = 'Group';
 
   constructor() {
     super();

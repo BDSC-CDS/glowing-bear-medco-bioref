@@ -16,7 +16,7 @@ export class PDF {
 
 
   constructor(
-    public readonly nbOfColumns: number = 1, //specifies the number of columns within one page of the pdf (as in columns of a table)
+    public readonly nbOfColumns: number = 1, // specifies the number of columns within one page of the pdf (as in columns of a table)
     public readonly headersSize: number = 14,
     private columnsMargin = 15, // margin between elements of the same row
     private verticalMarginTable: number = 7,
@@ -39,7 +39,7 @@ export class PDF {
   }
 
 
-  //the width occupied by a column in the pdf page
+  // the width occupied by a column in the pdf page
   getColumnWidth(): number {
     return (this.getWidth() - this.horizontalMargin) / this.nbOfColumns - this.columnsMargin
   }
@@ -48,14 +48,14 @@ export class PDF {
     return this._jsPDF.internal.pageSize.getWidth()
   }
 
-  //add some margin below the latest appended element of the column
+  // add some margin below the latest appended element of the column
   addVerticalMargin(margin: number, columnIndex: number = 0) {
     assert(margin > 0)
     this.columnsLastElementY[columnIndex] += margin
   }
 
 
-  //space occupied horizontally by previous rows. @param columnIndex: index of the current column
+  // space occupied horizontally by previous rows. @param columnIndex: index of the current column
   spaceOccupiedByPreviousRows(columnIndex: number, removeAssertion: boolean = false) {
     if (!removeAssertion) {
       assert(columnIndex < this.nbOfColumns)
@@ -64,7 +64,8 @@ export class PDF {
   }
 
   /*
-  * This function prints an image @param imData to the pdf at column @columnIndex. The parameters @param x0 and @param x0 specify the position of the image
+  * This function prints an image @param imData to the pdf at column @columnIndex.
+  * The parameters @param x0 and @param x0 specify the position of the image
   * relative to the column. The image is printed after previous elements present in the column specified with @param columnIndex.
   * @param columnIndex defines the columns at which the element will be appended within the current page of the pdf
   */
@@ -96,7 +97,8 @@ export class PDF {
 
 
   /* This method verifief if a new element fit in the current page.
-  * If the new element position is greater than the page size the code resets the columns height to zero and add a new page to the output pdf.
+  * If the new element position is greater than the page size the code
+  * resets the columns height to zero and add a new page to the output pdf.
   * @param yEnd: the bottom vertical position of the new element.
   */
   private checkFitInCurrentPage(yEnd: number) {

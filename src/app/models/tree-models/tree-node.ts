@@ -50,6 +50,28 @@ export class TreeNode implements PrimeNgTreeNode {
   parent: TreeNode;
   partialSelected: boolean;
 
+  static splitTreeNodePath(path: string, appliedPath: string): TreeNodePaths {
+    const splittedNodePath = path.split('/');
+    const realAppliedPath = `${splittedNodePath.length > 1 ? `/${splittedNodePath[1]}` : ''}${appliedPath}${appliedPath[appliedPath.length - 1] !== '/' ? '/' : ''}`;
+    const pathList = [
+      ...(appliedPath !== '@' ? TreeNode.getPathList(realAppliedPath) : []),
+      ...TreeNode.getPathList(path)
+    ];
+    return { pathElements: pathList, realAppliedPath };
+  }
+
+  private static getPathList(path: string) {
+    const splittedPath = path.split('/').filter(value => value !== '');
+
+    const pathList: string[] = [];
+
+    splittedPath.forEach((_, index) => {
+      pathList.push(splittedPath.slice(0, index + 1).reduce((result, value) => `${result}${value}/`, '/'));
+    });
+
+    return pathList;
+  }
+
   clone(clonedParent?: TreeNode, cloneChildren: boolean = true, cloneAppliedConcept: boolean = false): TreeNode {
     let copy: TreeNode = new TreeNode();
 
@@ -103,7 +125,7 @@ export class TreeNode implements PrimeNgTreeNode {
         return child.clone(copy, true)
       })
       copy.children = copiedChildren
-      console.log("Entering the copy children if statement", copy.children)
+      console.log('Entering the copy children if statement', copy.children)
     }
 
     return copy
@@ -182,30 +204,10 @@ export class TreeNode implements PrimeNgTreeNode {
     return TreeNode.splitTreeNodePath(this.path, this.appliedPath)
   }
 
-  static splitTreeNodePath(path: string, appliedPath: string): TreeNodePaths {
-    const splittedNodePath = path.split('/');
-    const realAppliedPath = `${splittedNodePath.length > 1 ? `/${splittedNodePath[1]}` : ''}${appliedPath}${appliedPath[appliedPath.length - 1] !== '/' ? '/' : ''}`;
-    const pathList = [
-      ...(appliedPath !== '@' ? TreeNode.getPathList(realAppliedPath) : []),
-      ...TreeNode.getPathList(path)
-    ];
-    return { pathElements: pathList, realAppliedPath };
-  }
 
-  private static getPathList(path: string) {
-    const splittedPath = path.split('/').filter(value => value !== '');
-
-    const pathList: string[] = [];
-
-    splittedPath.forEach((_, index) => {
-      pathList.push(splittedPath.slice(0, index + 1).reduce((result, value) => `${result}${value}/`, '/'));
-    });
-
-    return pathList;
-  }
 }
 
-type TreeNodePaths = {
+interface TreeNodePaths {
   pathElements: string[],
   realAppliedPath: string
 }

@@ -23,7 +23,7 @@
             <span *ngIf="analytesPaths.length == 0">None</span>
             <div class="analytesPaths">
                 <div *ngFor="let analytePath of analytesPaths">
-                    <path-displayer [pathElements]="analytePath"></path-displayer>
+                    <gb-path-displayer [pathElements]="analytePath"></gb-path-displayer>
                 </div>
             </div>
         </div>

@@ -6,12 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ApiValueMetadata } from "../api-response-models/medco-node/api-value-metadata";
-import { ValueType } from "../constraint-models/value-type";
-import { DropMode } from "../drop-mode";
-import { MedcoEncryptionDescriptor } from "./medco-encryption-descriptor";
-import { TreeNode } from "./tree-node";
-import { TreeNodeType } from "./tree-node-type";
+import { ApiValueMetadata } from '../api-response-models/medco-node/api-value-metadata';
+import { ValueType } from '../constraint-models/value-type';
+import { DropMode } from '../drop-mode';
+import { MedcoEncryptionDescriptor } from './medco-encryption-descriptor';
+import { TreeNode } from './tree-node';
+import { TreeNodeType } from './tree-node-type';
 
 
 function randomInt() {
@@ -65,18 +65,6 @@ function generateSimpleTreeNode(): TreeNode {
 
 
   return t
-}
-
-function advancedFieldsAreEqual(t1: TreeNode, t2: TreeNode): boolean {
-  appliedConcept: TreeNode;
-  const t = generateSimpleTreeNode()
-
-
-
-  t.children = []
-  t.parent = undefined
-
-  return true //TODO
 }
 
 function simpleFieldAreEqual(t1: TreeNode, t2: TreeNode) {
