@@ -51,6 +51,13 @@
             <i *ngIf="isUpdating" class="fa fa-circle-o-notch fa-spin"
               style="padding-left: .5em; padding-right: .5em;"></i>
           </span>
+          <gb-generic-tooltip *ngIf="userHasExploreStatsRole()" [infos]="'To estimate personalized reference intervals, only three easy steps are required:
+
+          1) Drag & drop the laboratory analyte(s) of interest from the ontology sidebar into the box in the Analytes field
+
+          2) Select the cohort definitions (like AdministrativeSex, Age or Predetermined conditions) in the preloaded fields or construct them from the ontology as needed
+
+          3) Start the analysis by pressing the “Run”-button.'"></gb-generic-tooltip>
         </span>
       </div>
 
