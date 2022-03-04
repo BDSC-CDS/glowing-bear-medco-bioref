@@ -9,7 +9,7 @@
 
 
     <div>
-      <p-accordionTab header="Latest explore query" [selected]="true" *ngIf="!inExploreStatsTab()">
+      <p-accordionTab header="Latest explore query" [selected]="true" *ngIf="!userHasExploreStatsRole()">
         <gb-summary></gb-summary>
       </p-accordionTab>
     </div>

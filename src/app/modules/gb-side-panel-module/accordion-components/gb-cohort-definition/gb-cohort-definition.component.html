@@ -6,8 +6,7 @@
                 <input [(ngModel)]="cohortName" pInputText (keydown)="saveIfEnter($event)" placeholder="Cohort name"
                     (drop)="preventDefault($event)" />
                 <span>&nbsp;</span>
-                <button
-                    title="save the cohort of patients from the latest query"
+                <button title="save the cohort of patients from the latest query"
                     class="btn btn-outline-primary btn-sm gb-data-selection-overview-panel-btn {{lastSuccessfulSet ?  '' : 'gb-explore-waiting-cohort'}}"
                     type="button" [disabled]="!lastSuccessfulSet" (click)="save()">
 
@@ -17,15 +16,6 @@
             </span>
         </span>
     </div>
-
-    <div class="container">
-        <b>Constraints</b>
-        <div>
-            <span *ngIf="noRootConstraint">None</span>
-            <ng-template #rootConstraintTemplate></ng-template>
-        </div>
-    </div>
-
 
     <div class="container">
         <b>Analytes</b>
@@ -38,4 +28,14 @@
             </div>
         </div>
     </div>
+
+    <div class="container">
+        <b>Constraints</b>
+        <div>
+            <span *ngIf="noRootConstraint">None</span>
+            <ng-template #rootConstraintTemplate></ng-template>
+        </div>
+    </div>
+
+
 </div>

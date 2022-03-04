@@ -183,7 +183,7 @@ export class HistogramChartComponent extends ChartComponent {
                 x: {
                     title: {
                         display: true,
-                        text: 'Value [' + this.chartInfo.unit + ']'
+                        text: this.chartInfo.treeNodeName + ' [' + this.chartInfo.unit + ']'
                     },
                 },
                 y: {
@@ -242,14 +242,14 @@ export class LineChartComponent extends ChartComponent {
 
         function color(x: number): string {
             if (inExtremes(x)) {
-                return 'rgb(0, 80, 166, .7)' //dark blue
+                return 'rgb(234, 235, 236)' //light gray
             }
 
             if (inConfidenceInterval(x)) {
-                return 'rgb(189, 12, 12, .5)' //light red
+                return 'rgb(166, 225, 250)' // light blue
             }
 
-            return 'rgb(20, 129, 210, .3)' //pale blue
+            return 'rgb(24, 141, 210)' //dark blue
         }
 
 
@@ -377,7 +377,7 @@ export class LineChartComponent extends ChartComponent {
             type: 'line',
             xMin: refIntervalX,
             xMax: refIntervalX,
-            borderColor: 'red'
+            borderColor: 'rgb(24, 141, 210)'
         }
     }
 
@@ -386,7 +386,7 @@ export class LineChartComponent extends ChartComponent {
             type: 'line',
             xMin: refIntervalX,
             xMax: refIntervalX,
-            borderColor: 'black',
+            borderColor: 'rgb(166, 225, 250)',
             borderDash: [5, 15],
         };
     }

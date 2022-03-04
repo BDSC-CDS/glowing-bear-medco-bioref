@@ -8,11 +8,11 @@
     </div>
     <div class="gb-data-selection-accordion-sub-header-2">
       <div style="display: flex;">
-        <span style="display: flex; align-items: center;">
+        <span style="display: flex; align-items: center;" *ngIf="!userHasExploreStatsRole()">
           <span class="gb-data-selection-accordion-sub-header-3 float-left">
             <span class="gb-data-selection-emphasis-text">{{globalCount | async}} subjects</span>
           </span>
-          <span id="save-box" *ngIf="!userHasExploreStatsRole()" style="margin-left: 2em;">
+          <span id="save-box"  style="margin-left: 2em;">
             <input [(ngModel)]="cohortName" pInputText (keydown)="saveIfEnter($event)" placeholder="Cohort name"
               (drop)="preventDefault($event)" />
             <span>&nbsp;</span>

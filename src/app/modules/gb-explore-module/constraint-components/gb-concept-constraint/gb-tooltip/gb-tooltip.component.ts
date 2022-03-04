@@ -7,21 +7,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component, Inject, Input, OnInit } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { ValueType } from 'src/app/models/constraint-models/value-type';
 import { GbConceptConstraintComponent } from '../gb-concept-constraint.component';
+import { GbGenericTooltipComponent } from '../../../../gb-utils-module/gb-generic-tooltip.component';
 
 @Component({
   selector: 'gb-tooltip',
-  templateUrl: './gb-tooltip.component.html',
-  styleUrls: ['./gb-tooltip.component.css']
+  templateUrl: '../../../../gb-utils-module/gb-tooltip.component.html',
 })
-export class GbTooltipComponent implements OnInit {
+export class GbTooltipComponent extends GbGenericTooltipComponent {
 
-  infos: string;
 
   constructor(@Inject(GbConceptConstraintComponent) private parentConcept: GbConceptConstraintComponent) {
-    this.infos = this.parentConcept.selectedConcept.comment
+    super()
+    this.infos = parentConcept.selectedConcept.comment
   }
 
   canDisplay(): boolean {
@@ -29,7 +29,4 @@ export class GbTooltipComponent implements OnInit {
       (this.parentConcept.constraintConcept.type === ValueType.NUMERICAL && this.parentConcept.numericalOperatorState !== null);
   }
 
-
-  ngOnInit() {
-  }
 }

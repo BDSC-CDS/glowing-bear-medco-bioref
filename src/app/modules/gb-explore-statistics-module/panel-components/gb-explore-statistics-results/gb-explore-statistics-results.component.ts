@@ -238,11 +238,11 @@ export abstract class ReferenceInterval implements OnDestroy {
 
     const columnIndex = index % pdf.nbOfColumns
 
-    pdf.addOneLineText(`Reference values`, columnIndex, pdf.headersSize + 5)
+    pdf.addOneLineText(`reference interval`, columnIndex, pdf.headersSize + 5)
     pdf.addVerticalMargin(2, columnIndex)
     pdf.addOneLineText(`Based on the given parameters, the query has returned ${this.numberOfObservations()} entries`, columnIndex)
     this.chartComponentRef.instance.printToPDF(pdf, columnIndex)
-    pdf.addOneLineText("The reference interval (95%) is:", columnIndex)
+    pdf.addOneLineText("The 95% reference interval (90% confidence) is: ", columnIndex)
     const referenceInterval = `${this.middleCI1} (${this.lowBoundCI1}-${this.highBoundCI1}) - ${this.middleCI2} (${this.lowBoundCI2}-${this.highBoundCI2})`
     pdf.addTableFromObjects(null, [[referenceInterval]], null, columnIndex)
     pdf.addVerticalMargin(8, columnIndex)

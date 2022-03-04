@@ -62,8 +62,8 @@ class ReferenceRange {
 
     constructor(intervals: Interval[]) {
         //TODO put Upal's code: replace the arbitrary values 1,2,3
-        this.CI1 = new ConfidenceInterval(1,2,3)
-        this.CI2 = new ConfidenceInterval(4,5,6)
+        this.CI1 = new ConfidenceInterval(1, 2, 3)
+        this.CI2 = new ConfidenceInterval(4, 5, 6)
     }
 }
 
@@ -255,7 +255,7 @@ export class ExploreStatisticsService {
         const analytes = Array.from(uniqueAnalytes);
 
         if (analytes.length == 0) {
-            throw ErrorHelper.handleNewError('No analytes have been specified (numerical medical concepts). The value returned by the request will be the reference values for the specified analytes.');
+            throw ErrorHelper.handleNewError('No analytes have been specified (numerical medical concepts). The value returned by the request will be the reference interval for the specified analytes.');
         }
 
         // the analytes split into two groups: modifiers and concepts

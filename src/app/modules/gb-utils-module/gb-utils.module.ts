@@ -8,6 +8,8 @@
 
  import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { TooltipModule } from 'primeng';
+import { GbGenericTooltipComponent } from './gb-generic-tooltip.component';
 import { PathDisplayer } from './gb-utils.component';
 
 
@@ -16,11 +18,14 @@ import { PathDisplayer } from './gb-utils.component';
  @NgModule({
    imports: [
      CommonModule,
+     TooltipModule,
    ],
    exports: [
+    GbGenericTooltipComponent,
     PathDisplayer,
    ],
    declarations: [
+    GbGenericTooltipComponent,
     PathDisplayer,
    ],
  })
