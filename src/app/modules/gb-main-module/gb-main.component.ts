@@ -29,11 +29,9 @@ export class GbMainComponent implements OnInit {
   isGutterDragged: boolean;
   x_pos: number; // Stores x coordinate of the mouse pointer
   x_gap: number; // Stores x gap (edge) between mouse and gutter
+  displayBasic = false
 
   constructor(public authenticationService: AuthenticationService,
-    private treeNodeService: TreeNodeService,
-    private constraintService: ConstraintService,
-    private queryService: QueryService,
     private navbarService: NavbarService,
     private config: AppConfig) {
   }
@@ -49,6 +47,10 @@ export class GbMainComponent implements OnInit {
     parentContainerElm.addEventListener('mousemove', this.onMouseMove.bind(this));
     parentContainerElm.addEventListener('mouseup', this.onMouseUp.bind(this));
     window.addEventListener('resize', this.onResize.bind(this));
+  }
+
+  showBasicDialog() {
+    this.displayBasic = true;
   }
 
   onMouseDown = function (event) {
