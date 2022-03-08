@@ -17,6 +17,12 @@ import { ChartComponent, HistogramChartComponent, LineChartComponent } from './g
 import { PDF } from 'src/app/utilities/files/pdf';
 import { ErrorHelper } from 'src/app/utilities/error-helper';
 import { Subscription } from 'rxjs';
+import { AuthenticationService } from 'src/app/services/authentication.service';
+import { QueryService } from 'src/app/services/query.service';
+import { GbSelectionComponent } from 'src/app/modules/gb-explore-module/gb-selection-component/gb-selection.component';
+import assert from 'assert';
+import { PdfExportVisitor } from 'src/app/modules/gb-side-panel-module/accordion-components/gb-cohort-definition/constraintVisitor/pdfExportVisitor';
+import { CombinationConstraint } from 'src/app/models/constraint-models/combination-constraint';
 
 const childFlexCss = './child-flex.css'
 const resultsCss = './gb-explore-statistics-results.component.css'
@@ -50,24 +56,65 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
   // instantiated reference interval components visible within the view of the GbExploreStatisticsResultsComponent
   private refIntervalsComponents: ReferenceIntervalComponent[]
+  private rootConstraint: CombinationConstraint;
 
   constructor(private exploreStatisticsService: ExploreStatisticsService,
+    private authService: AuthenticationService,
     private componentFactoryResolver: ComponentFactoryResolver,
+    private queryService: QueryService,
     private cdref: ChangeDetectorRef) {
+
+    this.exploreStatisticsService.rootConstraint.subscribe(constraint => {
+      this.rootConstraint = constraint
+    })
 
 
     this.exportPDFSubscription = this.exploreStatisticsService.exportPDF.subscribe(_ => {
-      const pdf = new PDF(2, 8)
-      if (this.refIntervalsComponents === undefined || this.refIntervalsComponents.length <= 0) {
-        throw ErrorHelper.handleNewError('Cannot export pdf yet. Execute a query firsthand.')
-      }
-      this.refIntervalsComponents.forEach((c, i) => c.toPDF(pdf, i))
-      pdf.export('testDoc.pdf')
+      this.exportPDF();
     })
 
   }
 
 
+
+  private exportPDF() {
+    const pdf = new PDF(2, 8);
+    if (this.refIntervalsComponents === undefined || this.refIntervalsComponents.length <= 0) {
+      throw ErrorHelper.handleNewError('Cannot export pdf yet. Execute a query firsthand.');
+    }
+    this.refIntervalsComponents.forEach((c, i) => c.toPDF(pdf, i));
+
+    const date = new Date();
+
+    const addEmptyLine = () => { for (let i = 0; i < pdf.nbOfColumns; i++) { pdf.addOneLineText(" ", i); } };
+
+    pdf.addOneLineText("date of export (day/month/year): " + date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getUTCFullYear(), 0);
+    addEmptyLine();
+    pdf.addOneLineText("User name: " + this.authService.username, 1);
+    addEmptyLine();
+
+
+    const timingValue = this.queryService.queryTimingSameInstance;
+    const chosenTiming = GbSelectionComponent.timings.filter(t => t.value == timingValue);
+    assert(chosenTiming.length > 0);
+    pdf.addOneLineText("Counting method: " + chosenTiming[0].label, 0);
+    addEmptyLine()
+    addEmptyLine()
+
+
+    pdf.addOneLineText("Constraints on cohort: ")
+    addEmptyLine()
+
+    const visitor = new PdfExportVisitor();
+    const constraintsSummary = this.rootConstraint.accept(visitor);
+
+    constraintsSummary.forEach(line => {
+      pdf.addOneLineText(line)
+      addEmptyLine()
+    })
+
+    pdf.export('testDoc.pdf');
+  }
 
   private displayCharts(chartsInfo: ChartInformation[]) {
 
@@ -151,7 +198,7 @@ export class Utils {
   }
 
   // retrieving the display name of the ancestors tree nodes and assemble those display name in a list
-  static extractDisplayablePath(treeNode: TreeNode) {
+  static extractDisplayablePath(treeNode: TreeNode): string[] {
     let currentNode: TreeNode = treeNode
     let displayNames: string[] = []
     for (; true;) {
