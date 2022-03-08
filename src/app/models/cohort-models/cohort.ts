@@ -60,7 +60,6 @@ export class Cohort {
     if (this._rootConstraint) {
       let cpy = new CombinationConstraint
       cpy.parentConstraint = this._rootConstraint.parentConstraint
-      cpy.textRepresentation = this._rootConstraint.textRepresentation
 
       cpy.children = this._rootConstraint.children
       cpy.combinationState = this._rootConstraint.combinationState
@@ -76,7 +75,6 @@ export class Cohort {
     if (constr) {
       let cpy = new CombinationConstraint
       cpy.parentConstraint = constr.parentConstraint
-      cpy.textRepresentation = constr.textRepresentation
 
       cpy.children = constr.children
       cpy.combinationState = constr.combinationState

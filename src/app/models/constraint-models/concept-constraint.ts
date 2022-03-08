@@ -120,8 +120,7 @@ export class ConceptConstraint extends Constraint {
 
   get textRepresentation(): string {
     let currentRepresentation = super.textRepresentation;
-    this.textRepresentation = this.excluded ? 'not (' + currentRepresentation + ')' : currentRepresentation
-    return super.textRepresentation
+    return this.excluded ? 'not (' + currentRepresentation + ')' : currentRepresentation
   }
 
   set textRepresentation(text: string) {
