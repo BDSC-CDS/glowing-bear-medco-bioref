@@ -29,6 +29,13 @@ const resultsCss = './gb-explore-statistics-results.component.css'
 const refIntervalCss = './gb-reference-interval.component.css'
 
 
+
+const shortCopyright = `LOINC ® codes and long common names: © 1995-2022, Regenstrief Institute, Inc. and the LOINC Committee
+GMDN ® codes, terms, and descriptions: © GMDN Agency 2005-2022.
+GUDI codes: courtesy of the the U.S. National Library of Medicine in collaboration with the U.S. Food and Drug Administration
+ICD-10-GM codes and descriptions: © 2022 Bundesinstitut für Arzneimittel und Medizinprodukte`
+
+
 export interface SVGConvertible {
   /*
   * print the current component to the pdf passed as parameter. Index is the index of the component in the parent component.
@@ -78,42 +85,52 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
 
   private exportPDF() {
-    const pdf = new PDF(2, 8);
+    const pdf = new PDF(2, 8, -3);
     if (this.refIntervalsComponents === undefined || this.refIntervalsComponents.length <= 0) {
       throw ErrorHelper.handleNewError('Cannot export pdf yet. Execute a query firsthand.');
     }
-    this.refIntervalsComponents.forEach((c, i) => c.toPDF(pdf, i));
 
     const date = new Date();
+    pdf.addOneLineText("Date of export (d/m/y): " + date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getUTCFullYear(), 0);
+    pdf.addOneLineText("Username: " + this.authService.username, 1);
+
 
     const addEmptyLine = () => { for (let i = 0; i < pdf.nbOfColumns; i++) { pdf.addOneLineText(" ", i); } };
 
-    pdf.addOneLineText("date of export (day/month/year): " + date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getUTCFullYear(), 0);
-    addEmptyLine();
-    pdf.addOneLineText("User name: " + this.authService.username, 1);
-    addEmptyLine();
+    for (let i = 0; i < 2; i++) addEmptyLine()
+
+    this.refIntervalsComponents.forEach((c, i) => c.toPDF(pdf, i));
 
 
-    const timingValue = this.queryService.queryTimingSameInstance;
-    const chosenTiming = GbSelectionComponent.timings.filter(t => t.value == timingValue);
-    assert(chosenTiming.length > 0);
-    pdf.addOneLineText("Counting method: " + chosenTiming[0].label, 0);
-    addEmptyLine()
-    addEmptyLine()
-
+    const generalInfoFontSize = pdf.headersSize + 3
+    pdf.addOneLineText("General information: ", 0, generalInfoFontSize)
+    pdf.addOneLineText("", 1, generalInfoFontSize)
 
     pdf.addOneLineText("Constraints on cohort: ")
-    addEmptyLine()
 
     const visitor = new PdfExportVisitor();
     const constraintsSummary = this.rootConstraint.accept(visitor);
 
     constraintsSummary.forEach(line => {
       pdf.addOneLineText(line)
-      addEmptyLine()
     })
 
-    pdf.export('testDoc.pdf');
+    addEmptyLine()
+
+    const timingValue = this.queryService.queryTimingSameInstance;
+    const chosenTiming = GbSelectionComponent.timings.filter(t => t.value == timingValue);
+    assert(chosenTiming.length > 0);
+    pdf.addOneLineText("Counting method: " + chosenTiming[0].label, 0);
+
+    for (let i = 0; i < 10; i++) {
+      addEmptyLine()
+    }
+
+    shortCopyright.split("\n").forEach(line => {
+      pdf.addOneLineText(line)
+    })
+
+    pdf.export('export.pdf');
   }
 
   private displayCharts(chartsInfo: ChartInformation[]) {

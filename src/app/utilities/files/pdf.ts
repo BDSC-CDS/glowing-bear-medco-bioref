@@ -18,11 +18,11 @@ export class PDF {
   constructor(
     public readonly nbOfColumns: number = 1, // specifies the number of columns within one page of the pdf (as in columns of a table)
     public readonly headersSize: number = 14,
-    private columnsMargin = 15, // margin between elements of the same row
+    public readonly verticalMarginText: number = -6,
     private verticalMarginTable: number = 7,
     private verticalMarginImage: number = 7,
-    private verticalMarginText: number = -6,
     private horizontalMargin: number = 14,
+    private columnsMargin = 15, // margin between elements of the same row
     private contentSize: number = 8,
     private topMargin: number = 10) {
 
