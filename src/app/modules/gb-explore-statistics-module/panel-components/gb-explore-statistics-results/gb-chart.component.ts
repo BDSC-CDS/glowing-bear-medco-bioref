@@ -1,6 +1,7 @@
 
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType, ScriptableLineSegmentContext } from 'chart.js';
+import { boolean } from 'mathjs';
 import { PDF } from 'src/app/utilities/files/pdf';
 import { ChartInformation, ConfidenceInterval } from '../../../../services/explore-statistics.service';
 import { ReferenceIntervalComponent, SVGConvertible } from './gb-explore-statistics-results.component';
@@ -16,7 +17,6 @@ const chartTemplate = `
     <canvas #canvasElement>{{chart}}</canvas>
   </div>
   `
-
 
 // See for reference how to use canvas in angular:  https://stackoverflow.com/questions/44426939/how-to-use-canvas-in-angular
 export abstract class ChartComponent implements AfterViewInit, OnDestroy, SVGConvertible {
@@ -176,17 +176,19 @@ export class HistogramChartComponent extends ChartComponent {
                     display: true
                 },
                 legend: {
-                    display: false,
+                    display: true,
                 },
             },
             scales: {
                 x: {
+                    stacked: true,
                     title: {
                         display: true,
                         text: this.chartInfo.treeNodeName + ' [' + this.chartInfo.unit + ']'
                     },
                 },
                 y: {
+                    stacked: true,
                     title: {
                         display: true,
                         text: 'Frequency'
@@ -217,7 +219,7 @@ export class LineChartComponent extends ChartComponent {
     }
 
     // buildPoints  processes the dataset necessary for drawing the interpolated line graph
-    private buildPoints(chartInfo: ChartInformation): ChartData {
+    private buildPoints(chartInfo: ChartInformation): any {
         // the x axis points associated to an interval count will be the the middle between the higher and lower bound of an interval
         const xValues: Array<number> = chartInfo.intervals.map(interval => {
             return (parseFloat(interval.higherBound) + parseFloat(interval.lowerBound)) / 2
@@ -240,16 +242,20 @@ export class LineChartComponent extends ChartComponent {
         }
 
 
+        const extremeColour = 'rgb(234, 235, 236)' // light gray
+        const CIColour = 'rgb(166, 225, 250)' // light blue
+        const centerColour = 'rgb(24, 141, 210)' // dark blue
+
         function color(x: number): string {
             if (inExtremes(x)) {
-                return 'rgb(234, 235, 236)' // light gray
+                return extremeColour
             }
 
             if (inConfidenceInterval(x)) {
-                return 'rgb(166, 225, 250)' // light blue
+                CIColour
             }
 
-            return 'rgb(24, 141, 210)' // dark blue
+            return centerColour
         }
 
 
@@ -259,6 +265,22 @@ export class LineChartComponent extends ChartComponent {
             // is the index of the current point within the first confidence interval or the second confidence interval
             return color(currentIndex)
         }
+
+
+        function createDataset(keep: ((x: number) => boolean)) {
+            return yValues.flatMap((y, i) => {
+                const x = xValues[i]
+                if (keep(x)) {
+                    return { x: x, y: y }
+                }
+                return [] //{ x: x, y: null }
+            })
+        }
+
+        const extremeData = createDataset(inExtremes)
+        const confidenceIntervalData = createDataset(x => !inExtremes(x) && inConfidenceInterval(x))
+        const centerData = createDataset(x => !inExtremes(x) && !inConfidenceInterval(x))
+
 
         return {
             labels: xValues,
@@ -277,12 +299,26 @@ export class LineChartComponent extends ChartComponent {
                     }
                 },
                 {
-                    label: 'histogram',
-                    data: yValues,
+                    label: 'extreme',
+                    data: extremeData,
+                    grouped: false,
                     type: 'bar',
-                    backgroundColor: (ctx) => { // this function defines the colour of the histogram bars
-                        return color(ctx.parsed.x)
-                    },
+                    backgroundColor: extremeColour,
+
+                },
+                {
+                    label: 'CI data',
+                    data: confidenceIntervalData,
+                    grouped: false,
+                    type: 'bar',
+                    backgroundColor: CIColour,
+                },
+                {
+                    label: 'center data',
+                    data: centerData,
+                    grouped: false,
+                    type: 'bar',
+                    backgroundColor: centerColour,
                 }
             ]
         };
@@ -291,7 +327,7 @@ export class LineChartComponent extends ChartComponent {
     }
 
     // this method builds the config necessary for drawing the interpolated line graph
-    private buildConfig(data: ChartData): ChartConfiguration {
+    private buildInterpolatedConfig(data: ChartData): ChartConfiguration {
 
 
 
@@ -352,7 +388,7 @@ export class LineChartComponent extends ChartComponent {
         const data = this.buildPoints(this.chartInfo)
 
 
-        const config = this.buildConfig(data) as any
+        const config = this.buildInterpolatedConfig(data) as any
 
         config.options.plugins.annotation = {
             annotations: {
@@ -369,7 +405,7 @@ export class LineChartComponent extends ChartComponent {
 
 
 
-        return new Chart(context, config, )
+        return new Chart(context, config,)
 
     }
 
