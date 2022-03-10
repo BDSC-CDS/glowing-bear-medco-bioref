@@ -318,7 +318,7 @@ export class LineChartComponent extends ChartComponent {
                         type: 'linear',
                         title: {
                             display: true,
-                            text: 'Value [' + this.chartInfo.unit + ']',
+                            text: this.chartInfo.treeNodeName + ' [' + this.chartInfo.unit + ']',
                         }
                     },
                     y: {
