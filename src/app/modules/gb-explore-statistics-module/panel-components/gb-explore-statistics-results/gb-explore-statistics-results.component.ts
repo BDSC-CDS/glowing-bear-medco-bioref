@@ -102,9 +102,9 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     this.refIntervalsComponents.forEach((c, i) => c.toPDF(pdf, i));
 
 
-    const generalInfoFontSize = pdf.headersSize + 3
-    pdf.addOneLineText("General information: ", 0, generalInfoFontSize)
-    pdf.addOneLineText("", 1, generalInfoFontSize)
+    const subtitleFontSize = pdf.headersSize + 3
+    pdf.addOneLineText("General information: ", 0, subtitleFontSize)
+    pdf.addOneLineText("", 1, subtitleFontSize)
 
     pdf.addOneLineText("Constraints on cohort: ")
 
@@ -126,6 +126,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
       addEmptyLine()
     }
 
+    pdf.addOneLineText("Copyright notice", 0, subtitleFontSize)
     shortCopyright.split("\n").forEach(line => {
       pdf.addOneLineText(line)
     })
@@ -308,7 +309,7 @@ export abstract class ReferenceIntervalComponent implements OnDestroy {
 
     const columnIndex = index % pdf.nbOfColumns
 
-    pdf.addOneLineText(`reference interval`, columnIndex, pdf.headersSize + 5)
+    pdf.addOneLineText(`Reference interval`, columnIndex, pdf.headersSize + 5)
     pdf.addVerticalMargin(2, columnIndex)
     pdf.addOneLineText(`Based on the given parameters, the query has returned ${this.numberOfObservations()} entries`, columnIndex)
     this.chartComponentRef.instance.printToPDF(pdf, columnIndex)
