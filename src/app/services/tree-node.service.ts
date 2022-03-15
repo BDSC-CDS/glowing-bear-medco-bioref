@@ -8,19 +8,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {Injectable, Injector} from '@angular/core';
-import {Concept} from '../models/constraint-models/concept';
-import {ConceptConstraint} from '../models/constraint-models/concept-constraint';
-import {TreeNode} from '../models/tree-models/tree-node';
-import {ConstraintService} from './constraint.service';
-import {ErrorHelper} from '../utilities/error-helper';
-import {TreeNodeType} from '../models/tree-models/tree-node-type';
-import {AppConfig} from '../config/app.config';
-import {GenomicAnnotation} from '../models/constraint-models/genomic-annotation';
-import {ExploreSearchService} from './api/medco-node/explore-search.service';
-import {Observable} from 'rxjs';
-import {ApiValueMetadata, DataType} from '../models/api-response-models/medco-node/api-value-metadata';
-import {Modifier} from '../models/constraint-models/modifier';
+import { Injectable, Injector } from '@angular/core';
+import { Concept } from '../models/constraint-models/concept';
+import { ConceptConstraint } from '../models/constraint-models/concept-constraint';
+import { TreeNode } from '../models/tree-models/tree-node';
+import { ConstraintService } from './constraint.service';
+import { ErrorHelper } from '../utilities/error-helper';
+import { TreeNodeType } from '../models/tree-models/tree-node-type';
+import { AppConfig } from '../config/app.config';
+import { GenomicAnnotation } from '../models/constraint-models/genomic-annotation';
+import { ExploreSearchService } from './api/medco-node/explore-search.service';
+import { Observable } from 'rxjs';
+import { ApiValueMetadata, DataType } from '../models/api-response-models/medco-node/api-value-metadata';
+import { Modifier } from '../models/constraint-models/modifier';
 import { MessageHelper } from '../utilities/message-helper';
 
 @Injectable()
@@ -78,8 +78,13 @@ export class TreeNodeService {
    * @param {TreeNode} parentNode
    * @param {ConstraintService} constraintService
    */
-  public loadChildrenNodes(parentNode: TreeNode, constraintService: ConstraintService) {
-    if (parentNode.leaf || parentNode.childrenAttached) {
+  public loadChildrenNodes(parentNode: TreeNode, constraintService: ConstraintService, onDone: () => any = () => { }) {
+    if (parentNode.leaf) {
+      return
+    }
+
+    if (parentNode.childrenAttached) {
+      onDone()
       return
     }
 
@@ -97,6 +102,7 @@ export class TreeNodeService {
         if (treeNodes.length === 0) {
           parentNode.leaf = true
         }
+        onDone()
       },
       (err) => {
         ErrorHelper.handleError('Error during tree children loading', err);

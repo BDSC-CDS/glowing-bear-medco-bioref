@@ -23,6 +23,7 @@ import { TreeNode } from '../../../../models/tree-models/tree-node';
 import { MessageHelper } from '../../../../utilities/message-helper';
 import { UIHelper } from '../../../../utilities/ui-helper';
 import { GbConstraintComponent } from '../gb-constraint/gb-constraint.component';
+import { TreeNodeType } from 'src/app/models/tree-models/tree-node-type';
 
 @Component({
   selector: 'gb-concept-constraint',
@@ -127,6 +128,16 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
     return new Promise<any>((resolve, reject) => {
 
       let constraint = (<ConceptConstraint>this.constraint);
+
+      const treeNode = constraint.treeNode
+      if (treeNode &&
+        (treeNode.nodeType === TreeNodeType.MODIFIER_FOLDER || treeNode.nodeType === TreeNodeType.CONCEPT_FOLDER)) {
+        const onLoaded = () => {
+          // check the children of the tree node to see if the children have been attached
+          console.log("Children loaded", treeNode)
+        }
+        this.treeNodeService.loadChildrenNodes(constraint.treeNode, this.constraintService, onLoaded)
+      }
 
       // Initialize aggregate values
       this.isMinEqual = true;
