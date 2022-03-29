@@ -91,22 +91,22 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     }
 
     const date = new Date();
-    pdf.addOneLineText("Date of export (d/m/y): " + date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getUTCFullYear(), 0);
-    pdf.addOneLineText("Username: " + this.authService.username, 1);
+    pdf.addOneLineText('Date of export (d/m/y): ' + date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getUTCFullYear(), 0);
+    pdf.addOneLineText('Username: ' + this.authService.username, 1);
 
 
-    const addEmptyLine = () => { for (let i = 0; i < pdf.nbOfColumns; i++) { pdf.addOneLineText(" ", i); } };
+    const addEmptyLine = () => { for (let i = 0; i < pdf.nbOfColumns; i++) { pdf.addOneLineText(' ', i); } };
 
-    for (let i = 0; i < 2; i++) addEmptyLine()
+    for (let i = 0; i < 2; i++) { addEmptyLine() }
 
     this.refIntervalsComponents.forEach((c, i) => c.toPDF(pdf, i));
 
 
     const subtitleFontSize = pdf.headersSize + 3
-    pdf.addOneLineText("General information: ", 0, subtitleFontSize)
-    pdf.addOneLineText("", 1, subtitleFontSize)
+    pdf.addOneLineText('General information: ', 0, subtitleFontSize)
+    pdf.addOneLineText('', 1, subtitleFontSize)
 
-    pdf.addOneLineText("Constraints on cohort: ")
+    pdf.addOneLineText('Constraints on cohort: ')
 
     const visitor = new PdfExportVisitor();
     const constraintsSummary = this.rootConstraint.accept(visitor);
@@ -118,16 +118,16 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     addEmptyLine()
 
     const timingValue = this.queryService.queryTimingSameInstance;
-    const chosenTiming = GbSelectionComponent.timings.filter(t => t.value == timingValue);
+    const chosenTiming = GbSelectionComponent.timings.filter(t => t.value === timingValue);
     assert(chosenTiming.length > 0);
-    pdf.addOneLineText("Counting method: " + chosenTiming[0].label, 0);
+    pdf.addOneLineText('Counting method: ' + chosenTiming[0].label, 0);
 
     for (let i = 0; i < 10; i++) {
       addEmptyLine()
     }
 
-    pdf.addOneLineText("Copyright notice", 0, subtitleFontSize)
-    shortCopyright.split("\n").forEach(line => {
+    pdf.addOneLineText('Copyright notice', 0, subtitleFontSize)
+    shortCopyright.split('\n').forEach(line => {
       pdf.addOneLineText(line)
     })
 

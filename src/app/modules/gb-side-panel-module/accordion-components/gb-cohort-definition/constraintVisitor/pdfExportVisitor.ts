@@ -25,9 +25,9 @@ export class PdfExportVisitor implements ConstraintVisitor<string[]> {
     }
 
     private getTabs(): string {
-        let tabs = ""
+        let tabs = ''
         for (let i = 0; i < this.numberOfTabs; i++) {
-            tabs += "\t"
+            tabs += '\t'
         }
         return tabs
     }
@@ -48,7 +48,7 @@ export class PdfExportVisitor implements ConstraintVisitor<string[]> {
     visitCombinationConstraint(cc: CombinationConstraint): string[] {
         let output = []
         if (cc.excluded) {
-            output = output.concat(this.printLine("Excluded: {"))
+            output = output.concat(this.printLine('Excluded: {'))
             this.numberOfTabs++
         }
 
@@ -61,16 +61,16 @@ export class PdfExportVisitor implements ConstraintVisitor<string[]> {
                 return
             }
 
-            let combinationState = ""
+            let combinationState = ''
             switch (cc.combinationState) {
                 case CombinationState.And:
-                    combinationState = "AND"
+                    combinationState = 'AND'
                     break
                 case CombinationState.Or:
-                    combinationState = "OR"
+                    combinationState = 'OR'
                     break
                 default:
-                    combinationState = "unknown"
+                    combinationState = 'unknown'
             }
 
             output = output.concat(this.printLine(combinationState))
@@ -79,15 +79,15 @@ export class PdfExportVisitor implements ConstraintVisitor<string[]> {
 
         if (cc.excluded) {
             this.numberOfTabs--
-            output = output.concat(this.printLine("}"))
+            output = output.concat(this.printLine('}'))
         }
         return output
     }
 
 
     visitConceptConstraint(c: ConceptConstraint): string[] {
-        const path = Utils.extractDisplayablePath(c.treeNode).reduce((e1, e2) => e1 + " > " + e2)
-        const txt = (c.excluded ? " Excluded: " : "") + path
+        const path = Utils.extractDisplayablePath(c.treeNode).reduce((e1, e2) => e1 + ' > ' + e2)
+        const txt = (c.excluded ? ' Excluded: ' : '') + path
         return this.printLine(txt)
     }
 

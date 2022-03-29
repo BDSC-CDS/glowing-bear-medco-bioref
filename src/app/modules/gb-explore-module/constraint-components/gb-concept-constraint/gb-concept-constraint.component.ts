@@ -28,7 +28,7 @@ import { Constraint } from 'src/app/models/constraint-models/constraint';
 import { DropMode } from 'src/app/models/drop-mode';
 import { first } from 'rxjs/operators';
 
-type SelectedNode = {
+interface SelectedNode  {
   name: String,
   node: TreeNode
 }
@@ -111,7 +111,10 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
   selectedCategories: string[];
   suggestedCategories: SelectItem[];
 
-  //* the list of options in the dropdown list that determines if the current constraint or one of its child tree node should be used as a constraint.
+  /*
+  * the list of options in the dropdown list that determines
+  * if the current constraint or one of its child tree node should be used as a constraint.
+  */
   conceptSelectionDropdown: SelectedNode[] = []
 
   droppedDownNode: SelectedNode
@@ -134,8 +137,6 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
 
   private _sensitive: boolean;
 
-
-  // TODO When dropping a new concept in the ontology concept zone when there is already one concept it doesn't change the content of the dropdown list
 
   ngOnInit() {
     this.initializeConstraints();
@@ -181,7 +182,7 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
     const index = unordered.findIndex(element => {
       const treeNode = element.node
 
-      let elementConceptPath = ""
+      let elementConceptPath = ''
       if (treeNode.isModifier()) {
         elementConceptPath = this.treeNodeService.getConceptFromModifierTreeNode(treeNode).path
       } else {
@@ -190,7 +191,7 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
       return elementConceptPath === constraint.concept.path
     })
     // 2) set the element displayed as selected in the dropdown to the element definitely selected (that is constraint.concept)
-    console.log("Similar dropdown element index: ", index)
+    console.log('Similar dropdown element index: ', index)
     const firstElement = unordered.splice(index, 1)
 
     this.conceptSelectionDropdown = firstElement.concat(unordered)
@@ -220,8 +221,8 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
 
       const onLoaded = () => {
         // check the children of the tree node to see if the children have been attached
-        console.log("Children loaded", treeNode)
-        if (!treeNode.children || treeNode.children.length == 0) {
+        console.log('Children loaded', treeNode)
+        if (!treeNode.children || treeNode.children.length === 0) {
           return
         }
         this.updateDropdownList(treeNode, treeNode.children)

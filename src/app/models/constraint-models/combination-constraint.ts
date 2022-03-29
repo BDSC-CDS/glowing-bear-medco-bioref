@@ -128,7 +128,7 @@ export class CombinationConstraint extends Constraint {
 
 
   get textRepresentation(): string {
-    if (this.children.length == 0) {
+    if (this.children.length === 0) {
       return CombinationConstraint.groupTextRepresentation;
     }
 

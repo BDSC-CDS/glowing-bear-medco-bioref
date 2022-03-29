@@ -252,7 +252,7 @@ export class LineChartComponent extends ChartComponent {
             }
 
             if (inConfidenceInterval(x)) {
-                CIColour
+                return CIColour
             }
 
             return centerColour
@@ -273,7 +273,7 @@ export class LineChartComponent extends ChartComponent {
                 if (keep(x)) {
                     return { x: x, y: y }
                 }
-                return [] //{ x: x, y: null }
+                return []
             })
         }
 
@@ -405,7 +405,7 @@ export class LineChartComponent extends ChartComponent {
 
 
 
-        return new Chart(context, config,)
+        return new Chart(context, config)
 
     }
 
