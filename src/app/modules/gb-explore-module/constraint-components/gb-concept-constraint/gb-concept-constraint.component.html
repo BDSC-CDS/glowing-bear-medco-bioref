@@ -2,100 +2,95 @@
   <div class="gb-constraint-child-container">
     <div>
       <label *ngIf="(depth === 1) && queryTimingSameInstance" style="margin: 6px;">Same instance:</label>
-      <p-checkbox *ngIf="(depth === 1) && queryTimingSameInstance" [(ngModel)]="panelTimingSameInstance" [binary]="true"></p-checkbox>
+      <p-checkbox *ngIf="(depth === 1) && queryTimingSameInstance" [(ngModel)]="panelTimingSameInstance"
+        [binary]="true"></p-checkbox>
     </div>
 
     <label>Ontology concept: </label>
-    <p-autoComplete #autoComplete
-                    [(ngModel)]="selectedConcept"
-                    [suggestions]="searchResults"
-                    field="label"
-                    (completeMethod)="onSearch($event)"
-                    [style]="{'width':'auto'}"
-                    [inputStyle]="{'width':'auto'}"
-                    styleClass="gb-concept-constraint-input"
-                    size="60"
-                    dropdown="true"
-                    (onDropdownClick)="onDropdown($event)"></p-autoComplete>
+    <p-autoComplete #autoComplete [(ngModel)]="selectedConcept" [suggestions]="searchResults" field="label"
+      (completeMethod)="onSearch($event)" [style]="{'width':'auto'}" [inputStyle]="{'width':'auto'}"
+      styleClass="gb-concept-constraint-input" size="60" dropdown="true" (onDropdownClick)="onDropdown($event)">
+    </p-autoComplete>
 
 
 
 
 
-<!-- if the concept is NUMERIC -->
-<div *ngIf="constraintConcept.type === ValueType.NUMERICAL" class="form-group gb-constraint-child-container" width="auto">
-  <span>with value&nbsp;</span>
-  <p-dropdown [(ngModel)]="numericalOperatorState" [options]="numericalOperation" dropdownIcon="pi pi-caret-down white-color" (onChange)="changeNumericalOperator($event)"></p-dropdown>
-  <span>&nbsp;</span>
+    <!-- if the concept is NUMERIC -->
+    <div *ngIf="constraintConcept.type === ValueType.NUMERICAL" class="form-group gb-constraint-child-container"
+      width="auto">
+      <span>with value&nbsp;</span>
+      <p-dropdown [(ngModel)]="numericalOperatorState" [options]="numericalOperation"
+        dropdownIcon="pi pi-caret-down white-color" (onChange)="changeNumericalOperator($event)"></p-dropdown>
+      <span>&nbsp;</span>
 
-  <div *ngIf="(numericalOperatorState !== null) && isBetween() " class="d-inline-block">
-    <input type="number" [step]="integerOrFloat" [min]="positive" class="col-sm-4" placeholder="min:{{minLimit}}"
-           [(ngModel)]="minVal">
-    <span>&nbsp;and&nbsp;</span>
-    <input type="number" [step]="integerOrFloat" [min]="positive" class="col-sm-4" placeholder="max:{{maxLimit}}"
-           [(ngModel)]="maxVal">
-    <span>&nbsp;{{unit}}</span>
-    <gb-tooltip></gb-tooltip>
-  </div>
+      <div *ngIf="(numericalOperatorState !== null) && isBetween() " class="d-inline-block">
+        <input type="number" [step]="integerOrFloat" [min]="positive" class="col-sm-4" placeholder="min:{{minLimit}}"
+          [(ngModel)]="minVal">
+        <span>&nbsp;and&nbsp;</span>
+        <input type="number" [step]="integerOrFloat" [min]="positive" class="col-sm-4" placeholder="max:{{maxLimit}}"
+          [(ngModel)]="maxVal">
+        <span>&nbsp;{{unit}}</span>
+        <gb-tooltip></gb-tooltip>
+      </div>
 
-  <div *ngIf="(numericalOperatorState !== null) && !isBetween() " class="d-inline-block">
-    <input type="number" [step]="integerOrFloat" [min]="positive" class="col-sm-8"
-           [(ngModel)]="equalVal">
-    <span>&nbsp;{{unit}}</span>
-    <gb-tooltip></gb-tooltip>
-  </div>
-</div>
-<!-- if the concept is TEXT -->
-<div *ngIf="constraintConcept.type === ValueType.TEXT" class="form-group gb-constraint-child-container" width="auto">
-  <span>with value&nbsp;</span>
-  <p-dropdown [(ngModel)]="textOperatorState" [options]="textOperation" dropdownIcon="pi pi-caret-down white-color" (onChange)="changeTextOperator($event)"></p-dropdown>
-  <span>&nbsp;&nbsp;&nbsp;</span>
-  <div *ngIf="(textOperatorState !== null)" class="d-inline-block">
-    <input type="text" class="col-sm-12" style="width: auto;" placeholder="expression"
-           [(ngModel)]="textValue"> <!-- Width auto so that the tooltip displays nicely on the right side instead of below this -->
-    <gb-tooltip></gb-tooltip>
-  </div>
-
-</div>
-
-  <!-- if the concept is CATEGORICAL -->
-  <div *ngIf="constraintConcept.type === ValueType.CATEGORICAL" class="v-align-center form-inline gb-constraint-child-container">
-    <span>with values</span>
-    <p-multiSelect [options]="suggestedCategories" [(ngModel)]="selectedCategories"
-                   [panelStyle]="{minWidth:'12em'}" (onChange)="updateConceptValues()"></p-multiSelect>
-  </div>
-
-  <!--  if the concept is DATE -->
-  <div *ngIf="constraintConcept.type === ValueType.DATE" class="form-inline gb-constraint-child-container">
-    <span>with date</span>
-    <button type="button" class="btn btn-outline-secondary"
-            (click)="switchValDateOperatorState()" [ngSwitch]="valDateOperatorState">
-      <i *ngSwitchCase="ValDateOperatorStateEnum.BEFORE">before </i>
-      <i *ngSwitchCase="ValDateOperatorStateEnum.AFTER">after </i>
-      <i *ngSwitchCase="ValDateOperatorStateEnum.BETWEEN">between </i>
-      <i *ngSwitchCase="ValDateOperatorStateEnum.NOT_BETWEEN">not between </i>
-    </button>
-    &nbsp;
-    <p-calendar [(ngModel)]="valDate1"
-                dateFormat="dd-mm-yy"
-                showTime="true"
-                showSeconds="true"
-                hourFormat="24"
-                (ngModelChange)="updateConceptValues()"
-                utc="true"></p-calendar>
-    <div *ngIf="[ValDateOperatorStateEnum.BETWEEN, ValDateOperatorStateEnum.NOT_BETWEEN].includes(valDateOperatorState)">
-      <span>&nbsp;and&nbsp;</span>
-      <p-calendar [(ngModel)]="valDate2"
-                  dateFormat="dd-mm-yy"
-                  showTime="true"
-                  showSeconds="true"
-                  hourFormat="24"
-                  (ngModelChange)="updateConceptValues()"
-                  utc="true"></p-calendar>
+      <div *ngIf="(numericalOperatorState !== null) && !isBetween() " class="d-inline-block">
+        <input type="number" [step]="integerOrFloat" [min]="positive" class="col-sm-8" [(ngModel)]="equalVal">
+        <span>&nbsp;{{unit}}</span>
+        <gb-tooltip></gb-tooltip>
+      </div>
     </div>
-  </div>
+    <!-- if the concept is TEXT -->
+    <div *ngIf="constraintConcept.type === ValueType.TEXT" class="form-group gb-constraint-child-container"
+      width="auto">
+      <span>with value&nbsp;</span>
+      <p-dropdown [(ngModel)]="textOperatorState" [options]="textOperation" dropdownIcon="pi pi-caret-down white-color"
+        (onChange)="changeTextOperator($event)"></p-dropdown>
+      <span>&nbsp;&nbsp;&nbsp;</span>
+      <div *ngIf="(textOperatorState !== null)" class="d-inline-block">
+        <input type="text" class="col-sm-12" style="width: auto;" placeholder="expression" [(ngModel)]="textValue">
+        <!-- Width auto so that the tooltip displays nicely on the right side instead of below this -->
+        <gb-tooltip></gb-tooltip>
+      </div>
 
-  <!-- ---------- more options ----------
+    </div>
+
+    <!-- if the concept is CATEGORICAL -->
+    <div *ngIf="constraintConcept.type === ValueType.CATEGORICAL"
+      class="v-align-center form-inline gb-constraint-child-container">
+      <span>with values</span>
+      <p-multiSelect [options]="suggestedCategories" [(ngModel)]="selectedCategories" [panelStyle]="{minWidth:'12em'}"
+        (onChange)="updateConceptValues()"></p-multiSelect>
+    </div>
+
+    <!--  if the concept is DATE -->
+    <div *ngIf="constraintConcept.type === ValueType.DATE" class="form-inline gb-constraint-child-container">
+      <span>with date</span>
+      <button type="button" class="btn btn-outline-secondary" (click)="switchValDateOperatorState()"
+        [ngSwitch]="valDateOperatorState">
+        <i *ngSwitchCase="ValDateOperatorStateEnum.BEFORE">before </i>
+        <i *ngSwitchCase="ValDateOperatorStateEnum.AFTER">after </i>
+        <i *ngSwitchCase="ValDateOperatorStateEnum.BETWEEN">between </i>
+        <i *ngSwitchCase="ValDateOperatorStateEnum.NOT_BETWEEN">not between </i>
+      </button>
+      &nbsp;
+      <p-calendar [(ngModel)]="valDate1" dateFormat="dd-mm-yy" showTime="true" showSeconds="true" hourFormat="24"
+        (ngModelChange)="updateConceptValues()" utc="true"></p-calendar>
+      <div
+        *ngIf="[ValDateOperatorStateEnum.BETWEEN, ValDateOperatorStateEnum.NOT_BETWEEN].includes(valDateOperatorState)">
+        <span>&nbsp;and&nbsp;</span>
+        <p-calendar [(ngModel)]="valDate2" dateFormat="dd-mm-yy" showTime="true" showSeconds="true" hourFormat="24"
+          (ngModelChange)="updateConceptValues()" utc="true"></p-calendar>
+      </div>
+    </div>
+    <div *ngIf="displayChildrenDropdown()">
+      <span>Selected concept: </span>
+      <p-dropdown [(ngModel)]="droppedDownNode" [options]="conceptSelectionDropdown" optionLabel="name" optionValue="node"
+        dropdownIcon="pi pi-caret-down white-color" (onChange)="onChangeDropdownSelection($event)"></p-dropdown>
+
+    </div>
+
+    <!-- ---------- more options ----------
 
   <div *ngIf="!sensitive" class="gb-constraint-child-container" style="margin-top: 2px">
     <p-panel [collapsed]="!showMoreOptions">
@@ -145,4 +140,4 @@
   </div>
 -->
 
-</div>
+  </div>

@@ -24,6 +24,14 @@ import { MessageHelper } from '../../../../utilities/message-helper';
 import { UIHelper } from '../../../../utilities/ui-helper';
 import { GbConstraintComponent } from '../gb-constraint/gb-constraint.component';
 import { TreeNodeType } from 'src/app/models/tree-models/tree-node-type';
+import { Constraint } from 'src/app/models/constraint-models/constraint';
+import { DropMode } from 'src/app/models/drop-mode';
+import { first } from 'rxjs/operators';
+
+type SelectedNode = {
+  name: String,
+  node: TreeNode
+}
 
 @Component({
   selector: 'gb-concept-constraint',
@@ -103,6 +111,12 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
   selectedCategories: string[];
   suggestedCategories: SelectItem[];
 
+  //* the list of options in the dropdown list that determines if the current constraint or one of its child tree node should be used as a constraint.
+  conceptSelectionDropdown: SelectedNode[] = []
+
+  droppedDownNode: SelectedNode
+
+
   // ------ more options ------
   /*
    * flag indicating if to show more options
@@ -120,22 +134,101 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
 
   private _sensitive: boolean;
 
+
+  // TODO When dropping a new concept in the ontology concept zone when there is already one concept it doesn't change the content of the dropdown list
+
   ngOnInit() {
     this.initializeConstraints();
   }
 
-  initializeConstraints(): Promise<any> {
+  private dropdownNonEmpty() {
+    return this.conceptSelectionDropdown !== undefined && this.conceptSelectionDropdown.length > 1;
+  }
+
+  /*
+  * updates the list of options in the dropdown list that determines if the parent folder constraint
+  * or one of its child tree node should be used as a constraint. The content of the dropdown is the parent tree node
+  * plus children of the parent.
+  *
+  * Example: If the user drops the Gender folder tree node in the constraints a dropdown will appear.
+  *   The drop down will contain: [parent, female, unknown, other, male]
+  *
+  * @param parent:  the parent tree node.
+  * @param children: the elements that represent the children of the current concept-constraint
+  * */
+  private updateDropdownList(parent: TreeNode, children: TreeNode[]) {
+
+    const parentElement = { name: parent.displayName, node: parent }
+
+
+    const childrenElements =
+      children
+        .map(c => {
+          return { name: c.displayName, node: c }
+        })
+
+
+    const unordered = [parentElement].concat(childrenElements)
+
+    if (unordered.length <= 1) {
+      this.conceptSelectionDropdown = unordered
+      return
+    }
+
+    const constraint = (<ConceptConstraint>this.constraint);
+    // set the displayed dropdown element to the one displayed in the main zone
+    // 1) find what is the element that is selected and that corresponds to the dropdown content
+    const index = unordered.findIndex(element => {
+      const treeNode = element.node
+
+      let elementConceptPath = ""
+      if (treeNode.isModifier()) {
+        elementConceptPath = this.treeNodeService.getConceptFromModifierTreeNode(treeNode).path
+      } else {
+        elementConceptPath = this.treeNodeService.getConceptFromTreeNode(treeNode).path
+      }
+      return elementConceptPath === constraint.concept.path
+    })
+    // 2) set the element displayed as selected in the dropdown to the element definitely selected (that is constraint.concept)
+    console.log("Similar dropdown element index: ", index)
+    const firstElement = unordered.splice(index, 1)
+
+    this.conceptSelectionDropdown = firstElement.concat(unordered)
+  }
+
+  displayChildrenDropdown(): boolean {
+    return this.conceptSelectionDropdown !== undefined && this.dropdownNonEmpty()
+  }
+
+
+  onChangeDropdownSelection(event) {
+    const selected = this.constraintService.generateConstraintFromTreeNode(this.droppedDownNode.node, DropMode.TreeNode);
+
+    // todo ensure selected is a concept constraint
+    (<ConceptConstraint>this.constraint).concept = (<ConceptConstraint>selected).concept;
+    // we do not load the children of the concept selected in the dropdown it has already been done when dropping the initial concept
+    this.initializeConstraints(false)
+    this.update();
+  }
+
+  initializeConstraints(loadChildren: boolean = true): Promise<any> {
     return new Promise<any>((resolve, reject) => {
 
       let constraint = (<ConceptConstraint>this.constraint);
 
       const treeNode = constraint.treeNode
-      if (treeNode &&
-        (treeNode.nodeType === TreeNodeType.MODIFIER_FOLDER || treeNode.nodeType === TreeNodeType.CONCEPT_FOLDER)) {
-        const onLoaded = () => {
-          // check the children of the tree node to see if the children have been attached
-          console.log("Children loaded", treeNode)
+
+      const onLoaded = () => {
+        // check the children of the tree node to see if the children have been attached
+        console.log("Children loaded", treeNode)
+        if (!treeNode.children || treeNode.children.length == 0) {
+          return
         }
+        this.updateDropdownList(treeNode, treeNode.children)
+      }
+
+      if (loadChildren && treeNode &&
+        (treeNode.nodeType === TreeNodeType.MODIFIER_FOLDER || treeNode.nodeType === TreeNodeType.CONCEPT_FOLDER)) {
         this.treeNodeService.loadChildrenNodes(constraint.treeNode, this.constraintService, onLoaded)
       }
 
@@ -596,6 +689,20 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
     this.showMoreOptions = !this.showMoreOptions;
   }
 
+  onSubconceptSelected(event: DragEvent) {
+    const subconstraint: Constraint = null;
+    if (subconstraint && subconstraint.className === 'ConceptConstraint') {
+      (<ConceptConstraint>this.constraint).concept = (<ConceptConstraint>subconstraint).concept;
+      this.initializeConstraints()
+        .then(() => {
+          this.update();
+        });
+    } else {
+      const summary = `Dropped a ${subconstraint.className}, incompatible with ConceptConstraint.`;
+      MessageHelper.alert('error', summary);
+    }
+  }
+
   onDrop(event: DragEvent) {
     event.stopPropagation();
 
@@ -605,6 +712,8 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
 
     if (this.droppedConstraint && this.droppedConstraint.className === 'ConceptConstraint') {
       (<ConceptConstraint>this.constraint).concept = (<ConceptConstraint>this.droppedConstraint).concept;
+      (<ConceptConstraint>this.constraint).treeNode = selectedNode
+
       this.initializeConstraints()
         .then(() => {
           this.update();
@@ -618,6 +727,9 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
     this.treeNodeService.selectedTreeNode = null;
     this.droppedConstraint = null;
   }
+
+
+
 
   get numericalOperatorState(): NumericalOperator {
     return this._numericalOperatorState;

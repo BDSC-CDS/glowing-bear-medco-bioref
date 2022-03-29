@@ -143,6 +143,10 @@ export class ConceptConstraint extends Constraint {
     return this._treeNode
   }
 
+  set treeNode(treeNode: TreeNode) {
+    this._treeNode = treeNode
+  }
+
   get valDateConstraint(): TimeConstraint {
     return this._valDateConstraint;
   }
