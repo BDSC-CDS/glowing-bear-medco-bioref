@@ -201,11 +201,13 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
     return this.conceptSelectionDropdown !== undefined && this.dropdownNonEmpty()
   }
 
-
+  /*
+  * This function is called whenever an element in the the dropdown containing children concepts is selected.
+  * This will triger the selection of the child concept and set it as the concept selected for this concept constraint
+  */
   onChangeDropdownSelection(event) {
     const selected = this.constraintService.generateConstraintFromTreeNode(this.droppedDownNode.node, DropMode.TreeNode);
 
-    // todo ensure selected is a concept constraint
     (<ConceptConstraint>this.constraint).concept = (<ConceptConstraint>selected).concept;
     // we do not load the children of the concept selected in the dropdown it has already been done when dropping the initial concept
     this.initializeConstraints(false)
@@ -704,6 +706,11 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
     }
   }
 
+  private updateCurrentConcept(selectedConcept: Constraint, selectedNode: TreeNode) {
+    (<ConceptConstraint>this.constraint).concept = (<ConceptConstraint>this.droppedConstraint).concept;
+    (<ConceptConstraint>this.constraint).treeNode = selectedNode
+  }
+
   onDrop(event: DragEvent) {
     event.stopPropagation();
 
@@ -712,8 +719,7 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
       this.constraintService.generateConstraintFromTreeNode(selectedNode, selectedNode ? selectedNode.dropMode : null);
 
     if (this.droppedConstraint && this.droppedConstraint.className === 'ConceptConstraint') {
-      (<ConceptConstraint>this.constraint).concept = (<ConceptConstraint>this.droppedConstraint).concept;
-      (<ConceptConstraint>this.constraint).treeNode = selectedNode
+      this.updateCurrentConcept(this.droppedConstraint, selectedNode)
 
       this.initializeConstraints()
         .then(() => {
