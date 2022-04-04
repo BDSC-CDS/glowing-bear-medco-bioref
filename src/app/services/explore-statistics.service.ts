@@ -9,12 +9,9 @@ import { ApiNodeMetadata } from '../models/api-response-models/medco-network/api
 import { ApiExploreQueryResult } from '../models/api-response-models/medco-node/api-explore-query-result';
 import { CombinationConstraint } from '../models/constraint-models/combination-constraint';
 import { Constraint } from '../models/constraint-models/constraint';
-import { ExploreQueryResult } from '../models/query-models/explore-query-result';
 import { ExploreQueryType } from '../models/query-models/explore-query-type';
 import { TreeNode } from '../models/tree-models/tree-node';
-import { ConstraintHelper } from '../utilities/constraint-utilities/constraint-helper';
 import { ErrorHelper } from '../utilities/error-helper';
-import { PDF } from '../utilities/files/pdf';
 import { ApiEndpointService } from './api-endpoint.service';
 import { MedcoNetworkService } from './api/medco-network.service';
 import { CohortService } from './cohort.service';
@@ -24,21 +21,10 @@ import { ConstraintService } from './constraint.service';
 import { CryptoService } from './crypto.service';
 import { NavbarService } from './navbar.service';
 import { QueryService } from './query.service';
+import { ReferenceIntervalComputer } from './reference-intervals';
 
 export class ConfidenceInterval {
-    constructor(private _lowerBound: number, private _middle: number, private _higherBound: number) {
-    }
-
-    get lowerBound() {
-        return this._lowerBound
-    }
-
-    get middle() {
-        return this._middle
-    }
-
-    get higherBound() {
-        return this._higherBound
+    constructor(public readonly lowerBound: number, public readonly middle: number, public readonly higherBound: number) {
     }
 }
 
@@ -61,9 +47,11 @@ class ReferenceRange {
     readonly CI2: ConfidenceInterval
 
     constructor(intervals: Interval[]) {
-        // TODO put Upal's code: replace the arbitrary values 1,2,3
-        this.CI1 = new ConfidenceInterval(1, 2, 3)
-        this.CI2 = new ConfidenceInterval(4, 5, 6)
+        const riComputer = new ReferenceIntervalComputer(intervals)
+        const RI = riComputer.compute()
+
+        this.CI1 = RI[0]
+        this.CI2 = RI[1]
     }
 }
 
@@ -334,21 +322,21 @@ export class ExploreStatisticsService {
         const chartsInformationsObservables: Observable<ChartInformation>[] =
             serverResponse.results.map((result: ApiExploreStatisticResult) => {
 
-            const encCounts: string[] = result.intervals.map((i: ApiInterval) => i.encCount);
+                const encCounts: string[] = result.intervals.map((i: ApiInterval) => i.encCount);
 
-            const decryptedCounts = this.cryptoService.decryptIntegersWithEphemeralKey(encCounts);
+                const decryptedCounts = this.cryptoService.decryptIntegersWithEphemeralKey(encCounts);
 
-            return decryptedCounts.pipe(
-                map(counts => {
-                    const intervals = counts.map((count, intervalIndex) => {
-                        const apiInterval = result.intervals[intervalIndex];
-                        return new Interval(apiInterval.lowerBound, apiInterval.higherBound, count);
-                    });
+                return decryptedCounts.pipe(
+                    map(counts => {
+                        const intervals = counts.map((count, intervalIndex) => {
+                            const apiInterval = result.intervals[intervalIndex];
+                            return new Interval(apiInterval.lowerBound, apiInterval.higherBound, count);
+                        });
 
-                    return new ChartInformation(intervals, result.unit, result.analyteName, cohortConstraint.textRepresentation);
-                })
-            );
-        });
+                        return new ChartInformation(intervals, result.unit, result.analyteName, cohortConstraint.textRepresentation);
+                    })
+                );
+            });
 
 
 
