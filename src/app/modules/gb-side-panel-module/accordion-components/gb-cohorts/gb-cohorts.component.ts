@@ -124,6 +124,11 @@ export class GbCohortsComponent implements AfterViewInit, OnInit {
     cohort.bookmarked = !cohort.bookmarked
   }
 
+  setDefaultCohort(e: Event, cohort: Cohort){
+    e.stopPropagation()
+    this.cohortService.setDefaultCohort(cohort)
+  }
+
   sortByName() {
     let sorted = this.cohortService.cohorts.sort((a, b) => (a.name > b.name) ? 1 : -1)
     this.cohortService.cohorts = sorted

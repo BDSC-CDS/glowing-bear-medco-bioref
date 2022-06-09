@@ -8,12 +8,14 @@
 import { CombinationConstraint } from '../constraint-models/combination-constraint'
 
 import { ApiQueryDefinition } from '../api-request-models/medco-node/api-query-definition'
-import {ErrorHelper} from '../../utilities/error-helper';
+import { ErrorHelper } from '../../utilities/error-helper';
 
 export class Cohort {
   private _name: string
   private _patient_set_id: Array<number>
   private _queryDefinitions: Array<ApiQueryDefinition>
+  private _predefined: boolean
+  private _defaulted: boolean
 
   public selected: boolean
   private _creationDate: Date[]
@@ -110,6 +112,22 @@ export class Cohort {
 
   get updateDate(): Date[] {
     return this._updateDate
+  }
+
+  get defaulted(): boolean {
+    return this._defaulted
+  }
+
+  set defaulted(val: boolean) {
+    this._defaulted = val
+  }
+
+  get predefined(): boolean {
+    return this._predefined
+  }
+
+  set predefined(val: boolean) {
+    this._predefined = val
   }
 
   /**

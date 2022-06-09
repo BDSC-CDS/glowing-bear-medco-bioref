@@ -43,11 +43,15 @@
         </button>
         <span>&nbsp;</span>
         <button pButton class="ui-button-secondary" type="button" pTooltip="Remove" tooltipPosition="top"
-          placeholder="Top" (click)="remove($event, cohort)" icon="fa fa-times">
+          placeholder="Top" (click)="remove($event, cohort)" [disabled]="cohort.predefined"  icon="fa fa-times">
         </button>
         <button pButton class="ui-button-secondary" type="button" pTooltip="Mark as important" tooltipPosition="top"
           placeholder="Top" (click)="bookmarkCohort($event,cohort)"
           icon="{{cohort.bookmarked ? 'fa fa-star':'fa fa-star-o'}}">
+        </button>
+        <button *ngIf="displayRestoreButton" pButton class="ui-button-secondary" type="button" pTooltip="Restore query definition" tooltipPosition="top"
+          placeholder="Top" (click)="setDefaultCohort($event, cohort)"
+          icon="{{cohort.defaulted ? 'fa fa-circle':'fa fa-circle-thin'}}">
         </button>
         <p *ngIf="patientListsStatus.has(cohort.name) && patientListsStatus.get(cohort.name) === OperationStatus.waitOnAPI" class="loading-blink">
           Waiting on MedCo server nodes response <span>•</span><span>•</span><span>•</span>

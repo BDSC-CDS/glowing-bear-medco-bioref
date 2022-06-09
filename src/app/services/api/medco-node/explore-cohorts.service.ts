@@ -67,6 +67,33 @@ export class ExploreCohortsService {
     ).pipe(map((resp) => [node, resp]));
   }
 
+  getDefaultCohortSingleNode(node: ApiNodeMetadata):
+    Observable<string>{
+      return this.apiEndpointService.getCall(
+        'node/explore/default-cohort',
+        {},
+        node.url
+      )
+    }
+
+  putDefaultCohortSingleNode(node: ApiNodeMetadata, cohortName: string) {
+    return this.apiEndpointService.putCall(
+      `node/explore/default-cohort/${cohortName}`,
+      {},
+      node.url
+    )
+  }
+
+  getDefaultCohortAllNodes():
+    Observable<string[]>{
+      return forkJoin(this.medcoNetworkService.nodes.map(node => this.getDefaultCohortSingleNode(node)))
+      .pipe(timeout(ExploreCohortsService.TIMEOUT_MS))
+    }
+  
+  putDefaultCohortAllNodes(cohortName: string){
+    return forkJoin(this.medcoNetworkService.nodes.map(node=>this.putDefaultCohortSingleNode(node,cohortName)))
+    .pipe(timeout(ExploreCohortsService.TIMEOUT_MS))
+  }
 
   getCohortAllNodes(): Observable<ApiCohortResponse[][]> {
     return forkJoin(this.medcoNetworkService.nodes.map(node => this.getCohortSingleNode(node)))
