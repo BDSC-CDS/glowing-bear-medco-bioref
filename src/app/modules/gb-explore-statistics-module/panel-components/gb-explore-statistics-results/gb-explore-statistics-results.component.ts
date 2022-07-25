@@ -30,10 +30,19 @@ const refIntervalCss = './gb-reference-interval.component.css'
 
 
 
-const shortCopyright = `LOINC ® codes and long common names: © 1995-2022, Regenstrief Institute, Inc. and the LOINC Committee
-GMDN ® codes, terms, and descriptions: © GMDN Agency 2005-2022.
-GUDI codes: courtesy of the the U.S. National Library of Medicine in collaboration with the U.S. Food and Drug Administration
-ICD-10-GM codes and descriptions: © 2022 Bundesinstitut für Arzneimittel und Medizinprodukte`
+const shortCopyright = `GMDN ® codes, terms, and descriptions: © GMDN Agency 2005-2022 (https://www.gmdnagency.org/).
+
+GUDI codes: courtesy of the the U.S. National Library of Medicine (https://www.nlm.nih.gov/)
+in collaboration with the U.S. Food and Drug Administration (https://www.fda.gov/).
+
+ICD-10-GM codes and descriptions: © 2022 Bundesinstitut für Arzneimittel und Medizinprodukte (https://www.bfarm.de/EN/Code-systems/Classifications/ICD/ICD-10-GM/_node.html).
+
+LOINC ® codes and long common names: © 1995-2022, Regenstrief Institute, Inc. (https://www.regenstrief.org/) and the LOINC (https://loinc.org/) Committee
+
+SNOMED CT: SNOMED CT is copyright © SNOMED International 2021 v3.15.1., SNOMED CT international (https://www.snomed.org/).
+
+UCUM: UCUM (https://ucum.nlm.nih.gov/) is copyright ©1999-2021,
+Regenstrief Institute, Inc. (https://www.regenstrief.org/), Inc. and The UCUM Organization, Indianapolis, IN. All rights reserved.`
 
 
 export interface SVGConvertible {
