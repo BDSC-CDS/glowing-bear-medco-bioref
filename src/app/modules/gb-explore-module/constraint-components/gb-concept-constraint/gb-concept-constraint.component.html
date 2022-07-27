@@ -84,7 +84,7 @@
       </div>
     </div>
     <div *ngIf="displayChildrenDropdown()">
-      <span>Selected concept: </span>
+      <span>Selected value: </span>
       <p-dropdown [(ngModel)]="droppedDownNode" [options]="conceptSelectionDropdown" optionLabel="name" optionValue="node"
         dropdownIcon="pi pi-caret-down white-color" (onChange)="onChangeDropdownSelection($event)"></p-dropdown>
 

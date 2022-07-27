@@ -157,9 +157,9 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
   * @param parent:  the parent tree node.
   * @param children: the elements that represent the children of the current concept-constraint
   * */
-  private updateDropdownList(parent: TreeNode, children: TreeNode[]) {
+  private updateDropdownList(parent: TreeNode, children: TreeNode[]): {value: string; parent: TreeNode}[] {
 
-    const parentElement = { name: parent.displayName, node: parent }
+    const parentElement = { name: 'any', node: parent }
 
 
     const childrenElements =
@@ -230,8 +230,11 @@ export class GbConceptConstraintComponent extends GbConstraintComponent implemen
         this.updateDropdownList(treeNode, treeNode.children)
       }
 
+      // we check concept as well as, in the tree, its modifiers will be seen as children
       if (loadChildren && treeNode &&
-        (treeNode.nodeType === TreeNodeType.MODIFIER_FOLDER || treeNode.nodeType === TreeNodeType.CONCEPT_FOLDER)) {
+        (treeNode.nodeType === TreeNodeType.MODIFIER_FOLDER ||
+          treeNode.nodeType === TreeNodeType.CONCEPT_FOLDER ||
+          treeNode.nodeType === TreeNodeType.CONCEPT)) {
         this.treeNodeService.loadChildrenNodes(constraint.treeNode, this.constraintService, onLoaded)
       }
 
