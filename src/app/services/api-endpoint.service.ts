@@ -56,8 +56,11 @@ export class ApiEndpointService {
    * @param body
    * @returns {Observable<any | any>}
    */
-  putCall(urlPart, body) {
-    let url = `${this.endpointUrl}/${urlPart}`;
+  putCall(urlPart, body, apiUrl?) {
+
+    const url = apiUrl ?
+      apiUrl + '/' + urlPart :
+      this.endpointUrl + '/' + urlPart;
     return this.http.put(url, body).pipe(
       catchError(ErrorHelper.handleHTTPError)
     );

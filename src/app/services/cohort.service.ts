@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Injectable } from '@angular/core';
-import { combineLatest, Observable, Subject } from 'rxjs';
+import { combineLatest, forkJoin, Observable, Subject } from 'rxjs';
 import { ExploreQueryService } from './api/medco-node/explore-query.service';
 import { MedcoNetworkService } from './api/medco-network.service';
 import { ConstraintService } from './constraint.service';
@@ -31,6 +31,8 @@ import { OperationStatus } from '../models/operation-status';
 import { QueryService } from './query.service';
 import { ExploreStatisticsService } from './explore-statistics.service';
 import { take } from 'rxjs/operators';
+import { equal } from 'mathjs';
+import { stringify } from 'querystring';
 
 @Injectable()
 export class CohortService {
@@ -101,6 +103,7 @@ export class CohortService {
 
       cohort.patient_set_id = apiCohorts.map(apiCohort => apiCohort[i].queryID)
       cohort.queryDefinition = apiCohorts.map(apiCohort => apiCohort[i].queryDefinition)
+      cohort.predefined = apiCohorts.map(apiCohort => apiCohort[i].predefined).some(value=>value)
       res.push(cohort)
 
     }
@@ -287,12 +290,45 @@ export class CohortService {
     return this._patternValidation
   }
 
+  private handleDefaultCohortNames(names :string[]) :void{
+    this.cohorts.forEach(((_,i) => {
+      this.cohorts[i].defaulted = false
+    }).bind(this))
+    const allTheSame = names.every(value => value === names[0])
+    if (!allTheSame) {
+      names.join(", ")
+      throw ErrorHelper.handleNewError(`The name of the default cohort is not the same across the nodes: ${names.join(", ")}`)
+    }
+
+    if (names[0] === ""){
+      MessageHelper.alert('info',"No default cohort/filter for the current user.")
+      return
+    }
+    MessageHelper.alert('info',`Cohort/filter ${names[0]} defined as default.`)
+
+    var found = false
+    this.cohorts.forEach(((value,i) => {
+      if (value.name === names[0]){
+        this.cohorts[i].defaulted = true
+        found=true
+        this.restoreTerms(value)
+      }
+    }).bind(this))
+    if (!found) {
+      throw ErrorHelper.handleNewError(`default cohort/filter ${names[0]} not found.`)
+    }
+    return
+  }
+
   getCohorts() {
     this._isRefreshing = true
-    this.exploreCohortsService.getCohortAllNodes().subscribe({
-      next: (apiCohorts => {
+    let cohorts$ = this.exploreCohortsService.getCohortAllNodes()
+    let defaultCohort$ = this.exploreCohortsService.getDefaultCohortAllNodes()
+    forkJoin([cohorts$, defaultCohort$]).subscribe({
+      next: (([apiCohorts, defaultCohortNames]) => {
         try {
           this.updateCohorts(CohortService.apiCohortsToCohort(apiCohorts))
+          this.handleDefaultCohortNames(defaultCohortNames)
         } catch (err) {
           MessageHelper.alert('error', 'An error occured with received saved cohorts', (err as Error).message)
         }
@@ -310,7 +346,25 @@ export class CohortService {
     })
   }
 
+  setDefaultCohort(cohort: Cohort) {
+    this.exploreCohortsService.putDefaultCohortAllNodes(cohort.name).subscribe({
+      next: (message => {
+        this.cohorts.forEach(
+          ((cohort_,i) =>{
+              this.cohorts[i].defaulted = (cohort_.name === cohort.name)
+          }).bind(this)
+        )
+        console.log('on remove cohort, message: ', message)
+      }).bind(this),
+      error: err => MessageHelper.alert('error', 'An error occured while setting default cohort/filter ', (err as HttpErrorResponse).error.message)
+    })
+  }
+
   postCohort(cohort: Cohort) {
+    if(cohort.predefined){
+      MessageHelper.alert('error',`Modifying predefined filter ${cohort.name} is not allowed.`)
+      return
+    }
     let apiCohorts = new Array<ApiCohort>()
     this._isRefreshing = true
     let cohortName = cohort.name
@@ -360,6 +414,10 @@ export class CohortService {
   }
 
   removeCohorts(cohort: Cohort) {
+    if(cohort.predefined){
+      MessageHelper.alert('error',`Deleting predefined filter ${cohort.name} is not allowed.`)
+      return
+    }
     this.exploreCohortsService.removeCohortAllNodes(cohort.name).subscribe(
       message => {
         console.log('on remove cohort, message: ', message)
