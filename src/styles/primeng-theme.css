@@ -287,7 +287,7 @@ body .ui-dropdown:not(.ui-state-disabled).ui-state-focus {
 }
 body .ui-dropdown .ui-dropdown-label {
   min-width: 12em;
-  padding-right: 2em;
+  /*padding-right: 2em; otherwise the texts sticks to the dropdown button*/
 }
 body .ui-dropdown .ui-dropdown-label .ui-placeholder {
   color: #9b9b9b;
