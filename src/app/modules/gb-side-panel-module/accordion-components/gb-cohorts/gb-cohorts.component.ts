@@ -10,7 +10,6 @@
 
 import { AfterViewInit, Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { ConfirmationService, OverlayPanel } from 'primeng';
-import { AuthenticationService } from 'src/app/services/authentication.service';
 import { Cohort } from '../../../../models/cohort-models/cohort';
 import { OperationStatus } from '../../../../models/operation-status';
 import { CohortService } from '../../../../services/cohort.service';
@@ -124,7 +123,7 @@ export class GbCohortsComponent implements AfterViewInit, OnInit {
     cohort.bookmarked = !cohort.bookmarked
   }
 
-  setDefaultCohort(e: Event, cohort: Cohort){
+  setDefaultCohort(e: Event, cohort: Cohort) {
     e.stopPropagation()
     this.cohortService.setDefaultCohort(cohort)
   }
