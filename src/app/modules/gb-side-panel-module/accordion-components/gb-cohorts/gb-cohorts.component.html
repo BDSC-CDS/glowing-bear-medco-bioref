@@ -49,7 +49,7 @@
           placeholder="Top" (click)="bookmarkCohort($event,cohort)"
           icon="{{cohort.bookmarked ? 'fa fa-star':'fa fa-star-o'}}">
         </button>
-        <button *ngIf="displayRestoreButton" pButton class="ui-button-secondary" type="button" pTooltip="Set this filter as default. If defaulted, it will the terms will be load in seleciton criteria at next login." tooltipPosition="top"
+        <button *ngIf="displayRestoreButton" pButton class="ui-button-secondary" type="button" pTooltip="Set this filter as default." tooltipPosition="top"
           placeholder="Top" (click)="setDefaultCohort($event, cohort)"
           icon="{{cohort.defaulted ? 'fa fa-circle':'fa fa-circle-thin'}}">
         </button>

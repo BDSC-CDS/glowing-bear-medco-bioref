@@ -103,7 +103,7 @@ export class CohortService {
 
       cohort.patient_set_id = apiCohorts.map(apiCohort => apiCohort[i].queryID)
       cohort.queryDefinition = apiCohorts.map(apiCohort => apiCohort[i].queryDefinition)
-      cohort.predefined = apiCohorts.map(apiCohort => apiCohort[i].predefined).some(value=>value)
+      cohort.predefined = apiCohorts.map(apiCohort => apiCohort[i].predefined).some(value => value)
       res.push(cohort)
 
     }
@@ -191,7 +191,7 @@ export class CohortService {
     if (this.cohortName === '') {
       throw ErrorHelper.handleNewUserInputError('You must provide a name for the cohort you want to save.');
     } else if (!this.patternValidation.test(this.cohortName).valueOf()) {
-      throw ErrorHelper.handleNewUserInputError(`Name ${this.cohortName} can only contain alphanumerical symbols (without ö é ç ...) and underscores "_".`);
+      throw ErrorHelper.handleNewUserInputError(`Name ${this.cohortName} can only contain alphanumerical symbols (without ö é ç ...) and underscores '_'.`);
     }
 
     let existingCohorts = this.cohorts
@@ -290,27 +290,27 @@ export class CohortService {
     return this._patternValidation
   }
 
-  private handleDefaultCohortNames(names :string[]) :void{
-    this.cohorts.forEach(((_,i) => {
+  private handleDefaultCohortNames(names: string[]): void {
+    this.cohorts.forEach(((_, i) => {
       this.cohorts[i].defaulted = false
     }).bind(this))
     const allTheSame = names.every(value => value === names[0])
     if (!allTheSame) {
-      names.join(", ")
-      throw ErrorHelper.handleNewError(`The name of the default cohort is not the same across the nodes: ${names.join(", ")}`)
+      names.join(', ')
+      throw ErrorHelper.handleNewError(`The name of the default cohort is not the same across the nodes: ${names.join(', ')}`)
     }
 
-    if (names[0] === ""){
-      MessageHelper.alert('info',"No default cohort/filter for the current user.")
+    if (names[0] === '') {
+      MessageHelper.alert('info', 'No default cohort/filter for the current user.')
       return
     }
-    MessageHelper.alert('info',`Cohort/filter ${names[0]} defined as default.`)
+    MessageHelper.alert('info', `Cohort/filter ${names[0]} defined as default.`)
 
-    var found = false
-    this.cohorts.forEach(((value,i) => {
-      if (value.name === names[0]){
+    let found = false
+    this.cohorts.forEach(((value, i) => {
+      if (value.name === names[0]) {
         this.cohorts[i].defaulted = true
-        found=true
+        found = true
         this.restoreTerms(value)
       }
     }).bind(this))
@@ -350,19 +350,20 @@ export class CohortService {
     this.exploreCohortsService.putDefaultCohortAllNodes(cohort.name).subscribe({
       next: (message => {
         this.cohorts.forEach(
-          ((cohort_,i) =>{
-              this.cohorts[i].defaulted = (cohort_.name === cohort.name)
+          ((cohort_, i) => {
+            this.cohorts[i].defaulted = (cohort_.name === cohort.name)
           }).bind(this)
         )
         console.log('on remove cohort, message: ', message)
       }).bind(this),
-      error: err => MessageHelper.alert('error', 'An error occured while setting default cohort/filter ', (err as HttpErrorResponse).error.message)
+      error: err => MessageHelper.alert('error', 'An error occured while setting default cohort/filter ',
+      (err as HttpErrorResponse).error.message)
     })
   }
 
   postCohort(cohort: Cohort) {
-    if(cohort.predefined){
-      MessageHelper.alert('error',`Modifying predefined filter ${cohort.name} is not allowed.`)
+    if (cohort.predefined) {
+      MessageHelper.alert('error', `Modifying predefined filter ${cohort.name} is not allowed.`)
       return
     }
     let apiCohorts = new Array<ApiCohort>()
@@ -414,8 +415,8 @@ export class CohortService {
   }
 
   removeCohorts(cohort: Cohort) {
-    if(cohort.predefined){
-      MessageHelper.alert('error',`Deleting predefined filter ${cohort.name} is not allowed.`)
+    if (cohort.predefined) {
+      MessageHelper.alert('error', `Deleting predefined filter ${cohort.name} is not allowed.`)
       return
     }
     this.exploreCohortsService.removeCohortAllNodes(cohort.name).subscribe(

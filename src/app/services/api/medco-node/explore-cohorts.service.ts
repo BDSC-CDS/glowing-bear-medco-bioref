@@ -10,14 +10,14 @@ import { Injectable } from '@angular/core';
 import { MedcoNetworkService } from '../medco-network.service';
 import { Observable, forkJoin } from 'rxjs';
 import { map, timeout } from 'rxjs/operators';
-import {ApiNodeMetadata} from '../../../models/api-response-models/medco-network/api-node-metadata';
-import {AppConfig} from '../../../config/app.config';
-import {ApiCohortsPatientLists} from '../../../models/api-request-models/medco-node/api-cohorts-patient-lists';
-import {ApiCohortsPatientListsResponse} from '../../../models/api-response-models/medco-node/api-cohorts-patient-list-response';
-import {ApiCohortResponse} from '../../../models/api-response-models/medco-node/api-cohort-response';
-import {ApiEndpointService} from '../../api-endpoint.service';
-import {ApiCohort} from '../../../models/api-request-models/medco-node/api-cohort';
-import {HttpParams} from '@angular/common/http';
+import { ApiNodeMetadata } from '../../../models/api-response-models/medco-network/api-node-metadata';
+import { AppConfig } from '../../../config/app.config';
+import { ApiCohortsPatientLists } from '../../../models/api-request-models/medco-node/api-cohorts-patient-lists';
+import { ApiCohortsPatientListsResponse } from '../../../models/api-response-models/medco-node/api-cohorts-patient-list-response';
+import { ApiCohortResponse } from '../../../models/api-response-models/medco-node/api-cohort-response';
+import { ApiEndpointService } from '../../api-endpoint.service';
+import { ApiCohort } from '../../../models/api-request-models/medco-node/api-cohort';
+import { HttpParams } from '@angular/common/http';
 
 @Injectable()
 export class ExploreCohortsService {
@@ -68,13 +68,13 @@ export class ExploreCohortsService {
   }
 
   getDefaultCohortSingleNode(node: ApiNodeMetadata):
-    Observable<string>{
-      return this.apiEndpointService.getCall(
-        'node/explore/default-cohort',
-        {},
-        node.url
-      )
-    }
+    Observable<string> {
+    return this.apiEndpointService.getCall(
+      'node/explore/default-cohort',
+      {},
+      node.url
+    )
+  }
 
   putDefaultCohortSingleNode(node: ApiNodeMetadata, cohortName: string) {
     return this.apiEndpointService.putCall(
@@ -85,14 +85,14 @@ export class ExploreCohortsService {
   }
 
   getDefaultCohortAllNodes():
-    Observable<string[]>{
-      return forkJoin(this.medcoNetworkService.nodes.map(node => this.getDefaultCohortSingleNode(node)))
+    Observable<string[]> {
+    return forkJoin(this.medcoNetworkService.nodes.map(node => this.getDefaultCohortSingleNode(node)))
       .pipe(timeout(ExploreCohortsService.TIMEOUT_MS))
-    }
-  
-  putDefaultCohortAllNodes(cohortName: string){
-    return forkJoin(this.medcoNetworkService.nodes.map(node=>this.putDefaultCohortSingleNode(node,cohortName)))
-    .pipe(timeout(ExploreCohortsService.TIMEOUT_MS))
+  }
+
+  putDefaultCohortAllNodes(cohortName: string) {
+    return forkJoin(this.medcoNetworkService.nodes.map(node => this.putDefaultCohortSingleNode(node, cohortName)))
+      .pipe(timeout(ExploreCohortsService.TIMEOUT_MS))
   }
 
   getCohortAllNodes(): Observable<ApiCohortResponse[][]> {
