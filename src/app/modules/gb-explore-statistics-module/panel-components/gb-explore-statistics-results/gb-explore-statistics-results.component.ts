@@ -76,7 +76,38 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
   private refIntervalsComponents: ReferenceIntervalComponent[]
   private rootConstraint: CombinationConstraint;
 
-  
+  private static cutLongLines(text: string, _maxLineSize: number): string[] {
+    let cutPos = -1
+    if (text.length > _maxLineSize) {
+      cutPos = text.slice(0, _maxLineSize).lastIndexOf(' ')
+      if (cutPos === -1) {
+        cutPos = text.slice(0, _maxLineSize).lastIndexOf(':')
+      }
+      if (cutPos === -1) {
+        cutPos = text.slice(0, _maxLineSize).lastIndexOf(';')
+      }
+      if (cutPos === -1) {
+        cutPos = text.slice(0, _maxLineSize).lastIndexOf(',')
+      }
+      if (cutPos === -1) {
+        cutPos = text.slice(0, _maxLineSize).lastIndexOf('/')
+      }
+      if (cutPos === -1) {
+        cutPos = text.slice(0, _maxLineSize).lastIndexOf('-')
+      }
+      if (cutPos === -1) {
+        cutPos = text.slice(0, _maxLineSize).lastIndexOf('_')
+      }
+      if (cutPos === -1) {
+        cutPos = _maxLineSize
+      }
+      cutPos += 1
+      return [text.slice(0, cutPos)].concat(GbExploreStatisticsResultsComponent.cutLongLines(text.slice(cutPos, text.length), _maxLineSize))
+    }
+
+    return [text]
+
+  }
 
   constructor(private exploreStatisticsService: ExploreStatisticsService,
     private authService: AuthenticationService,
@@ -124,7 +155,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     const visitor = new PdfExportVisitor();
     const constraintsSummary = this.rootConstraint.accept(visitor);
 
-    constraintsSummary.flatMap(line => GbExploreStatisticsResultsComponent.cutLongLines(line,maxSize)).forEach(line => {
+    constraintsSummary.flatMap(line => GbExploreStatisticsResultsComponent.cutLongLines(line, maxSize)).forEach(line => {
       pdf.addOneLineText(line)
     })
 
@@ -142,7 +173,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
     pdf.addOneLineText('Copyright notice', 0, subtitleFontSize)
     const maxSize = this._maxLineSize
-    shortCopyright.split('\n').flatMap(line => GbExploreStatisticsResultsComponent.cutLongLines(line,maxSize)).forEach(line => {
+    shortCopyright.split('\n').flatMap(line => GbExploreStatisticsResultsComponent.cutLongLines(line, maxSize)).forEach(line => {
       pdf.addOneLineText(line)
     })
 
@@ -183,39 +214,6 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
   get displayLoadingIcon() {
     return this._displayLoadingIcon
-  }
-
-  private  static cutLongLines(text: string, _maxLineSize : number) : string[] {
-    var cutPos = -1
-    if (text.length > _maxLineSize) {
-      cutPos = text.slice(0,_maxLineSize).lastIndexOf(" ")
-      if (cutPos === -1){
-        cutPos = text.slice(0,_maxLineSize).lastIndexOf(":")
-      }
-      if (cutPos === -1){
-        cutPos = text.slice(0,_maxLineSize).lastIndexOf(";")
-      }
-      if (cutPos === -1){
-        cutPos = text.slice(0,_maxLineSize).lastIndexOf(",")
-      }
-      if (cutPos === -1){
-        cutPos = text.slice(0,_maxLineSize).lastIndexOf("/")
-      }
-      if (cutPos === -1){
-        cutPos = text.slice(0,_maxLineSize).lastIndexOf("-")
-      }
-      if (cutPos === -1){
-        cutPos = text.slice(0,_maxLineSize).lastIndexOf("_")
-      }
-      if (cutPos === -1){
-        cutPos = _maxLineSize
-      }
-      cutPos + 1
-      return [text.slice(0, cutPos)].concat(GbExploreStatisticsResultsComponent.cutLongLines(text.slice(cutPos, text.length), _maxLineSize))
-    }
-
-    return [text]
-
   }
 
   ngOnInit() {
