@@ -154,6 +154,7 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
 
     const visitor = new PdfExportVisitor();
     const constraintsSummary = this.rootConstraint.accept(visitor);
+    const maxSize = this._maxLineSize;
 
     constraintsSummary.flatMap(line => GbExploreStatisticsResultsComponent.cutLongLines(line, maxSize)).forEach(line => {
       pdf.addOneLineText(line)
@@ -166,13 +167,12 @@ export class GbExploreStatisticsResultsComponent implements AfterViewInit, OnDes
     assert(chosenTiming.length > 0);
     pdf.addOneLineText('Counting method: ' + chosenTiming[0].label, 0);
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 8; i++) {
       addEmptyLine()
     }
 
 
     pdf.addOneLineText('Copyright notice', 0, subtitleFontSize)
-    const maxSize = this._maxLineSize
     shortCopyright.split('\n').flatMap(line => GbExploreStatisticsResultsComponent.cutLongLines(line, maxSize)).forEach(line => {
       pdf.addOneLineText(line)
     })
